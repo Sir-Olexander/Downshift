@@ -98,8 +98,11 @@ docs/         Deployment notes (Nebius Serverless), video script
 - **Deployment.** Dockerfiles and a compose file are included; `docs/deploy-nebius.md` describes the
   Nebius Serverless layout (two Endpoints plus an optional Job). It has not been deployed to Nebius
   yet.
-- **Rate limits.** Ollama Cloud rejects more than a few concurrent requests per key. The SDK caps
-  concurrent model calls per process (`DOWNSHIFT_MAX_CONCURRENT_CALLS`, default 3) and backs off on 429.
+- **Rate limits.** Ollama Cloud rejects more than a few concurrent requests per key and has a per-account
+  usage limit ("session usage limit reached"). The SDK caps concurrent model calls per process
+  (`DOWNSHIFT_MAX_CONCURRENT_CALLS`, default 3) and, on a 429, waits with backoff for up to
+  `DOWNSHIFT_RATE_LIMIT_MAX_WAIT_S` (default 900 s; set it to hours for an unattended optimization) while
+  the live log shows that the run is waiting. Recording the 42 baseline runs used about 1M tokens.
 
 ## Configuration
 
