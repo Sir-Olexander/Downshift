@@ -30,3 +30,6 @@ node_modules/
 # OS / editors
 .DS_Store
 *.log
+
+# Browser screenshots taken during development
+.playwright-mcp/
