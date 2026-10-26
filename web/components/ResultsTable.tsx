@@ -25,7 +25,7 @@ export function ResultsTable({ baseline, rows, recommended, optimizationId }: { 
               <span className="swatch ring" />
               <div>
                 <div className="name">Baseline</div>
-                <div className="models">nemotron-3-ultra · every step</div>
+                <div className="models">N3 Ultra · every step</div>
               </div>
             </div>
           </td>

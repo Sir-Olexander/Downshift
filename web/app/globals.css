@@ -97,7 +97,7 @@ th.num { font-family: var(--font-sans); }
 .section { margin-top: 44px; }
 .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
 .section-head p { color: var(--ink-2); font-size: 14px; }
-.grid-2 { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 20px; }
+.grid-2 { display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); gap: 20px; }
 @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
 .card { background: var(--surface); border: 1px solid var(--hair); border-radius: var(--radius); box-shadow: var(--shadow); }
 .card-pad { padding: 18px 20px; }
@@ -146,7 +146,8 @@ th.num { font-family: var(--font-sans); }
 .results .opt .name { font-weight: 500; white-space: nowrap; }
 .results .opt .models { color: var(--ink-3); font-size: 12px; font-family: var(--font-mono); white-space: nowrap; }
 .results td.num .delta { display: block; margin-top: 2px; }
-.results td { padding-top: 12px; padding-bottom: 12px; }
+.results td { padding: 12px 10px; }
+.results th { padding: 10px 10px; }
 .delta { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
 .delta.good { color: var(--good); }
 .delta.bad { color: var(--bad); }
