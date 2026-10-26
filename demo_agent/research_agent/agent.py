@@ -13,11 +13,9 @@ import json
 import re
 from typing import Any
 
-from downshift import Harness, Run, Step
+from downshift import Harness, Run, Step, extract_urls
 
 from .tools import SearchTools
-
-URL_RE = re.compile(r"https?://[^\s<>()\[\]\"']+")
 MAX_TOOL_RESULT_CHARS = 6000
 MAX_EVIDENCE_CHARS = 14000
 
@@ -47,10 +45,6 @@ def _extract_json(text: str) -> dict[str, Any] | None:
         except json.JSONDecodeError:
             return None
     return None
-
-
-def _clean_url(u: str) -> str:
-    return u.rstrip(".,;:!?)]}\"'")
 
 
 class ResearchAgent:
@@ -204,9 +198,4 @@ class ResearchAgent:
     # ---- output -------------------------------------------------------------------------
     @staticmethod
     def _sources(answer: str) -> list[str]:
-        out: list[str] = []
-        for u in URL_RE.findall(answer):
-            u = _clean_url(u)
-            if u not in out:
-                out.append(u)
-        return out
+        return extract_urls(answer)

@@ -32,10 +32,18 @@ def main(argv: list[str] | None = None) -> int:
     o.add_argument("--source", default="seed", help="label stored on the optimization: seed (precomputed) or live")
     s = sub.add_parser("status", help="print an optimization's status and events")
     s.add_argument("id")
+    r = sub.add_parser("resummarize", help="recompute checks, metrics and the summary of a finished optimization from its stored replays")
+    r.add_argument("id")
     args = ap.parse_args(argv)
 
     settings = Settings.from_env()
     db = Database(settings.db_path)
+    if args.cmd == "resummarize":
+        summary = Engine(db, settings).resummarize(args.id)
+        print(json.dumps({k: summary.get(k) for k in ("headline", "baseline", "bar")}, indent=1))
+        for row in summary.get("options") or []:
+            print(row["key"], row["metrics"].get("success_rate"), row["metrics"].get("quality"), row["metrics"].get("cost_per_run"), "meets_bar" if row["meets_bar"] else "below_bar")
+        return 0
     if args.cmd == "status":
         opt = db.get_optimization(args.id)
         if not opt:

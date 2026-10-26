@@ -113,6 +113,15 @@ def objective(metrics: dict[str, Any], baseline: dict[str, Any], *, tolerance_pp
     return round(q - penalty + cost_bonus, 3)
 
 
-def meets_bar(option: dict[str, Any], baseline: dict[str, Any], *, success_tol_pp: float = 5.0, quality_tol_pts: float = 5.0) -> bool:
+def bar_tolerance_pp(n: int | None, floor_pp: float = 5.0) -> float:
+    """The success-rate tolerance can't be finer than one run: with 17 held-out runs one run is 5.9 pp."""
+    if not n:
+        return floor_pp
+    return max(floor_pp, round(100.0 / n, 1))
+
+
+def meets_bar(option: dict[str, Any], baseline: dict[str, Any], *, success_tol_pp: float | None = None, quality_tol_pts: float = 5.0) -> bool:
+    """Within the bar: success no more than one run (or 5 pp) below the baseline, quality within 5 points."""
     d = deltas(option, baseline)
-    return (d["success_rate_pp"] is not None and d["success_rate_pp"] >= -success_tol_pp) and (d["quality_pts"] is not None and d["quality_pts"] >= -quality_tol_pts)
+    tol = bar_tolerance_pp(option.get("n_judged") or option.get("n")) if success_tol_pp is None else success_tol_pp
+    return (d["success_rate_pp"] is not None and d["success_rate_pp"] >= -tol) and (d["quality_pts"] is not None and d["quality_pts"] >= -quality_tol_pts)

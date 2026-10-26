@@ -1,4 +1,4 @@
-from downshift.replay import ReplayCache, jaccard, norm_url
+from downshift.replay import ReplayCache, extract_urls, jaccard, norm_url
 
 
 def _ev(name, args, result, latency=120):
@@ -26,3 +26,13 @@ def test_url_matching_ignores_scheme_www_and_trailing_slash():
 
 def test_jaccard_drops_stopwords():
     assert jaccard("what is the magna carta", "magna carta") == 1.0
+
+
+def test_extract_urls_keeps_wikipedia_parentheses_and_strips_prose_punctuation():
+    text = "See https://en.wikipedia.org/wiki/Trieste_(bathyscaphe). Also (https://example.org/a), and https://example.org/b?x=1#frag; done.\nSources:\nhttps://en.wikipedia.org/wiki/Swiss_Style_(design)\nhttps://en.wikipedia.org/wiki/Trieste_(bathyscaphe)"
+    assert extract_urls(text) == [
+        "https://en.wikipedia.org/wiki/Trieste_(bathyscaphe)",
+        "https://example.org/a",
+        "https://example.org/b?x=1#frag",
+        "https://en.wikipedia.org/wiki/Swiss_Style_(design)",
+    ]

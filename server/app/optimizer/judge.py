@@ -8,7 +8,7 @@ import re
 from typing import Any
 
 from downshift import LLM
-from downshift.replay import norm_url
+from downshift.replay import extract_urls, norm_url
 
 JUDGE_SYSTEM = """You are a strict grader of research answers. You compare two answers to the same question.
 Grade substance, not style or length. Penalise unsupported claims, factual errors and missing parts of the question.
@@ -79,7 +79,8 @@ def auto_checks(record: dict[str, Any]) -> dict[str, Any]:
     """Simple deterministic checks on a run record."""
     output = record.get("output") or {}
     answer = (output.get("answer") or "").strip()
-    sources = [s for s in (output.get("sources") or []) if isinstance(s, str)]
+    # Re-extract the cited URLs from the answer text, so a fix to the extractor applies to old records too.
+    sources = extract_urls(answer) if answer else [s for s in (output.get("sources") or []) if isinstance(s, str)]
     events = record.get("events") or []
     tool_events = [e for e in events if e.get("type") == "tool_call"]
     # tool errors are recovered by the agent (it sees an error result); only failed model calls count

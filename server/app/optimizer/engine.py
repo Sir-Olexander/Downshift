@@ -17,7 +17,7 @@ from ..settings import Settings
 from .analyze import analyze_runs
 from .guidance import guidance_text, lookup_guidance
 from .judge import auto_checks, judge_pair
-from .metrics import aggregate, baseline_run_metrics, deltas, meets_bar, objective, replay_metrics
+from .metrics import aggregate, bar_tolerance_pp, baseline_run_metrics, deltas, meets_bar, objective, replay_metrics
 from .replay import replay_many
 from .rewrite import propose_harness
 from .split import split_runs
@@ -254,6 +254,63 @@ class Engine:
         self._progress(oid, "done", 100, summary.get("headline", {}).get("text", "done"))
         self._event(oid, "Done. " + summary.get("headline", {}).get("text", ""), phase="done", data={"spent_usd": round(spent["usd"], 4)})
 
+    def resummarize(self, optimization_id: str) -> dict[str, Any]:
+        """Recompute automatic checks, per-run metrics, option aggregates and the summary from the stored
+        replays. Judge verdicts are kept as they are. Use after a fix to the checks or the bar."""
+        opt = self.db.get_optimization(optimization_id)
+        if not opt or opt.get("status") != "done":
+            raise RuntimeError("only completed optimizations can be resummarized")
+        cfg = {**default_config(self.settings), **(opt.get("config_json") or {})}
+        split = opt.get("split_json") or {}
+        options = self.db.list_options(optimization_id)
+        baseline_option = next((o for o in options if o["key"] == "baseline"), None)
+        if baseline_option is None:
+            raise RuntimeError("no baseline option stored")
+        baseline_runs = {r["task_id"]: r["record_json"] for r in self.db.latest_runs_per_task(opt["project_id"], tag=cfg.get("tag"))}
+        option_results: list[dict[str, Any]] = []
+        baseline_test_items: list[dict[str, Any]] = []
+        for o in options:
+            if o["key"] == "baseline" or o["status"] != "done":
+                continue
+            items = []
+            for rep in self.db.list_replays(o["id"], split="test"):
+                base_rec = self.db.get_run(rep["baseline_run_id"]) if rep.get("baseline_run_id") else None
+                base_rec = (base_rec or {}).get("record_json") or baseline_runs.get(rep["task_id"])
+                if not base_rec:
+                    continue
+                rec = rep["record_json"]
+                judge = rep.get("judge_json") or {}
+                checks, base_checks = auto_checks(rec), auto_checks(base_rec)
+                m, bm = replay_metrics(rec, judge, checks), baseline_run_metrics(base_rec, judge, base_checks)
+                bm["task_id"] = rep["task_id"]
+                self.db.update_replay(rep["id"], checks_json={"candidate": checks, "baseline": base_checks}, metrics_json={"candidate": m, "baseline": bm})
+                items.append({"metrics": m, "baseline_metrics": bm})
+            if not items:
+                continue
+            agg = aggregate([x["metrics"] for x in items])
+            base_agg = aggregate([x["baseline_metrics"] for x in items])
+            baseline_test_items.extend(x["baseline_metrics"] for x in items)
+            metrics = dict(o.get("metrics_json") or {})
+            metrics.update({"test": agg, "baseline_in_comparisons": base_agg, "n_test": len(items)})
+            option_results.append({"key": o["key"], "label": o["label"], "metrics": metrics, "models_used": Harness.from_dict(o["harness_json"]).models_used() if o.get("harness_json") else [], "option_id": o["id"]})
+        baseline_agg = aggregate(baseline_test_items)
+        if baseline_agg.get("n"):
+            baseline_agg["n"] = len({x.get("task_id") for x in baseline_test_items} - {None}) or len(split.get("test") or [])
+            baseline_agg["n_comparisons"] = len(baseline_test_items)
+        self.db.update_option(baseline_option["id"], metrics_json={"test": baseline_agg, "baseline_on_test": baseline_agg, "deltas": deltas(baseline_agg, baseline_agg), "meets_bar": True, "n_test": len(split.get("test") or [])})
+        for o in option_results:
+            t_agg = o["metrics"]["test"]
+            o["metrics"]["baseline_on_test"] = baseline_agg
+            o["metrics"]["deltas"] = deltas(t_agg, baseline_agg)
+            o["metrics"]["meets_bar"] = meets_bar(t_agg, baseline_agg)
+            self.db.update_option(o["option_id"], metrics_json=o["metrics"])
+        old = opt.get("summary_json") or {}
+        analysis = {"recommendations": (old.get("analysis") or {}).get("recommendations"), "per_step": (old.get("analysis") or {}).get("per_step")}
+        summary = self._summary(baseline_agg, option_results, len(split.get("opt") or []), len(split.get("test") or []), float(old.get("spent_usd") or 0.0), cfg, old.get("search_provider") or "", old.get("provider") or "", analysis)
+        self.db.update_optimization(optimization_id, summary_json=summary)
+        self.db.add_event(optimization_id, "Recomputed checks, metrics and summary from the stored replays (judge verdicts unchanged). " + summary["headline"]["text"], phase="resummarize")
+        return summary
+
     def _replay_and_score(self, oid: str, option_id: str, harness: Harness, records: list[dict[str, Any]], split: str, round_no: int, sdk: Downshift, tools: SearchTools, llm: LLM, cfg: dict[str, Any], add_cost: Any, on_progress: Any) -> list[dict[str, Any]]:
         """Replay each record with the harness, run checks and the blind judge, store everything."""
         done = {"n": 0}
@@ -322,6 +379,7 @@ class Engine:
             "options": rows,
             "notes": notes,
             "split": {"optimization": n_opt, "test": n_test, "test_fraction": cfg.get("test_fraction"), "note": "All numbers above come from the held-out test set, which the optimizer never saw."},
+            "bar": {"success_tol_pp": bar_tolerance_pp(baseline.get("n_judged") or baseline.get("n") or n_test), "quality_tol_pts": 5.0, "note": "Within the bar: task success no more than one held-out run (or 5 pp) below the baseline and quality within 5 points."},
             "spent_usd": round(spent, 4),
             "budget": {"rounds": cfg.get("rounds"), "sample_size": cfg.get("sample_size"), "max_cost_usd": cfg.get("max_cost_usd")},
             "judge": {"model": cfg.get("judge_model"), "method": "blind pairwise, random order, rubric: correct / complete / supported (0-5 each)"},

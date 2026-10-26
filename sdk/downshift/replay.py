@@ -16,6 +16,9 @@ from urllib.parse import urlsplit
 from .tracing import Run, ToolCallEvent, now_iso
 
 _WORD = re.compile(r"[a-z0-9]+")
+# A URL runs until whitespace, a quote, an angle bracket or a CJK bracket; parentheses are allowed
+# because Wikipedia titles use them (…/Trieste_(bathyscaphe)). Unbalanced closers are stripped after.
+_URL = re.compile(r"https?://[^\s<>\"'\u3010\u3011]+")
 _STOP = {"the", "a", "an", "of", "in", "on", "and", "or", "to", "for", "is", "what", "who", "when", "where", "how", "why", "which", "does", "do", "did", "was", "were", "are", "be"}
 
 
@@ -34,6 +37,32 @@ def jaccard(a: str, b: str) -> float:
     if not wa or not wb:
         return 0.0
     return len(wa & wb) / len(wa | wb)
+
+
+def clean_url(u: str) -> str:
+    """Strip trailing punctuation and unbalanced closing brackets from a URL found in prose."""
+    u = u.rstrip(".,;:!?\"'")
+    while u:
+        last = u[-1]
+        if last == ")" and u.count("(") < u.count(")"):
+            u = u[:-1]
+        elif last == "]" and u.count("[") < u.count("]"):
+            u = u[:-1]
+        elif last in ".,;:!?\"'":
+            u = u[:-1]
+        else:
+            break
+    return u
+
+
+def extract_urls(text: str) -> list[str]:
+    """Every distinct http(s) URL in `text`, in order of first appearance."""
+    out: list[str] = []
+    for m in _URL.finditer(text or ""):
+        u = clean_url(m.group(0))
+        if u and u not in out:
+            out.append(u)
+    return out
 
 
 def norm_url(u: str) -> str:

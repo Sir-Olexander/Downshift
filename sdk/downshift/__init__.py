@@ -19,7 +19,7 @@ from typing import Any
 from .harness import Harness, HarnessError, Step, StepParams, ToolSpec, FewShot, Defaults
 from .pricing import ModelTable, ModelInfo, ProviderInfo, default_table, UnknownModelError
 from .providers import LLM, LLMError, ChatResult, ToolCallRequest, active_provider_name
-from .replay import ReplayCache, ReplayRun, ReplayMiss
+from .replay import ReplayCache, ReplayRun, ReplayMiss, extract_urls, norm_url
 from .tracing import Run, RunRecord, ModelCallEvent, ToolCallEvent, Totals, SDK_VERSION
 from .transport import HttpTransport, FileTransport, MemoryTransport, NullTransport
 
@@ -28,7 +28,7 @@ __all__ = [
     "Downshift", "Harness", "HarnessError", "Step", "StepParams", "ToolSpec", "FewShot", "Defaults",
     "ModelTable", "ModelInfo", "ProviderInfo", "default_table", "UnknownModelError",
     "LLM", "LLMError", "ChatResult", "ToolCallRequest", "active_provider_name",
-    "ReplayCache", "ReplayRun", "ReplayMiss",
+    "ReplayCache", "ReplayRun", "ReplayMiss", "extract_urls", "norm_url",
     "Run", "RunRecord", "ModelCallEvent", "ToolCallEvent", "Totals",
     "HttpTransport", "FileTransport", "MemoryTransport", "NullTransport",
 ]

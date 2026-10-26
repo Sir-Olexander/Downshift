@@ -4,7 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.optimizer.judge import _extract_json, auto_checks, is_success, quality_score
-from app.optimizer.metrics import aggregate, deltas, meets_bar, objective
+from app.optimizer.metrics import aggregate, bar_tolerance_pp, deltas, meets_bar, objective
 from app.optimizer.rewrite import _check_target, _extract_yaml
 from app.optimizer.split import split_runs
 from downshift import Harness
@@ -13,6 +13,8 @@ BASELINE = Path(__file__).resolve().parents[2] / "demo_agent" / "harness.yaml"
 
 
 def _record(answer, sources, tool_urls, status="ok"):
+    if answer and sources:  # real answers list their sources in the text; checks re-extract them from there
+        answer = answer + "\n\nSources:\n" + "\n".join(sources)
     return {
         "status": status,
         "output": {"answer": answer, "sources": sources},
@@ -115,3 +117,11 @@ def test_tool_errors_do_not_fail_checks():
     assert auto_checks(rec)["passed"]
     rec["events"].append({"type": "model_call", "step": "synthesize", "error": "LLMError: boom"})
     assert not auto_checks(rec)["passed"]
+
+
+def test_bar_tolerance_is_at_least_one_run():
+    assert bar_tolerance_pp(17) == 5.9 and bar_tolerance_pp(100) == 5.0 and bar_tolerance_pp(None) == 5.0
+    base = {"n": 17, "n_judged": 17, "success_rate": 82.4, "quality": 98.8, "cost_per_run": 0.03, "latency_ms": 100}
+    one_run_worse = {"n": 17, "n_judged": 17, "success_rate": 76.5, "quality": 94.5, "cost_per_run": 0.008, "latency_ms": 40}
+    two_runs_worse = {**one_run_worse, "success_rate": 70.6}
+    assert meets_bar(one_run_worse, base) and not meets_bar(two_runs_worse, base)
