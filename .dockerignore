@@ -1,0 +1,14 @@
+.git
+.temp
+.venv
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/*.pyc
+server/data
+web/node_modules
+web/.next
+.downshift
+*.log
+.DS_Store
