@@ -1,0 +1,106 @@
+# Downshift model table: the one place for model IDs, prices and provider mappings.
+#
+# Prices are Nebius Token Factory list prices in USD per 1M tokens, checked on 2026-10-26 against
+# the Token Factory catalog (https://tokenfactory.nebius.com/endpoints) and
+# https://nebius.com/services/token-factory/models/nvidia-nemotron-models-inference.
+# Downshift always prices a call from its token counts with these numbers, whichever provider
+# actually served it, so a run replayed on Ollama is costed as if it ran on Token Factory.
+# The `tokenfactory` IDs were read from the catalog links; verify them in the console before relying on them.
+
+pricing:
+  currency: USD
+  unit: per_1m_tokens
+  source: https://tokenfactory.nebius.com/endpoints
+  checked_on: "2026-10-26"
+
+providers:
+  tokenfactory:
+    label: Nebius Token Factory
+    base_url: https://api.tokenfactory.nebius.com/v1/
+    api_key_env: NEBIUS_API_KEY
+    # How a harness `reasoning` setting is sent. Token Factory serves Nemotron with vLLM, which takes
+    # the chat-template flag below. Not yet verified against a live key.
+    reasoning:
+      "off": { chat_template_kwargs: { enable_thinking: false } }
+      "on": {}
+      low: { reasoning_effort: low }
+      medium: { reasoning_effort: medium }
+      high: { reasoning_effort: high }
+  ollama:
+    label: Ollama Cloud
+    base_url: https://ollama.com/v1
+    api_key_env: OLLAMA_API_KEY
+    # Verified 2026-10-26: reasoning_effort "none" switches Nemotron 3 thinking off on ollama.com/v1
+    # (completion tokens 107 -> 31 on the same prompt); `think: false` is ignored on this route.
+    reasoning:
+      "off": { reasoning_effort: none }
+      "on": {}
+      low: { reasoning_effort: low }
+      medium: { reasoning_effort: medium }
+      high: { reasoning_effort: high }
+  ollama-local:
+    label: Ollama (local)
+    base_url: http://localhost:11434/v1
+    api_key_env: OLLAMA_API_KEY
+    api_key_optional: true
+    reasoning:
+      "off": { reasoning_effort: none }
+      "on": {}
+      low: { reasoning_effort: low }
+      medium: { reasoning_effort: medium }
+      high: { reasoning_effort: high }
+  openai:
+    label: OpenAI (optional closed-model baseline)
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    reasoning:
+      "off": {}
+      "on": {}
+      low: { reasoning_effort: low }
+      medium: { reasoning_effort: medium }
+      high: { reasoning_effort: high }
+
+models:
+  nemotron-3-nano:
+    display: Nemotron 3 Nano
+    vendor: NVIDIA
+    tier: nano
+    size: 30B total / 3B active, hybrid Mamba-Transformer MoE
+    context: 262144
+    price_per_1m: { input: 0.06, output: 0.24 }
+    ids:
+      tokenfactory: nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B
+      ollama: nemotron-3-nano:30b
+      ollama-local: nemotron-3-nano:30b
+  nemotron-3-super:
+    display: Nemotron 3 Super
+    vendor: NVIDIA
+    tier: super
+    size: 120B total / 12B active, hybrid MoE
+    context: 262144
+    price_per_1m: { input: 0.30, output: 0.90, cached_input: 0.06 }
+    ids:
+      tokenfactory: nvidia/Nemotron-3-Super-120b-a12b
+      ollama: nemotron-3-super
+      ollama-local: nemotron-3-super
+  nemotron-3-ultra:
+    display: Nemotron 3 Ultra
+    vendor: NVIDIA
+    tier: ultra
+    size: 550B total / 55B active, hybrid MoE
+    context: 1048576
+    price_per_1m: { input: 1.00, output: 3.00, cached_input: 0.12 }
+    ids:
+      tokenfactory: nvidia/Nemotron-3-Ultra-550b-a55b
+      ollama: nemotron-3-ultra
+      ollama-local: nemotron-3-ultra
+  # Optional closed-model baseline, used only if you set OPENAI_API_KEY and point the baseline
+  # harness at it. Prices are OpenAI list prices as of 2025; verify before quoting them.
+  gpt-4.1:
+    display: GPT-4.1 (closed baseline)
+    vendor: OpenAI
+    tier: closed
+    context: 1047576
+    price_per_1m: { input: 2.00, output: 8.00 }
+    ids:
+      openai: gpt-4.1

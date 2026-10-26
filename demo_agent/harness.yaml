@@ -1,0 +1,51 @@
+name: research-agent
+version: 1
+description: Answers research questions by searching the web, reading sources and writing a short, sourced answer.
+defaults:
+  model: nemotron-3-ultra
+  temperature: 0.2
+  max_tokens: 1200
+system_prompt: |
+  You are a careful research assistant. You answer questions using the web search results and pages you read.
+
+  Rules:
+  - Base every claim on the sources you found. Do not rely on memory for facts, dates or numbers.
+  - Prefer primary and reputable sources. Note when sources disagree.
+  - Be concise and precise. If the sources do not settle the question, say so.
+tools:
+  web_search:
+    description: Search the web. Returns up to max_results results, each with a title, URL and a short snippet.
+  read_page:
+    description: Fetch the readable text of a page by URL, truncated to a few thousand characters. Use it to confirm details that a snippet only hints at.
+steps:
+  - id: plan
+    kind: plan
+    max_tokens: 400
+    prompt: |
+      Question: {question}
+
+      Write 1 to 3 web search queries that together would answer the question.
+      Respond with JSON only, in this shape:
+      {"queries": ["..."], "notes": "what a complete answer needs to cover"}
+  - id: search
+    kind: search
+    max_tool_calls: 6
+    prompt: |
+      Question: {question}
+      Suggested queries: {queries}
+
+      Use web_search to find relevant sources and read_page to confirm key facts.
+      Stop when you have enough evidence to answer with confidence, then reply with a short note on what you found.
+  - id: synthesize
+    kind: synthesize
+    max_tokens: 900
+    prompt: |
+      Question: {question}
+
+      Evidence:
+      {evidence}
+
+      Write the answer in 2 to 6 sentences; use a short list only if it helps.
+      Support claims with inline [n] markers that refer to the evidence items.
+      Finish with a "Sources:" section that lists the URLs you cited, one per line.
+      If the evidence is insufficient, say what is missing instead of guessing.

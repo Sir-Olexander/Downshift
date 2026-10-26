@@ -1,0 +1,31 @@
+[project]
+name = "downshift-workspace"
+version = "0.1.0"
+description = "Downshift: find out whether cheaper Nemotron models can run your agent, with a PR ready to merge."
+requires-python = ">=3.11"
+dependencies = [
+  "downshift",
+  "downshift-server",
+  "downshift-demo-agent",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "ruff>=0.6",
+]
+
+[tool.uv.workspace]
+members = ["sdk", "server", "demo_agent"]
+
+[tool.uv.sources]
+downshift = { workspace = true }
+downshift-server = { workspace = true }
+downshift-demo-agent = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["sdk/tests", "server/tests", "demo_agent/tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

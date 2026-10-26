@@ -1,0 +1,32 @@
+# Temp / scratch
+.temp/
+
+# Secrets: never commit environment files (only the templates)
+.env
+.env.*
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+
+# Local data written by the server and the SDK
+/server/data/
+.downshift/
+
+# Node / Next.js
+node_modules/
+/web/.next/
+/web/out/
+/web/next-env.d.ts
+*.tsbuildinfo
+
+# OS / editors
+.DS_Store
+*.log
