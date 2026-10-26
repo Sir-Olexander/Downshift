@@ -172,7 +172,7 @@ class Engine:
                 r_pct = base_pct + per_target * (0.1 + 0.6 * (round_no - 1) / rounds)
                 self._progress(oid, f"optimize:{target}", r_pct, f"{spec['label']}: round {round_no}/{rounds}, {cfg['rewrite_model']} is rewriting the harness")
                 try:
-                    proposal = propose_harness(llm, cfg["rewrite_model"], current=current, target=target, allowed_models=spec["allowed"], analysis_text=analysis_text, guidance=guidance, previous=previous, round_no=round_no, table=self.table, provider=llm.provider_name)
+                    proposal = propose_harness(llm, cfg["rewrite_model"], current=current, target=target, allowed_models=spec["allowed"], analysis_text=analysis_text, guidance=guidance, previous=previous, round_no=round_no, table=self.table, provider=llm.provider_name, base_version=baseline_harness.version)
                 except Exception as e:
                     self._event(oid, f"{spec['label']} round {round_no}: rewrite failed ({e}).", phase=f"optimize:{target}", level="warn")
                     continue

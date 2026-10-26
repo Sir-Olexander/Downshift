@@ -8,6 +8,8 @@ from typing import Any
 
 import httpx
 
+from downshift import Harness
+
 from .settings import Settings
 
 API = "https://api.github.com"
@@ -60,6 +62,10 @@ def pr_payload(option: dict[str, Any], optimization: dict[str, Any], settings: S
     base = summary.get("baseline") or {}
     label = option.get("label", key)
     harness = option.get("harness_json") or {}
+    try:
+        models_used = ", ".join(Harness.from_dict(harness).models_used())
+    except Exception:
+        models_used = harness.get("defaults", {}).get("model", "")
     branch = f"downshift/{key}-{optimization['id'].split('_')[-1][:6]}"
     cost_txt = f"cost {abs(d.get('cost_pct') or 0):.0f}% {'lower' if (d.get('cost_pct') or 0) <= 0 else 'higher'}"
     title = f"Run the research agent on {label}: {cost_txt}, task success {base.get('success_rate', 0):.0f}% → {m.get('success_rate', 0):.0f}%"
@@ -67,7 +73,7 @@ def pr_payload(option: dict[str, Any], optimization: dict[str, Any], settings: S
     results_url = f"{settings.public_web_url.rstrip('/')}/optimizations/{optimization['id']}"
     body = f"""## What this changes
 
-This PR replaces `{settings.harness_path}` with a version tuned for **{label}** (models: {', '.join(option.get('harness_json', {}).get('defaults', {}).get('model', '') and [s.get('model') or harness.get('defaults', {}).get('model') for s in harness.get('steps', []) if s.get('enabled', True)] or [])}).
+This PR replaces `{settings.harness_path}` with a version tuned for **{label}** (models: {models_used}).
 No code changes: the agent loads the harness at runtime.
 
 {changelog}

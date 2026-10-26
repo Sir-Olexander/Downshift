@@ -11,6 +11,7 @@ export function seriesColor(key: string): string {
 
 export function money(x: number | null | undefined, digits = 4): string {
   if (x === null || x === undefined || Number.isNaN(x)) return "–";
+  if (x > 0 && x < 0.001) return `$${x.toFixed(5)}`;
   return `$${x.toFixed(digits)}`;
 }
 

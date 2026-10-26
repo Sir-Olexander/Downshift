@@ -143,8 +143,10 @@ th.num { font-family: var(--font-sans); }
 .results tr.link { cursor: pointer; }
 .results tr.link:hover td { background: var(--surface-2); }
 .results .opt { display: flex; align-items: center; gap: 10px; }
-.results .opt .name { font-weight: 500; }
-.results .opt .models { color: var(--ink-3); font-size: 12px; font-family: var(--font-mono); }
+.results .opt .name { font-weight: 500; white-space: nowrap; }
+.results .opt .models { color: var(--ink-3); font-size: 12px; font-family: var(--font-mono); white-space: nowrap; }
+.results td.num .delta { display: block; margin-top: 2px; }
+.results td { padding-top: 12px; padding-bottom: 12px; }
 .delta { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
 .delta.good { color: var(--good); }
 .delta.bad { color: var(--bad); }

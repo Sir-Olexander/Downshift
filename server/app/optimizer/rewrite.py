@@ -122,7 +122,7 @@ def _check_target(h: Harness, target: str, allowed: list[str]) -> None:
             raise HarnessError(f"every step must use {allowed[0]} for this target, got {used}")
 
 
-def propose_harness(llm: LLM, model: str, *, current: Harness, target: str, allowed_models: list[str], analysis_text: str, guidance: str, previous: list[dict[str, Any]], round_no: int, table: ModelTable, provider: str) -> dict[str, Any]:
+def propose_harness(llm: LLM, model: str, *, current: Harness, target: str, allowed_models: list[str], analysis_text: str, guidance: str, previous: list[dict[str, Any]], round_no: int, table: ModelTable, provider: str, base_version: str | int | None = None) -> dict[str, Any]:
     target_instructions, model_rule = _target_instructions(target, allowed_models)
     user = USER.format(
         target_instructions=target_instructions, guidance=guidance, harness=current.to_yaml(), analysis=analysis_text,
@@ -149,7 +149,8 @@ def propose_harness(llm: LLM, model: str, *, current: Harness, target: str, allo
             msgs.append({"role": "assistant", "content": res.content})
             msgs.append({"role": "user", "content": f"That harness is invalid: {e}\nReturn the corrected complete harness in one ```yaml block, then the Rationale."})
             continue
-        version = f"{current.version}-{target}-r{round_no}" if round_no else f"{current.version}-{target}"
+        base = base_version if base_version is not None else current.version
+        version = f"{base}-{target}-r{round_no}" if round_no else f"{base}-{target}"
         h = h.copy_with(version=version)
         return {"harness": h, "rationale": _extract_rationale(res.content), "usage": usage, "raw": res.content[:20000]}
     raise HarnessError(f"the rewriter did not produce a valid harness after {usage['attempts']} attempts: {last_error}")

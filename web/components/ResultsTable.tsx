@@ -16,7 +16,6 @@ export function ResultsTable({ baseline, rows, recommended, optimizationId }: { 
           <th className="num">Quality</th>
           <th className="num">Cost / run</th>
           <th className="num">Latency</th>
-          <th>vs baseline</th>
         </tr>
       </thead>
       <tbody>
@@ -30,11 +29,16 @@ export function ResultsTable({ baseline, rows, recommended, optimizationId }: { 
               </div>
             </div>
           </td>
-          <td className="num">{pct(baseline.success_rate)}</td>
-          <td className="num">{baseline.quality ?? "–"}</td>
+          <td className="num">
+            {pct(baseline.success_rate)}
+            <div className="delta flat">reference</div>
+          </td>
+          <td className="num">
+            {baseline.quality ?? "–"}
+            <div className="delta flat">n={baseline.n}</div>
+          </td>
           <td className="num">{money(baseline.cost_per_run)}</td>
           <td className="num">{seconds(baseline.latency_ms)}</td>
-          <td className="muted small">reference, n={baseline.n}</td>
         </tr>
         {rows.map((r) => (
           <tr key={r.key}>
@@ -44,6 +48,9 @@ export function ResultsTable({ baseline, rows, recommended, optimizationId }: { 
                 <div>
                   <div className="name">
                     <Link href={`/optimizations/${optimizationId}/options/${r.key}`}>{r.label}</Link>
+                  </div>
+                  <div className="models">
+                    {r.models_used.map(shortModel).join(" + ")}
                     {r.key === recommended && (
                       <>
                         {" "}
@@ -57,20 +64,31 @@ export function ResultsTable({ baseline, rows, recommended, optimizationId }: { 
                       </>
                     )}
                   </div>
-                  <div className="models">{r.models_used.map(shortModel).join(" + ")}</div>
                 </div>
               </div>
             </td>
-            <td className="num">{pct(r.metrics.success_rate)}</td>
-            <td className="num">{r.metrics.quality ?? "–"}</td>
-            <td className="num">{money(r.metrics.cost_per_run)}</td>
-            <td className="num">{seconds(r.metrics.latency_ms)}</td>
-            <td>
-              <div className="row" style={{ gap: 10 }}>
+            <td className="num">
+              {pct(r.metrics.success_rate)}
+              <div>
                 <Delta v={r.deltas.success_rate_pp} upGood suffix=" pp" />
-                <Delta v={r.deltas.quality_pts} upGood suffix=" q" />
-                <Delta v={r.deltas.cost_pct} upGood={false} suffix="% cost" />
-                <Delta v={r.deltas.latency_pct} upGood={false} suffix="% time" />
+              </div>
+            </td>
+            <td className="num">
+              {r.metrics.quality ?? "–"}
+              <div>
+                <Delta v={r.deltas.quality_pts} upGood digits={1} />
+              </div>
+            </td>
+            <td className="num">
+              {money(r.metrics.cost_per_run)}
+              <div>
+                <Delta v={r.deltas.cost_pct} upGood={false} suffix="%" />
+              </div>
+            </td>
+            <td className="num">
+              {seconds(r.metrics.latency_ms)}
+              <div>
+                <Delta v={r.deltas.latency_pct} upGood={false} suffix="%" />
               </div>
             </td>
           </tr>
