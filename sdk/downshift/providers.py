@@ -31,9 +31,18 @@ RATE_LIMIT_MAX_WAIT_S = float(os.environ.get("DOWNSHIFT_RATE_LIMIT_MAX_WAIT_S", 
 _rate_limit_listeners: list[Callable[[str, float], None]] = []
 
 
-def on_rate_limit(listener: Callable[[str, float], None]) -> None:
-    """Register a callback (message, seconds waited so far) invoked while a call waits on a 429."""
+def on_rate_limit(listener: Callable[[str, float], None]) -> Callable[[], None]:
+    """Register a callback (message, seconds waited so far) invoked while a call waits on a 429.
+    Returns a function that removes the listener again."""
     _rate_limit_listeners.append(listener)
+
+    def remove() -> None:
+        try:
+            _rate_limit_listeners.remove(listener)
+        except ValueError:
+            pass
+
+    return remove
 
 
 def _notify_rate_limit(message: str, waited: float) -> None:

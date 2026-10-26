@@ -70,13 +70,15 @@ class Engine:
             short = message.split("{")[0][:60] + ("usage limit reached" if "usage limit" in message else "too many concurrent requests" if "concurrent" in message else "rate limited")
             self.db.add_event(optimization_id, f"Provider rate limit: {short}. Waiting; the run resumes on its own (waited {int(waited)}s on this call).", level="warn", phase="waiting")
 
-        on_rate_limit(rate_limited)
+        remove_listener = on_rate_limit(rate_limited)
         try:
             self._run(opt)
         except Exception as e:
             err = f"{type(e).__name__}: {e}"
             self.db.add_event(optimization_id, f"Optimization failed: {err}", level="error", phase="failed", data={"traceback": traceback.format_exc()[-4000:]})
             self.db.update_optimization(optimization_id, status="failed", error=err[:2000], finished_at=now_iso(), progress_json={"phase": "failed", "percent": 100, "detail": err[:300]})
+        finally:
+            remove_listener()
 
     # ---- helpers --------------------------------------------------------------------------------
     def _progress(self, oid: str, phase: str, percent: float, detail: str = "", **extra: Any) -> None:
