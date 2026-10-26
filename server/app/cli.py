@@ -34,10 +34,20 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("id")
     r = sub.add_parser("resummarize", help="recompute checks, metrics and the summary of a finished optimization from its stored replays")
     r.add_argument("id")
+    rd = sub.add_parser("redo", help="replay the held-out tasks of one option whose replays failed or are missing (e.g. after a provider outage), then rebuild the summary")
+    rd.add_argument("id")
+    rd.add_argument("option", help="option key: super | nano | mix")
+    rd.add_argument("--all", action="store_true", help="redo every held-out replay of the option, not only the failed ones")
     args = ap.parse_args(argv)
 
     settings = Settings.from_env()
     db = Database(settings.db_path)
+    if args.cmd == "redo":
+        out = Engine(db, settings).redo_test_replays(args.id, args.option, only_failed=not args.all)
+        print(f"redone {out['redone']} replays")
+        if out.get("summary"):
+            print(json.dumps(out["summary"].get("headline"), indent=1))
+        return 0
     if args.cmd == "resummarize":
         summary = Engine(db, settings).resummarize(args.id)
         print(json.dumps({k: summary.get(k) for k in ("headline", "baseline", "bar")}, indent=1))

@@ -239,6 +239,15 @@ class Database:
             where.append("round = ?"); args.append(round_)
         return self._all(f"SELECT {cols} FROM replays WHERE {' AND '.join(where)} ORDER BY task_id", tuple(args))
 
+    def delete_replays(self, option_id: str, split: str, task_ids: list[str]) -> int:
+        if not task_ids:
+            return 0
+        marks = ", ".join("?" for _ in task_ids)
+        with self._lock:
+            cur = self._conn.execute(f"DELETE FROM replays WHERE option_id = ? AND split = ? AND task_id IN ({marks})", [option_id, split, *task_ids])
+            self._conn.commit()
+            return int(cur.rowcount)
+
     def find_replay(self, option_id: str, task_id: str, split: str) -> dict[str, Any] | None:
         return self._one("SELECT * FROM replays WHERE option_id = ? AND task_id = ? AND split = ? ORDER BY round DESC LIMIT 1", (option_id, task_id, split))
 

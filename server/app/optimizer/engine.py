@@ -254,7 +254,53 @@ class Engine:
         self._progress(oid, "done", 100, summary.get("headline", {}).get("text", "done"))
         self._event(oid, "Done. " + summary.get("headline", {}).get("text", ""), phase="done", data={"spent_usd": round(spent["usd"], 4)})
 
-    def resummarize(self, optimization_id: str) -> dict[str, Any]:
+    def redo_test_replays(self, optimization_id: str, option_key: str, *, only_failed: bool = True) -> dict[str, Any]:
+        """Replay (again) the held-out tasks of one option whose replay is missing, errored or unjudged,
+        for example after a provider outage, then rebuild the summary. Successful replays are kept."""
+        opt = self.db.get_optimization(optimization_id)
+        if not opt:
+            raise RuntimeError("optimization not found")
+        option = self.db.get_option_by_key(optimization_id, option_key)
+        if not option or not option.get("harness_json"):
+            raise RuntimeError(f"option '{option_key}' has no stored harness")
+        cfg = {**default_config(self.settings), **(opt.get("config_json") or {})}
+        harness = Harness.from_dict(option["harness_json"])
+        test_ids = (opt.get("split_json") or {}).get("test") or []
+        runs = {r["task_id"]: r["record_json"] for r in self.db.latest_runs_per_task(opt["project_id"], tag=cfg.get("tag"))}
+        todo: list[str] = []
+        for tid in test_ids:
+            rep = self.db.find_replay(option["id"], tid, "test")
+            judge = (rep or {}).get("judge_json") or {}
+            failed = rep is None or rep.get("status") != "ok" or not judge or "error" in judge
+            if (failed or not only_failed) and tid in runs:
+                todo.append(tid)
+        if not todo:
+            return {"redone": 0, "summary": opt.get("summary_json")}
+        self.db.delete_replays(option["id"], "test", todo)
+        llm = LLM(self.settings.provider, table=self.table)
+        sdk = Downshift(transport=NullTransport(), llm=llm, table=self.table, project=opt["project_id"])
+        tools = SearchTools()
+        spent = {"usd": 0.0}
+        lock = threading.Lock()
+
+        def add_cost(x: float | None) -> None:
+            with lock:
+                spent["usd"] += float(x or 0.0)
+
+        self._event(optimization_id, f"Redoing {len(todo)} held-out replays for {option['label']} ({', '.join(todo)}).", phase=f"redo:{option_key}")
+        self._replay_and_score(optimization_id, option["id"], harness, [runs[t] for t in todo], "test", 0, sdk, tools, llm, cfg, add_cost, lambda d, n: self._progress(optimization_id, f"redo:{option_key}", 90 + 9 * d / max(1, n), f"{option['label']}: redoing held-out replays {d}/{n}"))
+        metrics = dict(option.get("metrics_json") or {})
+        if "best_round" not in metrics and option.get("rounds_json"):
+            best = max(option["rounds_json"], key=lambda r: r.get("objective", 0))
+            metrics.update({"best_round": best.get("round"), "objective": best.get("objective")})
+        self.db.update_option(option["id"], status="done", metrics_json=metrics)
+        if opt.get("status") != "done":
+            self.db.update_optimization(optimization_id, status="done", finished_at=now_iso(), error=None)
+        summary = self.resummarize(optimization_id, extra_spent_usd=spent["usd"])
+        self._progress(optimization_id, "done", 100, summary.get("headline", {}).get("text", "done"))
+        return {"redone": len(todo), "summary": summary}
+
+    def resummarize(self, optimization_id: str, *, extra_spent_usd: float = 0.0) -> dict[str, Any]:
         """Recompute automatic checks, per-run metrics, option aggregates and the summary from the stored
         replays. Judge verdicts are kept as they are. Use after a fix to the checks or the bar."""
         opt = self.db.get_optimization(optimization_id)
@@ -306,7 +352,7 @@ class Engine:
             self.db.update_option(o["option_id"], metrics_json=o["metrics"])
         old = opt.get("summary_json") or {}
         analysis = {"recommendations": (old.get("analysis") or {}).get("recommendations"), "per_step": (old.get("analysis") or {}).get("per_step")}
-        summary = self._summary(baseline_agg, option_results, len(split.get("opt") or []), len(split.get("test") or []), float(old.get("spent_usd") or 0.0), cfg, old.get("search_provider") or "", old.get("provider") or "", analysis)
+        summary = self._summary(baseline_agg, option_results, len(split.get("opt") or []), len(split.get("test") or []), float(old.get("spent_usd") or 0.0) + float(extra_spent_usd or 0.0), cfg, old.get("search_provider") or SearchTools().provider, old.get("provider") or (self.settings.provider or "ollama"), analysis)
         self.db.update_optimization(optimization_id, summary_json=summary)
         self.db.add_event(optimization_id, "Recomputed checks, metrics and summary from the stored replays (judge verdicts unchanged). " + summary["headline"]["text"], phase="resummarize")
         return summary

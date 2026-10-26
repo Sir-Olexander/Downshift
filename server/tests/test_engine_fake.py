@@ -136,6 +136,18 @@ def test_engine_runs_end_to_end(tmp_path, monkeypatch):
     assert rec["totals"]["tool_calls_recorded"] >= 1 and rec["meta"]["mode"] == "replay"
     phases = {e["phase"] for e in db.list_events(opt["id"])}
     assert {"split", "analyze", "done"} <= phases
+    # redo: a missing and an errored held-out replay are redone, the good one is kept
+    engine = Engine(db, settings)
+    kept = test_replays[0]
+    db.delete_replays(mix["id"], "test", [test_replays[1]["task_id"]])
+    db.update_replay(test_replays[2]["id"], status="error", judge_json={"error": "LLMError: 429"})
+    out = engine.redo_test_replays(opt["id"], "mix")
+    assert out["redone"] == 2
+    after = db.list_replays(mix["id"], split="test")
+    assert len(after) == 3 and all(r["status"] == "ok" and "error" not in (r["judge_json"] or {}) for r in after)
+    assert any(r["id"] == kept["id"] for r in after)
+    assert engine.redo_test_replays(opt["id"], "mix")["redone"] == 0
+    assert db.get_optimization(opt["id"])["summary_json"]["headline"]["text"]
     # seed round trip keeps everything
     out = tmp_path / "seed.json.gz"
     db.export_to_file(out)
