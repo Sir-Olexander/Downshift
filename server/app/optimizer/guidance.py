@@ -41,15 +41,23 @@ GENERAL_TIPS = (
 
 
 def lookup_guidance(tools: Any, model_display: str, max_results: int = 4) -> list[dict[str, Any]]:
-    """Look up prompting guidance for the target model (Tavily when configured, Wikipedia otherwise)."""
-    try:
-        res = tools.web_search(f"{model_display} prompting guide best practices tool calling reasoning", max_results=max_results)
-    except Exception:
-        return []
-    out = []
-    for r in (res or {}).get("results") or []:
-        out.append({"title": r.get("title", ""), "url": r.get("url", ""), "snippet": (r.get("snippet") or "")[:400], "provider": res.get("provider")})
-    return out
+    """Look up prompting guidance for the target model (Tavily when configured, Wikipedia otherwise).
+
+    Falls back to broader queries, since an encyclopedia rarely has a page for a prompting guide."""
+    queries = [
+        f"{model_display} prompting guide best practices tool calling reasoning",
+        f"{model_display} language model",
+        "Nemotron NVIDIA language model",
+    ]
+    for q in queries:
+        try:
+            res = tools.web_search(q, max_results=max_results)
+        except Exception:
+            continue
+        results = (res or {}).get("results") or []
+        if results:
+            return [{"title": r.get("title", ""), "url": r.get("url", ""), "snippet": (r.get("snippet") or "")[:400], "provider": res.get("provider"), "query": q} for r in results]
+    return []
 
 
 def guidance_text(target_models: list[str], table: ModelTable, search_results: list[dict[str, Any]]) -> str:

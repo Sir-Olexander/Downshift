@@ -15,21 +15,26 @@ from typing import Any, Callable
 from downshift import LLM
 
 SYSTEM = """You label the steps of a recorded run of an LLM research agent so an optimizer can decide
-which steps a smaller, cheaper model could handle. Be realistic: short, mechanical steps (writing search
-queries, choosing a tool call) are usually easy; writing a correct, complete, well-cited answer from messy
-evidence is harder. Respond with JSON only."""
+which steps a smaller, cheaper model could handle. Use this calibrated scale:
+- easy: a small model (about 3B active parameters) does this reliably. Examples: writing 1-3 search
+  queries for a clear question, choosing which tool to call next, pulling one fact out of a page.
+- medium: a mid-size model (about 12B active) does this reliably. Examples: a short answer from two or
+  three agreeing sources, a simple comparison, deciding when enough evidence has been gathered.
+- hard: only the strongest model does this reliably. Examples: a multi-part synthesis that must cite
+  several sources precisely, reconciling sources that disagree, subtle multi-step reasoning.
+Set needs_strong_model to true only for hard steps. Judge each step on what it actually had to do in this
+run, not on the model that happened to run it. Respond with JSON only."""
 
 USER = """Question: {question}
-Question type guess and overall difficulty are yours to decide.
 
-Recorded steps (in order):
+Recorded steps (in order), with the step ids you must use: {step_ids}
 {steps}
 
 Respond with exactly this JSON:
 {{"question_type": "fact|explain|compare|multi_hop", "question_difficulty": "easy|medium|hard",
- "steps": [{{"step": "<step id>", "kind": "search|read|synthesize|plan|verify", "difficulty": "easy|medium|hard",
-            "needs_strong_model": true, "reason": "short reason"}}]}}
-Include one entry per distinct step id."""
+ "steps": [{{"step": "<one of the step ids above>", "kind": "plan|search|synthesize|verify", "difficulty": "easy|medium|hard",
+            "needs_strong_model": false, "reason": "short reason"}}]}}
+Include exactly one entry per step id."""
 
 
 def _extract_json(text: str) -> dict[str, Any] | None:
@@ -73,15 +78,19 @@ def _summarise_steps(record: dict[str, Any]) -> str:
 
 
 def label_run(llm: LLM, model: str, record: dict[str, Any]) -> dict[str, Any]:
+    step_ids: list[str] = []
+    for e in record.get("events") or []:
+        if e.get("type") == "model_call" and e.get("step") and e["step"] not in step_ids:
+            step_ids.append(e["step"])
     msgs = [
         {"role": "system", "content": SYSTEM},
-        {"role": "user", "content": USER.format(question=record.get("input", ""), steps=_summarise_steps(record))},
+        {"role": "user", "content": USER.format(question=record.get("input", ""), step_ids=", ".join(step_ids) or "(none)", steps=_summarise_steps(record))},
     ]
     res = llm.chat(model, msgs, temperature=0.0, max_tokens=700, reasoning="off")
     data = _extract_json(res.content) or {}
     steps = []
     for s in data.get("steps") or []:
-        if not isinstance(s, dict):
+        if not isinstance(s, dict) or str(s.get("step", "")) not in step_ids:
             continue
         steps.append({
             "step": str(s.get("step", "")),
