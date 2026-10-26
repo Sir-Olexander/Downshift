@@ -59,7 +59,13 @@ uv run python demo_agent/record_baseline.py --concurrency 3
 uv run python -m app.cli optimize --targets super,nano,mix --rounds 2 --sample 10
 ```
 
-Tests: `uv run pytest` (SDK, optimizer units, API).
+If a run is interrupted (provider outage, usage limit), nothing is lost: every round's harness and every
+replay are stored as they happen. `uv run python -m app.cli redo <optimization id> mix` replays only the
+held-out tasks that failed or are missing for that option and rebuilds the summary;
+`uv run python -m app.cli resummarize <optimization id>` recomputes checks, metrics and the summary from
+the stored replays without spending tokens (for example after a fix to the automatic checks).
+
+Tests: `uv run pytest` (SDK, optimizer units, API, a scripted end-to-end optimization).
 
 ## Repo layout
 

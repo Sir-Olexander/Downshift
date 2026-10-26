@@ -49,7 +49,7 @@ def _option_public(o: dict[str, Any], *, with_harness: bool = False) -> dict[str
     h = o.get("harness_json") or {}
     out = {
         "id": o["id"], "key": o["key"], "label": o["label"], "target": o["target"], "status": o["status"], "position": o["position"],
-        "metrics": o.get("metrics_json"), "rounds": o.get("rounds_json") or [], "rationale": o.get("rationale"),
+        "metrics": o.get("metrics_json"), "rounds": [{k: v for k, v in r.items() if k != "harness"} for r in (o.get("rounds_json") or [])], "rationale": o.get("rationale"),
         "models_used": Harness.from_dict(h).models_used() if h else [], "changelog": h.get("changelog") or [], "created_at": o["created_at"],
     }
     if with_harness:

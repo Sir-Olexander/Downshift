@@ -148,6 +148,17 @@ def test_engine_runs_end_to_end(tmp_path, monkeypatch):
     assert any(r["id"] == kept["id"] for r in after)
     assert engine.redo_test_replays(opt["id"], "mix")["redone"] == 0
     assert db.get_optimization(opt["id"])["summary_json"]["headline"]["text"]
+    # an option interrupted before its held-out pass: harness recovered from the best stored round
+    assert all(r.get("harness") for r in mix["rounds_json"])
+    nano = db.get_option_by_key(opt["id"], "nano")
+    db.update_option(nano["id"], status="optimizing", harness_json=None, harness_yaml=None, metrics_json=None)
+    db.delete_replays(nano["id"], "test", [r["task_id"] for r in db.list_replays(nano["id"], split="test")])
+    db.update_optimization(opt["id"], status="running", summary_json=None)
+    out = engine.redo_test_replays(opt["id"], "nano")
+    nano = db.get_option_by_key(opt["id"], "nano")
+    assert out["redone"] == 3 and nano["status"] == "done" and nano["harness_json"] and nano["metrics_json"]["best_round"]
+    final = db.get_optimization(opt["id"])
+    assert final["status"] == "done" and final["summary_json"]["headline"]["text"]
     # seed round trip keeps everything
     out = tmp_path / "seed.json.gz"
     db.export_to_file(out)

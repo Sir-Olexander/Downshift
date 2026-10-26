@@ -205,7 +205,7 @@ class Engine:
                 agg = aggregate([x["metrics"] for x in items])
                 base_agg = aggregate([x["baseline_metrics"] for x in items])
                 score = objective(agg, base_agg)
-                entry = {"round": round_no, "fingerprint": cand.fingerprint(), "models_used": cand.models_used(), "metrics": agg, "baseline_metrics": base_agg, "objective": score, "changelog": cand.changelog, "rationale": proposal["rationale"], "rewrite_usage": proposal["usage"], "worst_examples": self._worst_examples(items), "n": len(items)}
+                entry = {"round": round_no, "fingerprint": cand.fingerprint(), "models_used": cand.models_used(), "metrics": agg, "baseline_metrics": base_agg, "objective": score, "changelog": cand.changelog, "rationale": proposal["rationale"], "rewrite_usage": proposal["usage"], "worst_examples": self._worst_examples(items), "n": len(items), "harness": cand.to_dict()}
                 rounds_log.append(entry)
                 self.db.update_option(option["id"], rounds_json=rounds_log)
                 self._event(oid, f"{spec['label']} round {round_no}: success {agg.get('success_rate')}% vs baseline {base_agg.get('success_rate')}%, quality {agg.get('quality')} vs {base_agg.get('quality')}, cost ${agg.get('cost_per_run')} vs ${base_agg.get('cost_per_run')} per run (optimization sample, n={len(items)}).", phase=f"optimize:{target}", data={"metrics": agg, "baseline": base_agg, "objective": score})
@@ -220,6 +220,8 @@ class Engine:
                 continue
 
             # held-out evaluation ------------------------------------------------------------------
+            # persist the chosen harness first, so an interrupted run can be resumed with `app.cli redo`
+            self.db.update_option(option["id"], status="testing", harness_json=best["harness"].to_dict(), harness_yaml=best["harness"].to_yaml(), rationale=best["rationale"], metrics_json={"best_round": best["round"], "objective": best["score"]})
             t_pct = base_pct + per_target * 0.72
             self._progress(oid, f"test:{target}", t_pct, f"{spec['label']}: evaluating round-{best['round']} harness on {len(test_set)} held-out runs")
             def on_test_progress(d: int, t: int, *, target: str = target, t_pct: float = t_pct, label: str = spec["label"]) -> None:
@@ -261,8 +263,17 @@ class Engine:
         if not opt:
             raise RuntimeError("optimization not found")
         option = self.db.get_option_by_key(optimization_id, option_key)
-        if not option or not option.get("harness_json"):
-            raise RuntimeError(f"option '{option_key}' has no stored harness")
+        if not option:
+            raise RuntimeError(f"option '{option_key}' not found")
+        if not option.get("harness_json"):
+            rounds = [r for r in (option.get("rounds_json") or []) if r.get("harness")]
+            if not rounds:
+                raise RuntimeError(f"option '{option_key}' has no stored harness and no completed round to recover one from")
+            best = max(rounds, key=lambda r: r.get("objective", 0))
+            recovered = Harness.from_dict(best["harness"])
+            self.db.update_option(option["id"], harness_json=recovered.to_dict(), harness_yaml=recovered.to_yaml(), rationale=best.get("rationale"), metrics_json={"best_round": best.get("round"), "objective": best.get("objective")})
+            option = self.db.get_option(option["id"]) or option
+            self._event(optimization_id, f"Recovered the round-{best.get('round')} harness for {option['label']} from the stored rounds.", phase=f"redo:{option_key}")
         cfg = {**default_config(self.settings), **(opt.get("config_json") or {})}
         harness = Harness.from_dict(option["harness_json"])
         test_ids = (opt.get("split_json") or {}).get("test") or []
