@@ -1,0 +1,291 @@
+"""The optimization engine: split, analyze, rewrite, replay, score, report. One call per optimization."""
+
+from __future__ import annotations
+
+import random
+import threading
+import time
+import traceback
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any
+
+from downshift import LLM, Downshift, Harness, NullTransport, default_table
+from research_agent.tools import SearchTools
+
+from ..db import Database, now_iso
+from ..settings import Settings
+from .analyze import analyze_runs
+from .guidance import guidance_text, lookup_guidance
+from .judge import auto_checks, judge_pair
+from .metrics import aggregate, baseline_run_metrics, deltas, meets_bar, objective, replay_metrics
+from .replay import replay_many
+from .rewrite import propose_harness
+from .split import split_runs
+
+TARGETS: dict[str, dict[str, Any]] = {
+    "super": {"label": "Nemotron 3 Super", "allowed": ["nemotron-3-super"], "lookup": "NVIDIA Nemotron 3 Super"},
+    "nano": {"label": "Nemotron 3 Nano", "allowed": ["nemotron-3-nano"], "lookup": "NVIDIA Nemotron 3 Nano"},
+    "mix": {"label": "Per-step mix", "allowed": ["nemotron-3-nano", "nemotron-3-super", "nemotron-3-ultra"], "lookup": "NVIDIA Nemotron 3 Nano"},
+}
+BASELINE_LABEL = "Baseline · Nemotron 3 Ultra"
+
+
+def default_config(settings: Settings) -> dict[str, Any]:
+    return {
+        "targets": list(settings.targets),
+        "rounds": settings.opt_rounds,
+        "sample_size": settings.opt_sample_size,
+        "test_fraction": settings.test_fraction,
+        "concurrency": settings.opt_concurrency,
+        "max_cost_usd": 6.0,
+        "seed": 42,
+        "judge_model": settings.judge_model,
+        "analysis_model": settings.analysis_model,
+        "rewrite_model": settings.rewrite_model,
+        "tag": None,
+    }
+
+
+class Engine:
+    def __init__(self, db: Database, settings: Settings):
+        self.db = db
+        self.settings = settings
+        self.table = default_table()
+
+    # ---- entry point --------------------------------------------------------------------------
+    def run(self, optimization_id: str) -> None:
+        opt = self.db.get_optimization(optimization_id)
+        if not opt:
+            return
+        self.db.update_optimization(optimization_id, status="running", started_at=now_iso())
+        try:
+            self._run(opt)
+        except Exception as e:
+            err = f"{type(e).__name__}: {e}"
+            self.db.add_event(optimization_id, f"Optimization failed: {err}", level="error", phase="failed", data={"traceback": traceback.format_exc()[-4000:]})
+            self.db.update_optimization(optimization_id, status="failed", error=err[:2000], finished_at=now_iso(), progress_json={"phase": "failed", "percent": 100, "detail": err[:300]})
+
+    # ---- helpers --------------------------------------------------------------------------------
+    def _progress(self, oid: str, phase: str, percent: float, detail: str = "", **extra: Any) -> None:
+        self.db.update_optimization(oid, progress_json={"phase": phase, "percent": round(min(100.0, max(0.0, percent)), 1), "detail": detail, "updated_at": now_iso(), **extra})
+
+    def _event(self, oid: str, message: str, *, phase: str = "", level: str = "info", data: dict[str, Any] | None = None) -> None:
+        self.db.add_event(oid, message, level=level, phase=phase, data=data)
+
+    @staticmethod
+    def _analysis_text(analysis: dict[str, Any]) -> str:
+        lines = [f"{analysis.get('runs_labelled', 0)} baseline runs labelled."]
+        for step, d in (analysis.get("per_step") or {}).items():
+            diff = ", ".join(f"{k} {v}%" for k, v in sorted((d.get("difficulty") or {}).items()))
+            lines.append(f"- step '{step}' ({d.get('kind')}): difficulty {diff or 'n/a'}; {d.get('needs_strong_model_pct')}% of runs judged to need a strong model. e.g. {'; '.join(d.get('sample_reasons') or [])[:300]}")
+        lines.append("Question types: " + ", ".join(f"{k or 'unknown'} {v}" for k, v in (analysis.get("question_types") or {}).items()))
+        lines.append("Recommendations: " + " | ".join(analysis.get("recommendations") or []))
+        return "\n".join(lines)
+
+    @staticmethod
+    def _worst_examples(items: list[dict[str, Any]], n: int = 3) -> list[dict[str, Any]]:
+        ranked = sorted(items, key=lambda x: (x["metrics"].get("success"), x["metrics"].get("quality") or 0))
+        out = []
+        for x in ranked[:n]:
+            checks = x["checks"]
+            failed = [k for k in ("answer_produced", "has_sources", "sources_from_evidence", "no_errors") if not checks.get(k)]
+            out.append({
+                "task_id": x["task_id"], "question": x["question"], "reason": (x["judge"] or {}).get("reason", ""),
+                "checks": ("failed: " + ", ".join(failed)) if failed else "all passed",
+                "answer_excerpt": ((x["record"].get("output") or {}).get("answer") or x["record"].get("error") or "")[:240],
+            })
+        return out
+
+    # ---- the pipeline ---------------------------------------------------------------------------
+    def _run(self, opt: dict[str, Any]) -> None:
+        oid = opt["id"]
+        cfg = {**default_config(self.settings), **(opt.get("config_json") or {})}
+        project_id = opt["project_id"]
+        project = self.db.get_project(project_id)
+        if not project or not project.get("harness_json"):
+            raise RuntimeError(f"project '{project_id}' has no recorded harness; record baseline runs first")
+        baseline_harness = Harness.from_dict(project["harness_json"])
+        runs = [r["record_json"] for r in self.db.latest_runs_per_task(project_id, tag=cfg.get("tag"))]
+        runs = [r for r in runs if r.get("status") == "ok" and (r.get("output") or {}).get("answer")]
+        if len(runs) < 4:
+            raise RuntimeError(f"need at least 4 successful recorded runs, found {len(runs)}")
+
+        provider = self.settings.provider
+        llm = LLM(provider, table=self.table)
+        sdk = Downshift(transport=NullTransport(), llm=llm, table=self.table, project=project_id)
+        tools = SearchTools()
+        spent = {"usd": 0.0}
+        spent_lock = threading.Lock()
+
+        def add_cost(x: float | None) -> None:
+            with spent_lock:
+                spent["usd"] += float(x or 0.0)
+
+        # 1. split -------------------------------------------------------------------------------
+        opt_set, test_set = split_runs(runs, float(cfg["test_fraction"]), int(cfg["seed"]))
+        self.db.update_optimization(oid, split_json={"opt": [r["task_id"] for r in opt_set], "test": [r["task_id"] for r in test_set], "seed": cfg["seed"], "test_fraction": cfg["test_fraction"]})
+        self._event(oid, f"Split {len(runs)} recorded runs into {len(opt_set)} for optimization and {len(test_set)} held out for testing (seed {cfg['seed']}). Results are reported on the held-out set only.", phase="split")
+        self._progress(oid, "split", 2, f"{len(opt_set)} optimization / {len(test_set)} test runs")
+        rng = random.Random(int(cfg["seed"]))
+        sample = opt_set if len(opt_set) <= int(cfg["sample_size"]) else sorted(rng.sample(opt_set, int(cfg["sample_size"])), key=lambda r: r["task_id"])
+
+        # 2. analyze with Nano ---------------------------------------------------------------------
+        self._progress(oid, "analyze", 4, f"labelling {len(opt_set)} runs with {cfg['analysis_model']}")
+        analysis = analyze_runs(
+            llm, cfg["analysis_model"], opt_set,
+            cache_get=self.db.get_labels, cache_set=self.db.set_labels, concurrency=int(cfg["concurrency"]),
+            on_progress=lambda d, t: self._progress(oid, "analyze", 4 + 8 * d / max(1, t), f"labelled {d}/{t} runs with {cfg['analysis_model']}"),
+        )
+        add_cost(analysis.get("cost_usd"))
+        analysis_text = self._analysis_text(analysis)
+        self._event(oid, f"Nemotron 3 Nano labelled {analysis.get('runs_labelled')} runs (${analysis.get('cost_usd', 0):.4f}). " + " ".join(analysis.get("recommendations") or []), phase="analyze", data={"per_step": analysis.get("per_step"), "question_types": analysis.get("question_types")})
+
+        # baseline option row ------------------------------------------------------------------------
+        baseline_option = self.db.create_option(oid, "baseline", BASELINE_LABEL, "nemotron-3-ultra", 0, baseline_harness.to_dict(), baseline_harness.to_yaml())
+        self.db.update_option(baseline_option["id"], status="done", rationale="The recorded harness, as it runs today.")
+
+        # 3. per target ----------------------------------------------------------------------------
+        targets = [t for t in cfg["targets"] if t in TARGETS] or ["super", "nano", "mix"]
+        rounds = max(1, int(cfg["rounds"]))
+        per_target = 80.0 / len(targets)
+        baseline_test_items: list[dict[str, Any]] = []
+        option_results: list[dict[str, Any]] = []
+
+        for ti, target in enumerate(targets):
+            spec = TARGETS[target]
+            base_pct = 12 + ti * per_target
+            option = self.db.create_option(oid, target, spec["label"], ",".join(spec["allowed"]), ti + 1, None, None)
+            self.db.update_option(option["id"], status="optimizing")
+            self._progress(oid, f"optimize:{target}", base_pct, f"{spec['label']}: looking up prompting guidance")
+            search_hits = lookup_guidance(tools, spec["lookup"])
+            guidance = guidance_text(spec["allowed"], self.table, search_hits)
+            self._event(oid, f"{spec['label']}: starting; {len(search_hits)} guidance results from {tools.provider}.", phase=f"optimize:{target}", data={"guidance_results": search_hits})
+
+            current = baseline_harness
+            previous: list[dict[str, Any]] = []
+            best: dict[str, Any] | None = None
+            rounds_log: list[dict[str, Any]] = []
+            for round_no in range(1, rounds + 1):
+                if spent["usd"] > float(cfg["max_cost_usd"]):
+                    self._event(oid, f"Budget cap ${cfg['max_cost_usd']} reached (${spent['usd']:.2f} spent); stopping rounds for {spec['label']}.", phase=f"optimize:{target}", level="warn")
+                    break
+                r_pct = base_pct + per_target * (0.1 + 0.6 * (round_no - 1) / rounds)
+                self._progress(oid, f"optimize:{target}", r_pct, f"{spec['label']}: round {round_no}/{rounds}, {cfg['rewrite_model']} is rewriting the harness")
+                try:
+                    proposal = propose_harness(llm, cfg["rewrite_model"], current=current, target=target, allowed_models=spec["allowed"], analysis_text=analysis_text, guidance=guidance, previous=previous, round_no=round_no, table=self.table, provider=llm.provider_name)
+                except Exception as e:
+                    self._event(oid, f"{spec['label']} round {round_no}: rewrite failed ({e}).", phase=f"optimize:{target}", level="warn")
+                    continue
+                cand: Harness = proposal["harness"]
+                add_cost(proposal["usage"].get("cost_usd"))
+                self._event(oid, f"{spec['label']} round {round_no}: proposed harness {cand.fingerprint()} using {cand.models_used()}. " + " / ".join(cand.changelog[:4]), phase=f"optimize:{target}", data={"changelog": cand.changelog, "rationale": proposal["rationale"], "fingerprint": cand.fingerprint()})
+
+                items = self._replay_and_score(oid, option["id"], cand, sample, "opt", round_no, sdk, tools, llm, cfg, add_cost, lambda d, t: self._progress(oid, f"optimize:{target}", r_pct + per_target * 0.5 * d / max(1, t) / rounds, f"{spec['label']}: round {round_no}/{rounds}, replayed and judged {d}/{t} runs"))
+                agg = aggregate([x["metrics"] for x in items])
+                base_agg = aggregate([x["baseline_metrics"] for x in items])
+                score = objective(agg, base_agg)
+                entry = {"round": round_no, "fingerprint": cand.fingerprint(), "models_used": cand.models_used(), "metrics": agg, "baseline_metrics": base_agg, "objective": score, "changelog": cand.changelog, "rationale": proposal["rationale"], "rewrite_usage": proposal["usage"], "worst_examples": self._worst_examples(items), "n": len(items)}
+                rounds_log.append(entry)
+                self.db.update_option(option["id"], rounds_json=rounds_log)
+                self._event(oid, f"{spec['label']} round {round_no}: success {agg.get('success_rate')}% vs baseline {base_agg.get('success_rate')}%, quality {agg.get('quality')} vs {base_agg.get('quality')}, cost ${agg.get('cost_per_run')} vs ${base_agg.get('cost_per_run')} per run (optimization sample, n={len(items)}).", phase=f"optimize:{target}", data={"metrics": agg, "baseline": base_agg, "objective": score})
+                previous.append({"round": round_no, "metrics": agg, "baseline_success_rate": base_agg.get("success_rate"), "baseline_quality": base_agg.get("quality"), "baseline_cost": base_agg.get("cost_per_run"), "worst_examples": entry["worst_examples"], "changelog": cand.changelog})
+                if best is None or score > best["score"]:
+                    best = {"harness": cand, "score": score, "round": round_no, "rationale": proposal["rationale"]}
+                current = best["harness"] if best else current
+
+            if best is None:
+                self.db.update_option(option["id"], status="failed", rationale="No valid harness could be produced within the budget.")
+                self._event(oid, f"{spec['label']}: no candidate produced.", phase=f"optimize:{target}", level="warn")
+                continue
+
+            # held-out evaluation ------------------------------------------------------------------
+            t_pct = base_pct + per_target * 0.72
+            self._progress(oid, f"test:{target}", t_pct, f"{spec['label']}: evaluating round-{best['round']} harness on {len(test_set)} held-out runs")
+            items = self._replay_and_score(oid, option["id"], best["harness"], test_set, "test", 0, sdk, tools, llm, cfg, add_cost, lambda d, t: self._progress(oid, f"test:{target}", t_pct + per_target * 0.26 * d / max(1, t), f"{spec['label']}: held-out evaluation {d}/{t}"))
+            agg = aggregate([x["metrics"] for x in items])
+            base_agg = aggregate([x["baseline_metrics"] for x in items])
+            baseline_test_items.extend(x["baseline_metrics"] for x in items)
+            metrics = {"test": agg, "baseline_on_test": base_agg, "deltas": deltas(agg, base_agg), "meets_bar": meets_bar(agg, base_agg), "best_round": best["round"], "objective": best["score"], "n_test": len(items)}
+            self.db.update_option(option["id"], status="done", harness_json=best["harness"].to_dict(), harness_yaml=best["harness"].to_yaml(), metrics_json=metrics, rationale=best["rationale"])
+            option_results.append({"key": target, "label": spec["label"], "metrics": metrics, "models_used": best["harness"].models_used(), "option_id": option["id"]})
+            self._event(oid, f"{spec['label']} on the held-out set (n={len(items)}): success {agg.get('success_rate')}% (baseline {base_agg.get('success_rate')}%), quality {agg.get('quality')} ({base_agg.get('quality')}), cost ${agg.get('cost_per_run')} ({base_agg.get('cost_per_run')}) per run, latency {agg.get('latency_ms')} ms ({base_agg.get('latency_ms')}).", phase=f"test:{target}", data={"metrics": metrics})
+
+        # 4. baseline metrics and summary ---------------------------------------------------------------
+        baseline_agg = aggregate(baseline_test_items)
+        if baseline_agg.get("n"):
+            baseline_agg["n"] = len({(x.get("task_id")) for x in baseline_test_items} - {None}) or len(test_set)
+        self.db.update_option(baseline_option["id"], metrics_json={"test": baseline_agg, "baseline_on_test": baseline_agg, "deltas": deltas(baseline_agg, baseline_agg), "meets_bar": True, "n_test": len(test_set)})
+        summary = self._summary(baseline_agg, option_results, len(opt_set), len(test_set), spent["usd"], cfg, tools.provider, llm.provider_name, analysis)
+        self.db.update_optimization(oid, status="done", finished_at=now_iso(), summary_json=summary)
+        self._progress(oid, "done", 100, summary.get("headline", {}).get("text", "done"))
+        self._event(oid, "Done. " + summary.get("headline", {}).get("text", ""), phase="done", data={"spent_usd": round(spent["usd"], 4)})
+
+    def _replay_and_score(self, oid: str, option_id: str, harness: Harness, records: list[dict[str, Any]], split: str, round_no: int, sdk: Downshift, tools: SearchTools, llm: LLM, cfg: dict[str, Any], add_cost: Any, on_progress: Any) -> list[dict[str, Any]]:
+        """Replay each record with the harness, run checks and the blind judge, store everything."""
+        done = {"n": 0}
+        lock = threading.Lock()
+        out: list[dict[str, Any]] = []
+        judge_model = cfg["judge_model"]
+        seed = int(cfg["seed"])
+
+        def score_one(base_rec: dict[str, Any], rec: dict[str, Any]) -> None:
+            checks = auto_checks(rec)
+            base_checks = auto_checks(base_rec)
+            judge = None
+            try:
+                judge = judge_pair(llm, judge_model, base_rec.get("input", ""), (base_rec.get("output") or {}).get("answer", ""), (rec.get("output") or {}).get("answer", ""), rng=random.Random(f"{seed}:{option_id}:{split}:{round_no}:{base_rec['task_id']}"))
+                add_cost(judge.get("cost_usd"))
+            except Exception as e:
+                judge = {"error": f"{type(e).__name__}: {e}"[:300], "preferred": None, "candidate": None, "baseline": None}
+            m = replay_metrics(rec, judge, checks)
+            bm = baseline_run_metrics(base_rec, judge, base_checks)
+            bm["task_id"] = base_rec["task_id"]
+            add_cost(m.get("cost_usd"))
+            self.db.insert_replay({"optimization_id": oid, "option_id": option_id, "task_id": base_rec["task_id"], "baseline_run_id": base_rec["id"], "split": split, "round": round_no, "status": rec.get("status"), "record_json": rec, "judge_json": judge, "checks_json": {"candidate": checks, "baseline": base_checks}, "metrics_json": {"candidate": m, "baseline": bm}})
+            with lock:
+                out.append({"task_id": base_rec["task_id"], "question": base_rec.get("input", ""), "record": rec, "judge": judge, "checks": checks, "metrics": m, "baseline_metrics": bm})
+                done["n"] += 1
+                n = done["n"]
+            on_progress(n, len(records))
+
+        replay_many(sdk, harness, records, tools, concurrency=int(cfg["concurrency"]), meta={"optimization_id": oid, "option_id": option_id, "split": split, "round": round_no}, on_each=score_one)
+        out.sort(key=lambda x: x["task_id"])
+        return out
+
+    @staticmethod
+    def _summary(baseline: dict[str, Any], options: list[dict[str, Any]], n_opt: int, n_test: int, spent: float, cfg: dict[str, Any], search_provider: str, provider: str, analysis: dict[str, Any]) -> dict[str, Any]:
+        rows = []
+        for o in options:
+            t = o["metrics"]["test"]
+            rows.append({"key": o["key"], "label": o["label"], "models_used": o["models_used"], "metrics": t, "deltas": deltas(t, baseline), "meets_bar": meets_bar(t, baseline), "option_id": o["option_id"]})
+        qualifying = [r for r in rows if r["meets_bar"] and r["metrics"].get("cost_per_run") is not None]
+        recommended = min(qualifying, key=lambda r: r["metrics"]["cost_per_run"]) if qualifying else None
+        if recommended:
+            d = recommended["deltas"]
+            text = f"Task success {baseline.get('success_rate'):.0f}% → {recommended['metrics'].get('success_rate'):.0f}%, cost {'down' if (d.get('cost_pct') or 0) <= 0 else 'up'} {abs(d.get('cost_pct') or 0):.0f}%"
+            verdict = f"{recommended['label']} keeps quality within the bar at {abs(d.get('cost_pct') or 0):.0f}% {'lower' if (d.get('cost_pct') or 0) <= 0 else 'higher'} cost per run."
+        else:
+            best = max(rows, key=lambda r: (r["metrics"].get("quality") or 0)) if rows else None
+            text = "No cheaper option met the quality bar" if best is None else f"No cheaper option met the bar: best was {best['label']} at {best['metrics'].get('success_rate')}% success vs {baseline.get('success_rate')}%"
+            verdict = "Keep the baseline for now; see the per-option notes for what fell short."
+        notes = []
+        for r in rows:
+            d = r["deltas"]
+            if r["meets_bar"]:
+                notes.append(f"{r['label']}: within the bar ({d.get('success_rate_pp'):+.0f} pp success, {d.get('quality_pts'):+.0f} quality, {d.get('cost_pct'):+.0f}% cost).")
+            else:
+                notes.append(f"{r['label']}: falls short ({d.get('success_rate_pp'):+.0f} pp success, {d.get('quality_pts'):+.0f} quality at {d.get('cost_pct'):+.0f}% cost).")
+        return {
+            "headline": {"text": text, "verdict": verdict, "recommended": recommended["key"] if recommended else None},
+            "baseline": baseline,
+            "options": rows,
+            "notes": notes,
+            "split": {"optimization": n_opt, "test": n_test, "test_fraction": cfg.get("test_fraction"), "note": "All numbers above come from the held-out test set, which the optimizer never saw."},
+            "spent_usd": round(spent, 4),
+            "budget": {"rounds": cfg.get("rounds"), "sample_size": cfg.get("sample_size"), "max_cost_usd": cfg.get("max_cost_usd")},
+            "judge": {"model": cfg.get("judge_model"), "method": "blind pairwise, random order, rubric: correct / complete / supported (0-5 each)"},
+            "analysis": {"model": cfg.get("analysis_model"), "recommendations": analysis.get("recommendations"), "per_step": analysis.get("per_step")},
+            "provider": provider,
+            "search_provider": search_provider,
+            "pricing_note": "Costs use Nebius Token Factory list prices applied to the recorded token counts.",
+        }
