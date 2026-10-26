@@ -219,10 +219,11 @@ def create_optimization(req: OptimizationRequest) -> dict[str, Any]:
         since = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat().replace("+00:00", "Z")
         if db.count_live_optimizations_since(since) >= settings.max_live_optimizations_per_hour:
             raise HTTPException(status_code=429, detail=f"demo limit: at most {settings.max_live_optimizations_per_hour} live optimizations per hour")
-        cfg["rounds"] = max(1, min(int(cfg["rounds"]), 2))
-        cfg["sample_size"] = max(3, min(int(cfg["sample_size"]), 8))
-        cfg["max_cost_usd"] = min(float(cfg["max_cost_usd"]), 4.0)
-        cfg["concurrency"] = max(1, min(int(cfg["concurrency"]), 4))
+        cfg["rounds"] = 1
+        cfg["sample_size"] = max(3, min(int(cfg["sample_size"]), 4))
+        cfg["test_limit"] = 6
+        cfg["max_cost_usd"] = min(float(cfg["max_cost_usd"]), 3.0)
+        cfg["concurrency"] = max(1, min(int(cfg["concurrency"]), 3))
     opt = db.create_optimization(req.project_id, cfg, source="live")
     db.add_event(opt["id"], f"Queued optimization for project '{req.project_id}' with targets {targets}.", phase="queued")
     _start(opt["id"])

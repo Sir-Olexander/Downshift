@@ -38,6 +38,7 @@ def default_config(settings: Settings) -> dict[str, Any]:
         "test_fraction": settings.test_fraction,
         "concurrency": settings.opt_concurrency,
         "max_cost_usd": 6.0,
+        "test_limit": None,  # cap on held-out runs evaluated (live demo runs); None = all of them
         "seed": 42,
         "judge_model": settings.judge_model,
         "analysis_model": settings.analysis_model,
@@ -128,6 +129,10 @@ class Engine:
         self._progress(oid, "split", 2, f"{len(opt_set)} optimization / {len(test_set)} test runs")
         rng = random.Random(int(cfg["seed"]))
         sample = opt_set if len(opt_set) <= int(cfg["sample_size"]) else sorted(rng.sample(opt_set, int(cfg["sample_size"])), key=lambda r: r["task_id"])
+        test_limit = cfg.get("test_limit")
+        if test_limit and len(test_set) > int(test_limit):
+            test_set = sorted(rng.sample(test_set, int(test_limit)), key=lambda r: r["task_id"])
+            self._event(oid, f"Live demo budget: evaluating on {len(test_set)} of the held-out runs.", phase="split", level="warn")
 
         # 2. analyze with Nano ---------------------------------------------------------------------
         self._progress(oid, "analyze", 4, f"labelling {len(opt_set)} runs with {cfg['analysis_model']}")

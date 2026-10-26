@@ -29,7 +29,7 @@ export function RunOptimizationButton({ projectId }: { projectId: string }) {
   return (
     <span className="row" style={{ gap: 8 }}>
       {msg && <span className="small sub">{msg}</span>}
-      <button className="btn small" onClick={start} disabled={busy} title="Runs a small, rate-limited live optimization">
+      <button className="btn small" onClick={start} disabled={busy} title="Starts a small live optimization: one round per target on a few recorded runs, scored on a sample of the held-out set">
         {busy ? "Starting…" : "Run optimization"}
       </button>
     </span>
