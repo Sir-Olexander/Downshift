@@ -216,10 +216,20 @@ class Engine:
             self._event(oid, f"{spec['label']} on the held-out set (n={len(items)}): success {agg.get('success_rate')}% (baseline {base_agg.get('success_rate')}%), quality {agg.get('quality')} ({base_agg.get('quality')}), cost ${agg.get('cost_per_run')} ({base_agg.get('cost_per_run')}) per run, latency {agg.get('latency_ms')} ms ({base_agg.get('latency_ms')}).", phase=f"test:{target}", data={"metrics": metrics})
 
         # 4. baseline metrics and summary ---------------------------------------------------------------
+        # The baseline is scored inside every pairwise judge call, so pool those scores for one
+        # baseline estimate and measure every option against the same number.
         baseline_agg = aggregate(baseline_test_items)
         if baseline_agg.get("n"):
             baseline_agg["n"] = len({(x.get("task_id")) for x in baseline_test_items} - {None}) or len(test_set)
+            baseline_agg["n_comparisons"] = len(baseline_test_items)
         self.db.update_option(baseline_option["id"], metrics_json={"test": baseline_agg, "baseline_on_test": baseline_agg, "deltas": deltas(baseline_agg, baseline_agg), "meets_bar": True, "n_test": len(test_set)})
+        for o in option_results:
+            t_agg = o["metrics"]["test"]
+            o["metrics"]["baseline_in_comparisons"] = o["metrics"]["baseline_on_test"]
+            o["metrics"]["baseline_on_test"] = baseline_agg
+            o["metrics"]["deltas"] = deltas(t_agg, baseline_agg)
+            o["metrics"]["meets_bar"] = meets_bar(t_agg, baseline_agg)
+            self.db.update_option(o["option_id"], metrics_json=o["metrics"])
         summary = self._summary(baseline_agg, option_results, len(opt_set), len(test_set), spent["usd"], cfg, tools.provider, llm.provider_name, analysis)
         self.db.update_optimization(oid, status="done", finished_at=now_iso(), summary_json=summary)
         self._progress(oid, "done", 100, summary.get("headline", {}).get("text", "done"))
@@ -268,7 +278,7 @@ class Engine:
         rows = []
         for o in options:
             t = o["metrics"]["test"]
-            rows.append({"key": o["key"], "label": o["label"], "models_used": o["models_used"], "metrics": t, "deltas": deltas(t, baseline), "meets_bar": meets_bar(t, baseline), "option_id": o["option_id"]})
+            rows.append({"key": o["key"], "label": o["label"], "models_used": o["models_used"], "metrics": t, "deltas": o["metrics"]["deltas"], "meets_bar": o["metrics"]["meets_bar"], "option_id": o["option_id"]})
         qualifying = [r for r in rows if r["meets_bar"] and r["metrics"].get("cost_per_run") is not None]
         recommended = min(qualifying, key=lambda r: r["metrics"]["cost_per_run"]) if qualifying else None
         if recommended:

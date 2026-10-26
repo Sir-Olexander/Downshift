@@ -80,3 +80,38 @@ def test_rewrite_helpers_extract_yaml_and_enforce_target():
         pass
     nano = h.copy_with(defaults={**h.to_dict()["defaults"], "model": "nemotron-3-nano"})
     _check_target(nano, "nano", ["nemotron-3-nano"])
+
+
+def test_unparsed_judge_reply_is_unknown_not_zero():
+    from app.optimizer.judge import judge_pair
+    from downshift.providers import ChatResult
+
+    class Mute:
+        provider_name = "fake"
+
+        def __init__(self):
+            from downshift import default_table
+            self.table = default_table()
+            self.calls = 0
+
+        def chat(self, model, messages, **kw):
+            self.calls += 1
+            return ChatResult(content="I cannot decide.", tool_calls=[], reasoning=None, tokens_in=10, tokens_out=5, latency_ms=1, finish_reason="stop", model=model, provider="fake", provider_model=model)
+
+    llm = Mute()
+    j = judge_pair(llm, "nemotron-3-ultra", "q", "a", "b")
+    assert llm.calls == 2 and j["parsed"] is False and j["candidate"] is None and j["preferred"] is None
+    items = [
+        {"judged": False, "success": False, "quality": None, "checks_passed": True, "cost_usd": 0.01, "latency_ms": 100, "tokens_in": 1, "tokens_out": 1, "tool_calls": 1, "tool_calls_live": 0, "status": "ok"},
+        {"judged": True, "success": True, "quality": 90, "checks_passed": True, "cost_usd": 0.01, "latency_ms": 100, "tokens_in": 1, "tokens_out": 1, "preferred": "candidate", "tool_calls": 1, "tool_calls_live": 0, "status": "ok"},
+    ]
+    agg = aggregate(items)
+    assert agg["n"] == 2 and agg["n_judged"] == 1 and agg["success_rate"] == 100.0 and agg["quality"] == 90.0
+
+
+def test_tool_errors_do_not_fail_checks():
+    rec = _record("A long enough answer with a citation [1] and more words to pass the length check.", ["https://en.wikipedia.org/wiki/Moon"], ["https://en.wikipedia.org/wiki/Moon"])
+    rec["events"].append({"type": "tool_call", "name": "read_page", "args": {"url": "x"}, "result": None, "latency_ms": 5, "error": "HTTPError: 404"})
+    assert auto_checks(rec)["passed"]
+    rec["events"].append({"type": "model_call", "step": "synthesize", "error": "LLMError: boom"})
+    assert not auto_checks(rec)["passed"]

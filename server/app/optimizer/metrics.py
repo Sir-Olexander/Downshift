@@ -11,6 +11,7 @@ def replay_metrics(record: dict[str, Any], judge: dict[str, Any] | None, checks:
     totals = record.get("totals") or {}
     scores = (judge or {}).get("candidate")
     return {
+        "judged": scores is not None,
         "success": is_success(scores, checks),
         "quality": quality_score(scores),
         "checks_passed": bool(checks.get("passed")),
@@ -31,6 +32,7 @@ def baseline_run_metrics(record: dict[str, Any], judge: dict[str, Any] | None, c
     totals = record.get("totals") or {}
     scores = (judge or {}).get("baseline")
     return {
+        "judged": scores is not None,
         "success": is_success(scores, checks),
         "quality": quality_score(scores),
         "checks_passed": bool(checks.get("passed")),
@@ -53,8 +55,9 @@ def _mean(xs: list[float]) -> float | None:
 def aggregate(items: list[dict[str, Any]]) -> dict[str, Any]:
     n = len(items)
     if n == 0:
-        return {"n": 0, "success_rate": None, "quality": None, "cost_per_run": None, "latency_ms": None}
-    qualities = [float(i["quality"]) for i in items if i.get("quality") is not None]
+        return {"n": 0, "n_judged": 0, "success_rate": None, "quality": None, "cost_per_run": None, "latency_ms": None}
+    judged = [i for i in items if i.get("judged", i.get("quality") is not None)]
+    qualities = [float(i["quality"]) for i in judged if i.get("quality") is not None]
     prefs = [i.get("preferred") for i in items if i.get("preferred")]
     wins = sum(1 for p in prefs if p == "candidate")
     ties = sum(1 for p in prefs if p == "tie")
@@ -62,7 +65,8 @@ def aggregate(items: list[dict[str, Any]]) -> dict[str, Any]:
     live = sum(i.get("tool_calls_live", 0) for i in items)
     return {
         "n": n,
-        "success_rate": round(100 * sum(1 for i in items if i.get("success")) / n, 1),
+        "n_judged": len(judged),
+        "success_rate": round(100 * sum(1 for i in judged if i.get("success")) / len(judged), 1) if judged else None,
         "checks_pass_rate": round(100 * sum(1 for i in items if i.get("checks_passed")) / n, 1),
         "quality": round(sum(qualities) / len(qualities), 1) if qualities else None,
         "cost_per_run": _mean([float(i.get("cost_usd") or 0.0) for i in items]),

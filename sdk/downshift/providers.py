@@ -170,11 +170,11 @@ class LLM:
         last_err: Exception | None = None
         while attempt < max(1, self.max_retries):
             attempt += 1
-            t0 = time.perf_counter()
             try:
-                with _GATE:
+                with _GATE:  # queueing for a slot is not model latency
+                    t0 = time.perf_counter()
                     resp = self._client.chat.completions.create(**kwargs)
-                latency_ms = int((time.perf_counter() - t0) * 1000)
+                    latency_ms = int((time.perf_counter() - t0) * 1000)
                 return self._parse(resp, model, provider_model, latency_ms, attempt)
             except openai.RateLimitError as e:
                 last_err = e

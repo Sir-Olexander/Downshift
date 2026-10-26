@@ -5,6 +5,8 @@ export const API_URL = process.env.API_URL || "http://localhost:8000";
 
 export type Metrics = {
   n: number;
+  n_judged?: number;
+  n_comparisons?: number;
   success_rate: number | null;
   checks_pass_rate?: number | null;
   quality: number | null;
@@ -52,7 +54,7 @@ export type OptEvent = { id: number; ts: string; level: string; phase: string; m
 export type Checks = { answer_produced: boolean; has_sources: boolean; sources_from_evidence: boolean; tools_used: boolean; no_errors: boolean; n_sources: number; n_unknown_sources: number; n_tool_calls: number; passed: boolean };
 export type Scores = { correct: number; complete: number; supported: number };
 export type Judge = { preferred: "candidate" | "baseline" | "tie" | null; reason: string; candidate: Scores | null; baseline: Scores | null; candidate_quality: number | null; baseline_quality: number | null; order?: string; error?: string; model?: string };
-export type RunMetrics = { success: boolean; quality: number | null; checks_passed: boolean; cost_usd: number; latency_ms: number; tokens_in: number; tokens_out: number; model_calls: number; tool_calls: number; tool_calls_recorded: number; tool_calls_live: number; preferred?: string | null; status: string };
+export type RunMetrics = { judged?: boolean; success: boolean; quality: number | null; checks_passed: boolean; cost_usd: number; latency_ms: number; tokens_in: number; tokens_out: number; model_calls: number; tool_calls: number; tool_calls_recorded: number; tool_calls_live: number; preferred?: string | null; status: string };
 export type ReplayRow = { id: string; task_id: string; split: string; round: number; status: string; question: string | null; metrics: { candidate: RunMetrics; baseline: RunMetrics } | null; judge: Judge | null; checks: { candidate: Checks; baseline: Checks } | null };
 export type HarnessStep = { id: string; kind: string; prompt?: string; model?: string; temperature?: number; max_tokens?: number; reasoning?: string; max_tool_calls?: number; few_shot?: { input: string; output: string }[]; retry_on_fail?: boolean; enabled?: boolean };
 export type Harness = { name: string; version: string | number; description?: string; defaults: { model: string; temperature?: number; max_tokens?: number; reasoning?: string }; system_prompt: string; tools: Record<string, { description: string }>; steps: HarnessStep[]; changelog?: string[] };

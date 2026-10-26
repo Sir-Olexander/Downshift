@@ -125,17 +125,18 @@ class Database:
 
     # ---- projects -----------------------------------------------------------------------------
     def upsert_project(self, project_id: str, harness: dict[str, Any] | None, fingerprint: str | None, meta: dict[str, Any] | None = None) -> dict[str, Any]:
-        existing = self.get_project(project_id)
-        if existing is None:
-            self._insert("projects", {"id": project_id, "name": project_id, "created_at": now_iso(), "harness_json": harness, "harness_fingerprint": fingerprint, "meta_json": meta or {}})
-        else:
-            upd: dict[str, Any] = {}
-            if harness is not None and fingerprint != existing.get("harness_fingerprint"):
-                upd.update({"harness_json": harness, "harness_fingerprint": fingerprint})
-            if meta:
-                upd["meta_json"] = {**(existing.get("meta_json") or {}), **meta}
-            self._update("projects", project_id, upd)
-        return self.get_project(project_id)  # type: ignore[return-value]
+        with self._lock:  # read-then-write as one step (RLock, so the nested calls are fine)
+            existing = self.get_project(project_id)
+            if existing is None:
+                self._insert("projects", {"id": project_id, "name": project_id, "created_at": now_iso(), "harness_json": harness, "harness_fingerprint": fingerprint, "meta_json": meta or {}})
+            else:
+                upd: dict[str, Any] = {}
+                if harness is not None and fingerprint != existing.get("harness_fingerprint"):
+                    upd.update({"harness_json": harness, "harness_fingerprint": fingerprint})
+                if meta:
+                    upd["meta_json"] = {**(existing.get("meta_json") or {}), **meta}
+                self._update("projects", project_id, upd)
+            return self.get_project(project_id)  # type: ignore[return-value]
 
     def get_project(self, project_id: str) -> dict[str, Any] | None:
         return self._one("SELECT * FROM projects WHERE id = ?", (project_id,))

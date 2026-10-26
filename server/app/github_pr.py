@@ -36,6 +36,12 @@ def _fmt_pct(x: Any, signed: bool = True) -> str:
     return f"{float(x):+.0f}%" if signed else f"{float(x):.0f}%"
 
 
+def _fmt_num(x: Any, signed: bool = True, suffix: str = "") -> str:
+    if x is None:
+        return "n/a"
+    return (f"{float(x):+.0f}" if signed else f"{float(x):.0f}") + suffix
+
+
 def results_table(summary: dict[str, Any], chosen_key: str) -> str:
     base = summary.get("baseline") or {}
     lines = [
@@ -48,7 +54,7 @@ def results_table(summary: dict[str, Any], chosen_key: str) -> str:
         mark = " **(this PR)**" if r.get("key") == chosen_key else ""
         lines.append(
             f"| {r.get('label')}{mark} | {_fmt_pct(m.get('success_rate'), False)} | {m.get('quality')} | {_fmt_money(m.get('cost_per_run'))} | {int((m.get('latency_ms') or 0)/1000)} s | "
-            f"success {d.get('success_rate_pp', 0):+.0f} pp, quality {d.get('quality_pts', 0):+.0f}, cost {_fmt_pct(d.get('cost_pct'))} |"
+            f"success {_fmt_num(d.get('success_rate_pp'), suffix=' pp')}, quality {_fmt_num(d.get('quality_pts'))}, cost {_fmt_pct(d.get('cost_pct'))} |"
         )
     return "\n".join(lines)
 
@@ -68,7 +74,7 @@ def pr_payload(option: dict[str, Any], optimization: dict[str, Any], settings: S
         models_used = harness.get("defaults", {}).get("model", "")
     branch = f"downshift/{key}-{optimization['id'].split('_')[-1][:6]}"
     cost_txt = f"cost {abs(d.get('cost_pct') or 0):.0f}% {'lower' if (d.get('cost_pct') or 0) <= 0 else 'higher'}"
-    title = f"Run the research agent on {label}: {cost_txt}, task success {base.get('success_rate', 0):.0f}% → {m.get('success_rate', 0):.0f}%"
+    title = f"Run the research agent on {label}: {cost_txt}, task success {_fmt_pct(base.get('success_rate'), False)} → {_fmt_pct(m.get('success_rate'), False)}"
     changelog = "\n".join(f"- {c}" for c in (harness.get("changelog") or [])) or "- (no changelog recorded)"
     results_url = f"{settings.public_web_url.rstrip('/')}/optimizations/{optimization['id']}"
     body = f"""## What this changes

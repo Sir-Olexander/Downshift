@@ -21,7 +21,7 @@ from .settings import Settings
 settings = Settings.from_env()
 db = Database(settings.db_path)
 _running: dict[str, threading.Thread] = {}
-_run_lock = threading.Lock()
+_run_lock = threading.RLock()
 
 
 @asynccontextmanager
@@ -183,8 +183,7 @@ def _start(oid: str) -> None:
                 _running.pop(oid, None)
 
     t = threading.Thread(target=target, name=f"opt-{oid}", daemon=True)
-    with _run_lock:
-        _running[oid] = t
+    _running[oid] = t  # callers hold _run_lock (an RLock)
     t.start()
 
 
@@ -193,14 +192,11 @@ def create_optimization(req: OptimizationRequest) -> dict[str, Any]:
     project = db.get_project(req.project_id)
     if not project or not project.get("harness_json"):
         raise HTTPException(status_code=400, detail=f"project '{req.project_id}' has no recorded baseline runs")
-    n_ok = len([r for r in db.latest_runs_per_task(req.project_id, tag=req.tag)])
+    n_ok = len([r for r in db.latest_runs_per_task(req.project_id, tag=req.tag) if (r["record_json"].get("output") or {}).get("answer")])
     if n_ok < 4:
         raise HTTPException(status_code=400, detail=f"need at least 4 successful recorded runs, found {n_ok}")
-    with _run_lock:
-        if _running:
-            raise HTTPException(status_code=409, detail="an optimization is already running; try again in a few minutes")
     cfg = default_config(settings)
-    targets = [t for t in req.targets if t in TARGETS]
+    targets = list(dict.fromkeys(t for t in req.targets if t in TARGETS))
     if not targets:
         raise HTTPException(status_code=400, detail=f"targets must be among {list(TARGETS)}")
     cfg["targets"] = targets
@@ -224,9 +220,12 @@ def create_optimization(req: OptimizationRequest) -> dict[str, Any]:
         cfg["test_limit"] = 6
         cfg["max_cost_usd"] = min(float(cfg["max_cost_usd"]), 3.0)
         cfg["concurrency"] = max(1, min(int(cfg["concurrency"]), 3))
-    opt = db.create_optimization(req.project_id, cfg, source="live")
-    db.add_event(opt["id"], f"Queued optimization for project '{req.project_id}' with targets {targets}.", phase="queued")
-    _start(opt["id"])
+    with _run_lock:
+        if _running:
+            raise HTTPException(status_code=409, detail="an optimization is already running; try again in a few minutes")
+        opt = db.create_optimization(req.project_id, cfg, source="live")
+        db.add_event(opt["id"], f"Queued optimization for project '{req.project_id}' with targets {targets}.", phase="queued")
+        _start(opt["id"])
     return _optimization_public(opt)
 
 

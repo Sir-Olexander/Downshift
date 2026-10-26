@@ -82,7 +82,8 @@ def auto_checks(record: dict[str, Any]) -> dict[str, Any]:
     sources = [s for s in (output.get("sources") or []) if isinstance(s, str)]
     events = record.get("events") or []
     tool_events = [e for e in events if e.get("type") == "tool_call"]
-    model_errors = [e for e in events if e.get("error")]
+    # tool errors are recovered by the agent (it sees an error result); only failed model calls count
+    model_errors = [e for e in events if e.get("type") == "model_call" and e.get("error")]
     # URLs the tools actually returned during this run
     seen_urls: set[str] = set()
     for e in tool_events:
@@ -119,8 +120,16 @@ def judge_pair(llm: LLM, model: str, question: str, baseline_answer: str, candid
         {"role": "system", "content": JUDGE_SYSTEM},
         {"role": "user", "content": JUDGE_USER.format(question=question, a=a, b=b)},
     ]
-    res = llm.chat(model, msgs, temperature=0.0, max_tokens=600, reasoning="off")
+    res = llm.chat(model, msgs, temperature=0.0, max_tokens=900, reasoning="off")
     data = _extract_json(res.content) or {}
+    attempts = 1
+    if not data or not isinstance(data.get("A"), dict) or not isinstance(data.get("B"), dict):
+        res = llm.chat(model, msgs + [{"role": "assistant", "content": res.content}, {"role": "user", "content": "Reply with the JSON object only."}], temperature=0.0, max_tokens=900, reasoning="off")
+        data = _extract_json(res.content) or {}
+        attempts = 2
+    if not data or not isinstance(data.get("A"), dict) or not isinstance(data.get("B"), dict):
+        # unknown verdict: the run is excluded from judged metrics instead of scored as zero
+        return {"model": model, "order": "candidate_first" if candidate_first else "baseline_first", "candidate": None, "baseline": None, "candidate_quality": None, "baseline_quality": None, "preferred": None, "reason": "", "parsed": False, "attempts": attempts, "raw": (res.content or "")[:400], "tokens_in": res.tokens_in, "tokens_out": res.tokens_out, "cost_usd": llm.table.cost(model, res.tokens_in, res.tokens_out), "latency_ms": res.latency_ms}
     scores_a, scores_b = _scores(data.get("A")), _scores(data.get("B"))
     pref = str(data.get("preferred", "tie")).strip().upper()
     pref = pref if pref in {"A", "B", "TIE"} else "TIE"
@@ -139,7 +148,8 @@ def judge_pair(llm: LLM, model: str, question: str, baseline_answer: str, candid
         "baseline_quality": quality_score(base),
         "preferred": preferred,
         "reason": str(data.get("reason", ""))[:600],
-        "parsed": bool(data),
+        "parsed": True,
+        "attempts": attempts,
         "tokens_in": res.tokens_in,
         "tokens_out": res.tokens_out,
         "cost_usd": llm.table.cost(model, res.tokens_in, res.tokens_out),
