@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from downshift import LLM, Downshift, Harness, NullTransport, default_table
+from downshift.providers import on_rate_limit
 from research_agent.tools import SearchTools
 
 from ..db import Database, now_iso
@@ -59,6 +60,17 @@ class Engine:
         if not opt:
             return
         self.db.update_optimization(optimization_id, status="running", started_at=now_iso())
+        last_note = {"t": 0.0}
+
+        def rate_limited(message: str, waited: float) -> None:
+            # surface provider rate limits in the live log, at most once a minute
+            if time.time() - last_note["t"] < 60:
+                return
+            last_note["t"] = time.time()
+            short = message.split("{")[0][:60] + ("usage limit reached" if "usage limit" in message else "too many concurrent requests" if "concurrent" in message else "rate limited")
+            self.db.add_event(optimization_id, f"Provider rate limit: {short}. Waiting; the run resumes on its own (waited {int(waited)}s on this call).", level="warn", phase="waiting")
+
+        on_rate_limit(rate_limited)
         try:
             self._run(opt)
         except Exception as e:

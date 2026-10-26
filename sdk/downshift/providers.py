@@ -12,7 +12,7 @@ import random
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 import openai
 
@@ -24,6 +24,24 @@ PROVIDER_PREFERENCE = ("tokenfactory", "ollama", "ollama-local", "openai")
 # requests" above a handful). One process-wide gate keeps every thread within that cap.
 MAX_CONCURRENT_CALLS = int(os.environ.get("DOWNSHIFT_MAX_CONCURRENT_CALLS", "3") or 3)
 _GATE = threading.BoundedSemaphore(max(1, MAX_CONCURRENT_CALLS))
+
+# A 429 can mean "too many concurrent requests" (seconds) or "usage limit reached" (minutes to hours).
+# Rather than fail a long optimization, wait it out, up to this budget per call.
+RATE_LIMIT_MAX_WAIT_S = float(os.environ.get("DOWNSHIFT_RATE_LIMIT_MAX_WAIT_S", "900") or 900)
+_rate_limit_listeners: list[Callable[[str, float], None]] = []
+
+
+def on_rate_limit(listener: Callable[[str, float], None]) -> None:
+    """Register a callback (message, seconds waited so far) invoked while a call waits on a 429."""
+    _rate_limit_listeners.append(listener)
+
+
+def _notify_rate_limit(message: str, waited: float) -> None:
+    for fn in list(_rate_limit_listeners):
+        try:
+            fn(message, waited)
+        except Exception:
+            pass
 
 
 class LLMError(RuntimeError):
@@ -167,6 +185,9 @@ class LLM:
             kwargs["extra_body"] = extra_body
 
         attempt = 0
+        rate_limit_waits = 0
+        waited = 0.0
+        last_notice = 0.0
         last_err: Exception | None = None
         while attempt < max(1, self.max_retries):
             attempt += 1
@@ -178,10 +199,16 @@ class LLM:
                 return self._parse(resp, model, provider_model, latency_ms, attempt)
             except openai.RateLimitError as e:
                 last_err = e
-                if attempt >= self.max_retries:
+                rate_limit_waits += 1
+                attempt -= 1  # rate limits are budgeted by time, not by attempts
+                if waited >= RATE_LIMIT_MAX_WAIT_S:
                     break
-                # concurrency / rate limits need real waiting, not a quick retry
-                time.sleep(min(45.0, 4.0 * (2 ** (attempt - 1))) + random.uniform(0, 2))
+                delay = min(60.0, 4.0 * (2 ** min(rate_limit_waits - 1, 4))) + random.uniform(0, 2)
+                if waited == 0.0 or waited - last_notice >= 60.0:
+                    _notify_rate_limit(str(e)[:300], waited)
+                    last_notice = waited
+                time.sleep(delay)
+                waited += delay
             except (
                 openai.APIConnectionError,
                 openai.APITimeoutError,
@@ -194,7 +221,7 @@ class LLM:
             except openai.APIStatusError as e:
                 raise LLMError(f"{self.provider_name} {provider_model}: {e}") from e
         raise LLMError(
-            f"{self.provider_name} {provider_model}: giving up after {attempt} attempts: {last_err}"
+            f"{self.provider_name} {provider_model}: giving up after {attempt} attempts and {int(waited)}s of rate-limit waiting: {last_err}"
         ) from last_err
 
     def _parse(self, resp: Any, model: str, provider_model: str, latency_ms: int, attempts: int) -> ChatResult:
