@@ -31,7 +31,7 @@ def main() -> int:
     ap.add_argument("--project", default="research-agent")
     ap.add_argument("--limit", type=int, default=0, help="only the first N questions")
     ap.add_argument("--only", default="", help="comma-separated question ids")
-    ap.add_argument("--concurrency", type=int, default=3)
+    ap.add_argument("--concurrency", type=int, default=3, help="parallel runs (the SDK also caps concurrent model calls, see DOWNSHIFT_MAX_CONCURRENT_CALLS)")
     ap.add_argument("--offline-dir", default="", help="write runs here instead of posting them")
     ap.add_argument("--endpoint", default=None)
     ap.add_argument("--api-key", default=None)

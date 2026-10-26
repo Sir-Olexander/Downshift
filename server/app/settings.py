@@ -75,7 +75,7 @@ class Settings:
             cors_origins=[o.strip() for o in (os.environ.get("DOWNSHIFT_CORS_ORIGINS") or "http://localhost:3000").split(",") if o.strip()],
             opt_rounds=_int("DOWNSHIFT_OPT_ROUNDS", 2),
             opt_sample_size=_int("DOWNSHIFT_OPT_SAMPLE", 10),
-            opt_concurrency=_int("DOWNSHIFT_OPT_CONCURRENCY", 4),
+            opt_concurrency=_int("DOWNSHIFT_OPT_CONCURRENCY", 3),
             test_fraction=float(os.environ.get("DOWNSHIFT_TEST_FRACTION") or 0.4),
             judge_model=os.environ.get("DOWNSHIFT_JUDGE_MODEL") or "nemotron-3-ultra",
             analysis_model=os.environ.get("DOWNSHIFT_ANALYSIS_MODEL") or "nemotron-3-nano",

@@ -1,0 +1,17 @@
+# Local full stack: API on :8000, web on :3000. Needs OLLAMA_API_KEY (or NEBIUS_API_KEY) in .env.
+services:
+  api:
+    build: { context: ., dockerfile: server/Dockerfile }
+    env_file: .env
+    environment:
+      DOWNSHIFT_PUBLIC_WEB_URL: http://localhost:3000
+    ports: ["8000:8000"]
+    volumes: ["downshift-data:/data"]
+  web:
+    build: { context: ./web, args: { API_URL: http://api:8000 } }
+    environment:
+      API_URL: http://api:8000
+    ports: ["3000:3000"]
+    depends_on: [api]
+volumes:
+  downshift-data: {}

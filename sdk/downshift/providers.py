@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import random
+import threading
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -18,6 +19,11 @@ import openai
 from .pricing import ModelTable, ProviderInfo, default_table
 
 PROVIDER_PREFERENCE = ("tokenfactory", "ollama", "ollama-local", "openai")
+
+# Hosted providers cap concurrent requests per key (Ollama Cloud answers 429 "too many concurrent
+# requests" above a handful). One process-wide gate keeps every thread within that cap.
+MAX_CONCURRENT_CALLS = int(os.environ.get("DOWNSHIFT_MAX_CONCURRENT_CALLS", "3") or 3)
+_GATE = threading.BoundedSemaphore(max(1, MAX_CONCURRENT_CALLS))
 
 
 class LLMError(RuntimeError):
@@ -105,7 +111,7 @@ class LLM:
         api_key: str | None = None,
         base_url: str | None = None,
         timeout: float = 180.0,
-        max_retries: int = 3,
+        max_retries: int = 6,
     ):
         self.table = table or default_table()
         self.provider_name = provider or active_provider_name(self.table)
@@ -166,11 +172,17 @@ class LLM:
             attempt += 1
             t0 = time.perf_counter()
             try:
-                resp = self._client.chat.completions.create(**kwargs)
+                with _GATE:
+                    resp = self._client.chat.completions.create(**kwargs)
                 latency_ms = int((time.perf_counter() - t0) * 1000)
                 return self._parse(resp, model, provider_model, latency_ms, attempt)
+            except openai.RateLimitError as e:
+                last_err = e
+                if attempt >= self.max_retries:
+                    break
+                # concurrency / rate limits need real waiting, not a quick retry
+                time.sleep(min(45.0, 4.0 * (2 ** (attempt - 1))) + random.uniform(0, 2))
             except (
-                openai.RateLimitError,
                 openai.APIConnectionError,
                 openai.APITimeoutError,
                 openai.InternalServerError,
