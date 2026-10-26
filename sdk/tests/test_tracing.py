@@ -39,7 +39,7 @@ def test_run_records_model_and_tool_calls_with_costs():
     assert rec["status"] == "ok"
     assert rec["totals"]["model_calls"] == 1 and rec["totals"]["tool_calls"] == 1
     assert rec["totals"]["cost_usd"] == pytest.approx(0.0025)  # 1000 in, 500 out on ultra
-    assert rec["events"][0]["params"]["max_tokens"] == 400
+    assert rec["events"][0]["params"]["max_tokens"] == 1200
     assert rec["totals"]["latency_ms"] >= 42
 
 

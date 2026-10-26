@@ -12,7 +12,7 @@ def test_baseline_loads_and_merges_params():
     assert h.name == "research-agent"
     p = h.params("plan")
     assert p.model == "nemotron-3-ultra"
-    assert p.max_tokens == 400  # step override
+    assert p.max_tokens == 1200  # step override
     assert p.temperature == 0.2  # default
     assert h.models_used() == ["nemotron-3-ultra"]
     h.validate_models(default_table(), "ollama")

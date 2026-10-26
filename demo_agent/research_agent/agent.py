@@ -183,6 +183,10 @@ class ResearchAgent:
         if ctx["feedback"] and "{feedback}" not in step.prompt:
             user += f"\n\nA reviewer found these problems with the previous draft; fix them:\n{ctx['feedback']}"
         res = self.run.chat(step, self._messages(step, user))
+        if not (res.content or "").strip() and res.finish_reason == "length":
+            # the model spent the whole budget thinking: one retry with twice the room (both calls stay in the trace)
+            budget = self.harness.params(step).max_tokens
+            res = self.run.chat(step, self._messages(step, user), max_tokens=budget * 2)
         ctx["answer"] = res.content
 
     def _verify(self, step: Step, ctx: dict[str, Any]) -> None:

@@ -30,6 +30,9 @@ MODEL_NOTES: dict[str, str] = {
 }
 
 GENERAL_TIPS = (
+    "Reasoning (thinking) tokens count against max_tokens on these endpoints: a step with reasoning on needs "
+    "a generous max_tokens (2000+ for synthesis) or it returns an empty answer; reasoning off makes short "
+    "steps cheap and reliable. "
     "Techniques that usually help smaller models: shorter system prompts with numbered rules; an explicit "
     "output template; one or two few-shot examples of the exact output; a hard cap on tool calls with a "
     "clear stop condition; a separate cheap 'verify' step that checks citations and completeness and triggers "

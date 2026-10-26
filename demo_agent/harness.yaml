@@ -4,7 +4,7 @@ description: Answers research questions by searching the web, reading sources an
 defaults:
   model: nemotron-3-ultra
   temperature: 0.2
-  max_tokens: 1200
+  max_tokens: 2000
 system_prompt: |
   You are a careful research assistant. You answer questions using the web search results and pages you read.
 
@@ -20,7 +20,7 @@ tools:
 steps:
   - id: plan
     kind: plan
-    max_tokens: 400
+    max_tokens: 1200
     prompt: |
       Question: {question}
 
@@ -38,7 +38,7 @@ steps:
       Stop when you have enough evidence to answer with confidence, then reply with a short note on what you found.
   - id: synthesize
     kind: synthesize
-    max_tokens: 900
+    max_tokens: 3000
     prompt: |
       Question: {question}
 
