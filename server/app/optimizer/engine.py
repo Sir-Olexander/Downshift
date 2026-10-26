@@ -253,6 +253,12 @@ class Engine:
         return out
 
     @staticmethod
+    def _n(x: Any, signed: bool = False) -> str:
+        if x is None:
+            return "n/a"
+        return f"{float(x):+.0f}" if signed else f"{float(x):.0f}"
+
+    @staticmethod
     def _summary(baseline: dict[str, Any], options: list[dict[str, Any]], n_opt: int, n_test: int, spent: float, cfg: dict[str, Any], search_provider: str, provider: str, analysis: dict[str, Any]) -> dict[str, Any]:
         rows = []
         for o in options:
@@ -262,19 +268,20 @@ class Engine:
         recommended = min(qualifying, key=lambda r: r["metrics"]["cost_per_run"]) if qualifying else None
         if recommended:
             d = recommended["deltas"]
-            text = f"Task success {baseline.get('success_rate'):.0f}% → {recommended['metrics'].get('success_rate'):.0f}%, cost {'down' if (d.get('cost_pct') or 0) <= 0 else 'up'} {abs(d.get('cost_pct') or 0):.0f}%"
+            text = f"Task success {Engine._n(baseline.get('success_rate'))}% → {Engine._n(recommended['metrics'].get('success_rate'))}%, cost {'down' if (d.get('cost_pct') or 0) <= 0 else 'up'} {abs(d.get('cost_pct') or 0):.0f}%"
             verdict = f"{recommended['label']} keeps quality within the bar at {abs(d.get('cost_pct') or 0):.0f}% {'lower' if (d.get('cost_pct') or 0) <= 0 else 'higher'} cost per run."
         else:
             best = max(rows, key=lambda r: (r["metrics"].get("quality") or 0)) if rows else None
-            text = "No cheaper option met the quality bar" if best is None else f"No cheaper option met the bar: best was {best['label']} at {best['metrics'].get('success_rate')}% success vs {baseline.get('success_rate')}%"
+            text = "No cheaper option met the quality bar" if best is None else f"No cheaper option met the bar: best was {best['label']} at {Engine._n(best['metrics'].get('success_rate'))}% success vs {Engine._n(baseline.get('success_rate'))}%"
             verdict = "Keep the baseline for now; see the per-option notes for what fell short."
         notes = []
         for r in rows:
             d = r["deltas"]
+            n = Engine._n
             if r["meets_bar"]:
-                notes.append(f"{r['label']}: within the bar ({d.get('success_rate_pp'):+.0f} pp success, {d.get('quality_pts'):+.0f} quality, {d.get('cost_pct'):+.0f}% cost).")
+                notes.append(f"{r['label']}: within the bar ({n(d.get('success_rate_pp'), True)} pp success, {n(d.get('quality_pts'), True)} quality, {n(d.get('cost_pct'), True)}% cost).")
             else:
-                notes.append(f"{r['label']}: falls short ({d.get('success_rate_pp'):+.0f} pp success, {d.get('quality_pts'):+.0f} quality at {d.get('cost_pct'):+.0f}% cost).")
+                notes.append(f"{r['label']}: falls short ({n(d.get('success_rate_pp'), True)} pp success, {n(d.get('quality_pts'), True)} quality at {n(d.get('cost_pct'), True)}% cost).")
         return {
             "headline": {"text": text, "verdict": verdict, "recommended": recommended["key"] if recommended else None},
             "baseline": baseline,
