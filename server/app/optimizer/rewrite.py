@@ -133,7 +133,7 @@ def propose_harness(llm: LLM, model: str, *, current: Harness, target: str, allo
     last_error = ""
     for attempt in range(3):
         usage["attempts"] += 1
-        res = llm.chat(model, msgs, temperature=0.4, max_tokens=4000, reasoning="on")
+        res = llm.chat(model, msgs, temperature=0.4, max_tokens=8000, reasoning="on")
         usage["tokens_in"] += res.tokens_in
         usage["tokens_out"] += res.tokens_out
         usage["cost_usd"] += llm.table.cost(model, res.tokens_in, res.tokens_out) or 0.0
