@@ -24,7 +24,7 @@ def _record(answer, sources, tool_urls, status="ok"):
 def test_split_is_deterministic_and_disjoint():
     runs = [{"task_id": f"q{i:03d}"} for i in range(42)]
     a_opt, a_test = split_runs(runs, 0.4, 42)
-    b_opt, b_test = split_runs(list(reversed(runs)), 0.4, 42)
+    _, b_test = split_runs(list(reversed(runs)), 0.4, 42)
     assert [r["task_id"] for r in a_test] == [r["task_id"] for r in b_test]
     assert len(a_test) == 17 and len(a_opt) == 25
     assert not {r["task_id"] for r in a_opt} & {r["task_id"] for r in a_test}

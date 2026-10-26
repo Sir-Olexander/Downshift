@@ -34,7 +34,7 @@ loads it at runtime, the optimizer writes new versions, and the PR changes only 
 
 ## Demo results
 
-_Filled in from the shipped optimization; see the UI for the live table._
+_Generated from the shipped optimization with `uv run python -m app.report readme`; the UI has the live table._
 
 RESULTS_PLACEHOLDER
 

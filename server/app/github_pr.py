@@ -19,7 +19,7 @@ def github_token(settings: Settings) -> str | None:
     if settings.github_token:
         return settings.github_token
     try:  # local convenience: reuse the gh CLI login
-        out = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True, timeout=5)
+        out = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True, timeout=5, check=False)
         tok = out.stdout.strip()
         return tok or None
     except Exception:

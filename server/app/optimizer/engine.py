@@ -6,7 +6,6 @@ import random
 import threading
 import time
 import traceback
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from downshift import LLM, Downshift, Harness, NullTransport, default_table
@@ -199,7 +198,10 @@ class Engine:
                 add_cost(proposal["usage"].get("cost_usd"))
                 self._event(oid, f"{spec['label']} round {round_no}: proposed harness {cand.fingerprint()} using {cand.models_used()}. " + " / ".join(cand.changelog[:4]), phase=f"optimize:{target}", data={"changelog": cand.changelog, "rationale": proposal["rationale"], "fingerprint": cand.fingerprint()})
 
-                items = self._replay_and_score(oid, option["id"], cand, sample, "opt", round_no, sdk, tools, llm, cfg, add_cost, lambda d, t: self._progress(oid, f"optimize:{target}", r_pct + per_target * 0.5 * d / max(1, t) / rounds, f"{spec['label']}: round {round_no}/{rounds}, replayed and judged {d}/{t} runs"))
+                def on_round_progress(d: int, t: int, *, target: str = target, r_pct: float = r_pct, label: str = spec["label"], round_no: int = round_no) -> None:
+                    self._progress(oid, f"optimize:{target}", r_pct + per_target * 0.5 * d / max(1, t) / rounds, f"{label}: round {round_no}/{rounds}, replayed and judged {d}/{t} runs")
+
+                items = self._replay_and_score(oid, option["id"], cand, sample, "opt", round_no, sdk, tools, llm, cfg, add_cost, on_round_progress)
                 agg = aggregate([x["metrics"] for x in items])
                 base_agg = aggregate([x["baseline_metrics"] for x in items])
                 score = objective(agg, base_agg)
@@ -220,7 +222,10 @@ class Engine:
             # held-out evaluation ------------------------------------------------------------------
             t_pct = base_pct + per_target * 0.72
             self._progress(oid, f"test:{target}", t_pct, f"{spec['label']}: evaluating round-{best['round']} harness on {len(test_set)} held-out runs")
-            items = self._replay_and_score(oid, option["id"], best["harness"], test_set, "test", 0, sdk, tools, llm, cfg, add_cost, lambda d, t: self._progress(oid, f"test:{target}", t_pct + per_target * 0.26 * d / max(1, t), f"{spec['label']}: held-out evaluation {d}/{t}"))
+            def on_test_progress(d: int, t: int, *, target: str = target, t_pct: float = t_pct, label: str = spec["label"]) -> None:
+                self._progress(oid, f"test:{target}", t_pct + per_target * 0.26 * d / max(1, t), f"{label}: held-out evaluation {d}/{t}")
+
+            items = self._replay_and_score(oid, option["id"], best["harness"], test_set, "test", 0, sdk, tools, llm, cfg, add_cost, on_test_progress)
             agg = aggregate([x["metrics"] for x in items])
             base_agg = aggregate([x["baseline_metrics"] for x in items])
             baseline_test_items.extend(x["baseline_metrics"] for x in items)
