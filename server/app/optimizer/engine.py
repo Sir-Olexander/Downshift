@@ -436,7 +436,7 @@ class Engine:
             "options": rows,
             "notes": notes,
             "split": {"optimization": n_opt, "test": n_test, "test_fraction": cfg.get("test_fraction"), "note": "All numbers above come from the held-out test set, which the optimizer never saw."},
-            "bar": {"success_tol_pp": bar_tolerance_pp(baseline.get("n_judged") or baseline.get("n") or n_test), "quality_tol_pts": 5.0, "note": "Within the bar: task success no more than one held-out run (or 5 pp) below the baseline and quality within 5 points."},
+            "bar": {"success_tol_pp": bar_tolerance_pp(n_test or baseline.get("n")), "quality_tol_pts": 5.0, "note": "Within the bar: task success no more than one held-out run (or 5 pp) below the baseline and quality within 5 points."},
             "spent_usd": round(spent, 4),
             "budget": {"rounds": cfg.get("rounds"), "sample_size": cfg.get("sample_size"), "max_cost_usd": cfg.get("max_cost_usd")},
             "judge": {"model": cfg.get("judge_model"), "method": "blind pairwise, random order, rubric: correct / complete / supported (0-5 each)"},

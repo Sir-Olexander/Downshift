@@ -36,7 +36,34 @@ loads it at runtime, the optimizer writes new versions, and the PR changes only 
 
 _Generated from the shipped optimization with `uv run python -m app.report readme`; the UI has the live table._
 
-RESULTS_PLACEHOLDER
+<!-- results:start -->
+**Task success 100% → 94%, cost down 94%** · Nemotron 3 Nano keeps quality within the bar at 94% lower cost per run.
+
+| Option | Task success | Quality (0-100) | Cost / run | Latency | vs baseline |
+|---|---|---|---|---|---|
+| Baseline (Nemotron 3 Ultra) | 100% | 98.4 | $0.0301 | 134 s | — |
+| Nemotron 3 Super | 94% | 94.5 | $0.0081 | 37 s | success -6 pp, quality -4, cost -73% |
+| Nemotron 3 Nano **(this PR)** | 94% | 93.7 | $0.0019 | 58 s | success -6 pp, quality -5, cost -94% |
+| Per-step mix | 100% | 95.7 | $0.0148 | 118 s | success +0 pp, quality -3, cost -51% |
+
+Held-out test set: 17 runs the optimizer never saw (25 runs were used to optimize). Judge: nemotron-3-ultra, blind pairwise in random order. Models served via Ollama Cloud, search via wikipedia. Optimization spend: $1.14.
+
+What held up and what fell short:
+- Nemotron 3 Super: within the bar (-6 pp success, -4 quality, -73% cost).
+- Nemotron 3 Nano: within the bar (-6 pp success, -5 quality, -94% cost).
+- Per-step mix: within the bar (+0 pp success, -3 quality, -51% cost).
+
+Step analysis by nemotron-3-nano (share of optimization runs where the step needed a strong model):
+- `plan` (plan): 4%
+- `search` (search): 32%
+- `synthesize` (synthesize): 92%
+
+Nemotron 3 Super harness changes: Removed plan step; search step now generates its own queries and stops after 5 tool calls or 3 solid sources. · Set reasoning: "off" and temperature 0.6 for search (cheap, reliable tool use); reasoning: "on" with 3000 max_tokens for synthesis (quality). · Added verify step with retry_on_fail to catch citation/coverage errors; runs with reasoning off for speed. · Added one few-shot example each for search and synthesize to lock output format.
+Nemotron 3 Nano harness changes: Set all steps to nemotron-3-nano; added reasoning: off for plan/search, reasoning: on for synthesize · Added few-shot examples to plan, search, and synthesize for exact output format · Reduced max_tool_calls in search from 6 to 4 with explicit stop rule · Added verify step with retry_on_fail to catch citation errors cheaply
+Per-step mix harness changes: Assigned nemotron-3-nano (reasoning off) to plan step: 92% easy, only query generation needed · Assigned nemotron-3-super (reasoning on) to search step: good tool use, handles medium-difficulty retrieval · Kept nemotron-3-ultra (reasoning on) for synthesize: 92% runs need strong model for multi-source synthesis · Added verify step with nemotron-3-nano (reasoning off) to catch citation errors cheaply, retry_on_fail triggers one rewrite
+
+Optimization id `opt_c5bcd27101b5`; open it in the UI for the harness diffs and every replayed run.
+<!-- results:end -->
 
 ## Quickstart
 
@@ -93,6 +120,12 @@ docs/         Deployment notes (Nebius Serverless), video script
 - **Reasoning.** On Ollama Cloud, `reasoning: off` in a harness maps to `reasoning_effort: "none"`
   (verified: it removes Nemotron's thinking tokens). The Token Factory mapping uses the vLLM
   `chat_template_kwargs.enable_thinking=false` convention and is not yet verified.
+- **Read the results with the sample size in mind.** The held-out set is 17 runs, so one run is 5.9
+  points of task success; Super and Nano each lost exactly one run against the baseline. The bar counts a
+  one-run drop as within tolerance, and says so. In blind pairwise judging the baseline was still
+  preferred more often than any cheaper option (Nano won 12% and tied 35% of comparisons), so "within the
+  bar" means "close", not "as good". The per-step mix kept every run and lost the least quality, at about
+  half the cost; Nano is the cheapest option that stayed within the bar.
 - **Held-out reporting.** Runs are split 60/40 with a fixed seed. Optimization rounds only replay a
   sample of the 60%; every number in the UI, the README and the PR comes from the 40%.
 - **Judge.** Nemotron 3 Ultra compares the baseline and candidate answers blind, in random order,

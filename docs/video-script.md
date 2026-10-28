@@ -23,10 +23,11 @@ and in random order, next to automatic checks: answer produced, sources listed, 
 evidence. Two rounds, keep the best, then one honest pass on the held-out set."
 
 **1:50 – Results (35 s).** Screen: chart and table.
-"One point per option. Super, Nano and a per-step mix. Here the story is: <say the real numbers>.
-And the honest part: <where Nano falls short, e.g. 'Nano is fine for search steps but not for
-synthesis'>. That is why the mix puts a cheap model on the mechanical steps and keeps a stronger one
-where it matters."
+"One point per option. On 17 held-out runs, Nano keeps task success at 94% against 100% for the
+baseline, at 94% lower cost per run. The per-step mix loses nothing on success and only 3 quality
+points, at half the cost. And the honest part: the judge still prefers Ultra's answers more often than
+not, and Nano's own analysis says synthesis needs a strong model in 92% of runs, which is exactly why the
+mix keeps Ultra for synthesis and puts Nano on planning and checking."
 
 **2:25 – Diff and run view (25 s).** Screen: the option page.
 "This is the whole change: the harness side by side. Shorter rules, explicit output format, reasoning
