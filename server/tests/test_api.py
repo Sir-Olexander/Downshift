@@ -44,3 +44,34 @@ def test_harness_validate_endpoint(client):
     assert ok["ok"] and ok["models_used"] == ["nemotron-3-ultra"]
     bad = client.post("/v1/harness/validate", json={"yaml": "name: x\n"}).json()
     assert not bad["ok"] and "invalid harness" in bad["error"]
+
+
+def test_agent_onboarding_flow(client, tmp_path, monkeypatch):
+    import app.main as main
+
+    monkeypatch.setattr(main.settings, "agents_root", tmp_path)
+    folder = tmp_path / "my-agent"
+    folder.mkdir()
+    (folder / "README.md").write_text("# My agent\n\nAnswers questions about the Moon.\n")
+    (folder / "tools.py").write_text('class T:\n    def lookup(self, q):\n        """Look things up."""\n    def _private(self):\n        pass\n')
+    assert client.post("/v1/fs/inspect", json={"path": "/etc"}).status_code == 400  # outside the root
+    info = client.post("/v1/fs/inspect", json={"path": str(folder)}).json()
+    assert info["harness_yaml"] is None and info["tools"] == {"lookup": "Look things up."}
+    browse = client.get("/v1/fs/browse", params={"path": str(tmp_path)}).json()
+    assert [d["name"] for d in browse["dirs"]] == ["my-agent"]
+
+    agent = client.post("/v1/agents", json={"path": str(folder)}).json()
+    assert agent["id"] == "my-agent" and not agent["harness_on_disk"]
+    draft = client.post("/v1/agents/my-agent/harness/draft").json()
+    assert draft["validation"]["ok"] and "lookup" in draft["yaml"]
+    assert client.put("/v1/agents/my-agent/harness", json={"yaml": "name: x\n"}).status_code == 400
+    assert client.put("/v1/agents/my-agent/harness", json={"yaml": draft["yaml"]}).status_code == 200
+    assert (folder / "harness.yaml").is_file()
+    assert client.put("/v1/agents/my-agent/harness", json={"yaml": draft["yaml"]}).status_code == 409
+    assert client.put("/v1/agents/my-agent/harness", json={"yaml": draft["yaml"], "overwrite": True}).status_code == 200
+
+    listed = client.get("/v1/agents").json()
+    assert [a["id"] for a in listed] == ["my-agent"] and listed[0]["harness_on_disk"]
+    assert client.delete("/v1/agents/my-agent").status_code == 200
+    assert client.get("/v1/agents").json() == []
+    assert client.get("/v1/agents/my-agent").status_code == 404

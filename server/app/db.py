@@ -40,12 +40,15 @@ CREATE TABLE IF NOT EXISTS events (
   id INTEGER PRIMARY KEY AUTOINCREMENT, optimization_id TEXT, ts TEXT, level TEXT, phase TEXT, message TEXT, data_json TEXT
 );
 CREATE INDEX IF NOT EXISTS events_opt ON events(optimization_id, id);
+CREATE TABLE IF NOT EXISTS agents (
+  id TEXT PRIMARY KEY, name TEXT, path TEXT, created_at TEXT
+);
 CREATE TABLE IF NOT EXISTS prs (
   id TEXT PRIMARY KEY, optimization_id TEXT, option_id TEXT, created_at TEXT, url TEXT, dry_run INTEGER, payload_json TEXT
 );
 """
 
-TABLES = ["projects", "runs", "optimizations", "options", "replays", "labels", "events", "prs"]
+TABLES = ["projects", "runs", "optimizations", "options", "replays", "labels", "events", "prs"]  # agents hold local paths, so they stay out of exports
 JSON_COLS = {"harness_json", "meta_json", "record_json", "config_json", "split_json", "progress_json", "summary_json", "rounds_json", "metrics_json", "judge_json", "checks_json", "labels_json", "data_json", "payload_json"}
 
 
@@ -81,6 +84,8 @@ class Database:
         with self._lock:
             self._conn.execute("PRAGMA journal_mode=WAL")
             self._conn.execute("PRAGMA synchronous=NORMAL")
+            # True on the first start with this schema: lets the app register the demo agent once.
+            self.agents_table_created = self._conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='agents'").fetchone() is None
             self._conn.executescript(SCHEMA)
             self._conn.commit()
 
@@ -143,6 +148,25 @@ class Database:
 
     def list_projects(self) -> list[dict[str, Any]]:
         return self._all("SELECT p.*, (SELECT COUNT(*) FROM runs r WHERE r.project_id = p.id) AS run_count FROM projects p ORDER BY created_at")
+
+    # ---- agents (the folders a user tests; one per project id) --------------------------------
+    def upsert_agent(self, agent_id: str, name: str, path: str) -> dict[str, Any]:
+        with self._lock:
+            existing = self.get_agent(agent_id)
+            self._insert("agents", {"id": agent_id, "name": name, "path": path, "created_at": (existing or {}).get("created_at") or now_iso()})
+            return self.get_agent(agent_id)  # type: ignore[return-value]
+
+    def get_agent(self, agent_id: str) -> dict[str, Any] | None:
+        return self._one("SELECT * FROM agents WHERE id = ?", (agent_id,))
+
+    def list_agents(self) -> list[dict[str, Any]]:
+        return self._all("SELECT * FROM agents ORDER BY created_at")
+
+    def delete_agent(self, agent_id: str) -> bool:
+        with self._lock:
+            cur = self._conn.execute("DELETE FROM agents WHERE id = ?", (agent_id,))
+            self._conn.commit()
+            return cur.rowcount > 0
 
     # ---- runs ---------------------------------------------------------------------------------
     def insert_run(self, record: dict[str, Any]) -> None:
