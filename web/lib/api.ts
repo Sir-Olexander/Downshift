@@ -73,6 +73,22 @@ export type RunSummary = { id: string; project_id: string; task_id: string; inpu
 export type Project = { id: string; name: string; created_at: string; harness: Harness | null; harness_yaml: string | null; harness_fingerprint: string | null; runs: RunSummary[]; optimizations: Optimization[] };
 export type ProjectListItem = { id: string; name: string; created_at: string; harness_fingerprint: string | null; run_count: number; models_used: string[] };
 
+export type Agent = {
+  id: string; name: string; path: string | null; registered: boolean; created_at: string | null; folder_exists: boolean; harness_on_disk: boolean;
+  harness_fingerprint: string | null; models_used: string[]; run_count: number; ok_task_count: number;
+  active: Optimization | null; latest: Optimization | null; optimization_count: number; optimizations?: Optimization[];
+};
+export type HarnessCheck = { ok: true; name: string; fingerprint: string; models_used: string[]; steps: string[]; tools: string[] } | { ok: false; error: string };
+export type FolderInfo = {
+  path: string; name: string; suggested_id: string; description: string; harness_yaml: string | null; harness: HarnessCheck | null;
+  questions_file: string | null; record_script: string | null; python_files: number; uses_sdk: boolean; tools: Record<string, string>;
+};
+export type Browse = { path: string; parent: string | null; root: string; has_harness: boolean; dirs: { name: string; path: string; has_harness: boolean }[] };
+export type Health = { ok: boolean; provider: string | null; demo_mode: boolean; running: string[]; allow_fs: boolean; agents_root: string | null };
+
+/** The minimum the API asks for before it will start an optimization. */
+export const MIN_RUNS = 4;
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -100,4 +116,20 @@ export const api = {
   run: (id: string, key: string, taskId: string, split = "test") => get<RunComparison>(`/v1/optimizations/${id}/options/${key}/runs/${taskId}?split=${split}`),
   projects: () => get<ProjectListItem[]>("/v1/projects"),
   project: (id: string) => get<Project>(`/v1/projects/${id}`),
+  agents: () => get<Agent[]>("/v1/agents"),
+  agent: (id: string) => get<Agent>(`/v1/agents/${id}`),
+  health: () => get<Health>("/healthz"),
 };
+
+/** Browser-side JSON call through the /api rewrite. Throws with the API's `detail` on failure. */
+export async function call<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`/api${path}`, { method: init?.method ?? (init?.body !== undefined ? "POST" : "GET"), headers: init?.body !== undefined ? { "Content-Type": "application/json" } : undefined, body: init?.body !== undefined ? JSON.stringify(init.body) : undefined });
+  } catch (e) {
+    throw new Error(`Could not reach the API: ${(e as Error).message}`);
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : `Request failed (${res.status}).`);
+  return data as T;
+}

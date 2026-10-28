@@ -35,7 +35,7 @@ export default async function OptionPage({ params }: { params: Promise<{ id: str
   const existingPr = o.prs.find((p) => p.url)?.url ?? null;
   return (
     <main className="shell">
-      <TopBar crumbs={[{ label: "Results", href: `/optimizations/${o.optimization.id}` }, { label: o.label }]} projectId={o.optimization.project_id} />
+      <TopBar crumbs={[{ label: "Results", href: `/optimizations/${o.optimization.id}` }, { label: o.label }]} projectId={o.optimization.project_id} active="results" />
       <section className="section">
         <div className="row" style={{ gap: 10 }}>
           <span className={`swatch ${isBaseline ? "ring" : ""}`} style={isBaseline ? undefined : { background: seriesColor(o.key) }} />

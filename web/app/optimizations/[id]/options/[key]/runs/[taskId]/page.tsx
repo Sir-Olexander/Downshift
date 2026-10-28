@@ -28,7 +28,7 @@ export default async function RunPage({ params, searchParams }: { params: Promis
   const verdict = j?.preferred === "candidate" ? "judge preferred this one" : j?.preferred === "tie" ? "judge: tie" : j?.preferred === "baseline" ? "judge preferred this one" : undefined;
   return (
     <main className="shell">
-      <TopBar crumbs={[{ label: "Results", href: `/optimizations/${id}` }, { label: r.option.label, href: `/optimizations/${id}/options/${key}` }, { label: r.task_id }]} />
+      <TopBar crumbs={[{ label: "Results", href: `/optimizations/${id}` }, { label: r.option.label, href: `/optimizations/${id}/options/${key}` }, { label: r.task_id }]} projectId={r.candidate.project} active="results" />
       <section className="section">
         <div className="eyebrow">
           {r.split === "test" ? "Held-out run" : `Optimization sample, round ${r.round}`} · {r.task_id}

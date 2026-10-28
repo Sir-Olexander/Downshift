@@ -1,7 +1,14 @@
 import Link from "next/link";
-import { RunOptimizationButton } from "@/components/RunOptimizationButton";
 
-export function TopBar({ crumbs, projectId = "research-agent" }: { crumbs?: { label: string; href?: string }[]; projectId?: string }) {
+type Nav = "agents" | "run" | "results" | "history";
+
+export function TopBar({ crumbs, projectId = "research-agent", active }: { crumbs?: { label: string; href?: string }[]; projectId?: string; active?: Nav }) {
+  const links: { key: Nav; label: string; href: string }[] = [
+    { key: "agents", label: "Agents", href: "/agents" },
+    { key: "run", label: "Run", href: `/agents/${projectId}` },
+    { key: "results", label: "Results", href: "/" },
+    { key: "history", label: "History", href: "/optimizations" },
+  ];
   return (
     <header className="topbar">
       <div className="crumbs">
@@ -16,12 +23,13 @@ export function TopBar({ crumbs, projectId = "research-agent" }: { crumbs?: { la
           </span>
         ))}
       </div>
-      <div className="topbar-actions">
-        <Link href="/optimizations" className="btn secondary small">
-          History
-        </Link>
-        <RunOptimizationButton projectId={projectId} />
-      </div>
+      <nav className="topnav" aria-label="Main">
+        {links.map((l) => (
+          <Link key={l.key} href={l.href} className={l.key === active ? "on" : undefined} aria-current={l.key === active ? "page" : undefined}>
+            {l.label}
+          </Link>
+        ))}
+      </nav>
     </header>
   );
 }

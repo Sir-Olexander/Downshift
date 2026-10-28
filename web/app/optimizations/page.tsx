@@ -22,7 +22,7 @@ export default async function History() {
   }
   return (
     <main className="shell">
-      <TopBar crumbs={[{ label: "History" }]} />
+      <TopBar crumbs={[{ label: "History" }]} active="history" />
       <section className="section">
         <div className="section-head">
           <h2>Optimizations</h2>

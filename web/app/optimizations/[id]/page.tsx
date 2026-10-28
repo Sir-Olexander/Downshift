@@ -29,7 +29,7 @@ export default async function OptimizationPage({ params }: { params: Promise<{ i
   }
   return (
     <main className="shell">
-      <TopBar crumbs={[{ label: "History", href: "/optimizations" }, { label: opt.id }]} projectId={opt.project_id} />
+      <TopBar crumbs={[{ label: "History", href: "/optimizations" }, { label: opt.id }]} projectId={opt.project_id} active={opt.status === "done" ? "results" : "run"} />
       {opt.status === "done" && opt.summary ? (
         <Results opt={opt} />
       ) : opt.status === "failed" ? (
