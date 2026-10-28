@@ -38,7 +38,7 @@ export default async function RunAgent({ params }: { params: Promise<{ id: strin
   const st = agentState(agent);
   const others = (health?.running ?? []).filter((r) => r !== active?.id);
   const blocked = agent.ok_task_count < MIN_RUNS ? `Needs at least ${MIN_RUNS} recorded runs (has ${agent.ok_task_count}).` : others.length ? "Another optimization is running; start this one when it finishes." : null;
-  const history = agent.optimizations ?? [];
+  const history = (agent.optimizations ?? []).filter((o) => o.id !== active?.id);
 
   return (
     <main className="shell">

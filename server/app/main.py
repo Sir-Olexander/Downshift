@@ -451,4 +451,4 @@ def validate_harness(body: dict[str, Any]) -> dict[str, Any]:
         h.validate_models(default_table())
     except HarnessError as e:
         return {"ok": False, "error": str(e)}
-    return {"ok": True, "fingerprint": h.fingerprint(), "models_used": h.models_used(), "yaml": h.to_yaml()}
+    return {"ok": True, "name": h.name, "fingerprint": h.fingerprint(), "models_used": h.models_used(), "steps": [s.id for s in h.steps if s.enabled], "tools": list(h.tools), "yaml": h.to_yaml()}

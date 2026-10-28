@@ -296,6 +296,7 @@ footer.foot { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--h
 .field > span { font-size: 12px; color: var(--ink-3); }
 .input, .textarea, .select { width: 100%; font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 0 12px; height: 38px; }
 .input:focus, .textarea:focus, .select:focus { outline: none; border-color: var(--ink); }
+.input:disabled, .select:disabled { color: var(--ink-3); background: var(--surface-2); border-color: var(--hair); }
 .input.mono { font-family: var(--font-mono); font-size: 13px; }
 .textarea { height: auto; min-height: 420px; padding: 12px 14px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; resize: vertical; tab-size: 2; }
 .input-row { display: flex; gap: 8px; }
@@ -323,7 +324,8 @@ footer.foot { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--h
 /* folder browser */
 .browser { border: 1px solid var(--hair); border-radius: 8px; overflow: hidden; }
 .browser .where { display: flex; gap: 8px; align-items: center; padding: 8px 12px; background: var(--surface-2); font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); }
-.browser .where .path { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; }
+.browser .where .btn { font-family: var(--font-sans); }
+.browser .where .path { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .browser ul { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow: auto; }
 .browser li button { width: 100%; display: flex; gap: 10px; align-items: center; padding: 8px 12px; border: 0; border-bottom: 1px solid var(--hair); background: transparent; text-align: left; cursor: pointer; font-size: 13.5px; }
 .browser li:last-child button { border-bottom: 0; }
@@ -338,7 +340,7 @@ footer.foot { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--h
 .is-yes { color: var(--good); }
 .is-no { color: var(--ink-3); }
 .cmd { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 8px; background: var(--surface-2); }
-.cmd pre { flex: 1; min-width: 0; font-size: 12.5px; }
+.cmd pre { flex: 1; min-width: 0; font-size: 12.5px; white-space: pre; overflow-x: auto; word-break: normal; }
 .count { font-size: 44px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
 
 /* agent list */

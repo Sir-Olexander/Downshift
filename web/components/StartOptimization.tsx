@@ -14,8 +14,9 @@ const TARGETS = [
 export function StartOptimization({ projectId, canStart, blockedReason, demoMode }: { projectId: string; canStart: boolean; blockedReason?: string | null; demoMode: boolean }) {
   const router = useRouter();
   const [targets, setTargets] = useState<string[]>(TARGETS.map((t) => t.key));
-  const [rounds, setRounds] = useState(2);
-  const [sample, setSample] = useState(10);
+  // demo mode caps live runs on the API side; show the values it will use
+  const [rounds, setRounds] = useState(demoMode ? 1 : 2);
+  const [sample, setSample] = useState(demoMode ? 4 : 10);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

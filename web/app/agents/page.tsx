@@ -49,7 +49,7 @@ export default async function Agents() {
                     {a.path}
                   </div>
                   <div className="small sub" style={{ marginTop: 2 }}>
-                    {a.ok_task_count} of {MIN_RUNS}+ baseline runs recorded
+                    {a.ok_task_count < MIN_RUNS ? `${a.ok_task_count} of ${MIN_RUNS} baseline runs needed` : `${a.ok_task_count} baseline runs recorded`}
                     {a.models_used.length ? ` · ${a.models_used.map(shortModel).join(", ")}` : ""}
                     {a.latest ? ` · last result ${when(a.latest.finished_at)}` : ""}
                   </div>

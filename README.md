@@ -82,7 +82,7 @@ cd web && cp .env.example .env.local && npm install && npm run dev      # http:/
 # 3. Record your own baseline runs with the SDK (42 research questions on Nemotron 3 Ultra)
 uv run python demo_agent/record_baseline.py --concurrency 3
 
-# 4. Optimize: from the UI ("Run optimization", small and rate limited) or in full from the CLI
+# 4. Optimize: from the UI's Run screen (small and rate limited) or in full from the CLI
 uv run python -m app.cli optimize --targets super,nano,mix --rounds 2 --sample 10
 ```
 
@@ -99,7 +99,7 @@ Tests: `uv run pytest` (SDK, optimizer units, API, a scripted end-to-end optimiz
 ```
 sdk/          Python package `downshift`: harness schema, model table + prices, provider layer, tracing, replay
 server/       FastAPI backend: storage (SQLite), optimizer (split, analyze, rewrite, replay, judge), GitHub PR, seed
-web/          Next.js UI: results, harness diff, run view, Open PR, Run optimization
+web/          Next.js UI: agents, onboarding (folder → harness.yaml → baseline runs), Run screen, results, harness diff, Open PR
 demo_agent/   The "user's agent": research agent (web_search + read_page), harness.yaml, 42 questions, recorder
 docs/         Deployment notes (Nebius Serverless), video script
 ```
@@ -152,6 +152,7 @@ docs/         Deployment notes (Nebius Serverless), video script
 | `TAVILY_API_KEY` | search provider for the demo agent (Wikipedia fallback without it) |
 | `DOWNSHIFT_API_KEYS` | keys the SDK may use to send runs (default `ds_dev`) |
 | `DOWNSHIFT_DEMO_MODE`, `DOWNSHIFT_MAX_LIVE_PER_HOUR` | keep live optimizations small and rate limited |
+| `DOWNSHIFT_ALLOW_FS`, `DOWNSHIFT_AGENTS_ROOT` | let the UI browse agent folders and write their harness.yaml (default on, inside your home folder); turn off on a public deployment |
 | `DOWNSHIFT_OPT_ROUNDS`, `DOWNSHIFT_OPT_SAMPLE`, `DOWNSHIFT_OPT_CONCURRENCY`, `DOWNSHIFT_TEST_FRACTION` | optimizer budget |
 | `GITHUB_REPO`, `GITHUB_TOKEN`, `GITHUB_BASE_BRANCH`, `GITHUB_HARNESS_PATH` | Open PR |
 | `DOWNSHIFT_PUBLIC_WEB_URL` | web URL linked from PR descriptions |

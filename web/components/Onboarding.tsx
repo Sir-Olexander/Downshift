@@ -156,8 +156,8 @@ function FolderStep({ root, initialPath, initialId, onAdded }: { root: string; i
             <dd>{Object.keys(info.tools).length ? <span className="mono">{Object.keys(info.tools).join(", ")}</span> : <span className="is-no">None detected in tools*.py</span>}</dd>
           </dl>
           <div className="row" style={{ alignItems: "flex-end" }}>
-            <label className="field" style={{ width: 280 }}>
-              <span>Agent id (also the project name the SDK records under)</span>
+            <label className="field" style={{ width: 320 }}>
+              <span>Agent id (the project name the SDK records under)</span>
               <input className="input mono" value={id} onChange={(e) => setId(e.target.value)} spellCheck={false} />
             </label>
             <span className="spacer" />
@@ -397,11 +397,11 @@ function RecordStep({ agentId }: { agentId: string }) {
   const ready = n >= MIN_RUNS;
   const cmd = folder?.record_script
     ? `cd ${folder.path}\nuv run python ${folder.record_script} --project ${agentId}`
-    : `from downshift import Downshift\n\nds = Downshift(project="${agentId}")          # sends runs to DOWNSHIFT_ENDPOINT\nharness = ds.load_harness("harness.yaml")\n\nfor task in tasks:\n    with ds.run(task_id=task["id"], input=task["question"], harness=harness) as run:\n        ...                                  # run.chat(...), run.tool(...)\n        run.finish(answer=answer, sources=urls)`;
+    : `from downshift import Downshift\n\nds = Downshift(project="${agentId}")\nharness = ds.load_harness("harness.yaml")\n\nfor task in tasks:\n    with ds.run(task_id=task["id"], input=task["question"],\n                harness=harness) as run:\n        ...  # run.chat(...), run.tool(...)\n        run.finish(answer=answer, sources=urls)`;
 
   return (
     <div className="grid-2">
-      <div className="card card-pad stack" style={{ gap: 14 }}>
+      <div className="card card-pad stack" style={{ gap: 14, gridTemplateColumns: "minmax(0, 1fr)" }}>
         <div>
           <h2>Record baseline runs</h2>
           <p className="sub small" style={{ marginTop: 4 }}>
@@ -419,7 +419,7 @@ function RecordStep({ agentId }: { agentId: string }) {
             : `Record at least ${MIN_RUNS} tasks; more runs give a firmer result.`}
         </p>
       </div>
-      <div className="card progress stack" style={{ gap: 12, alignContent: "start" }}>
+      <div className="card progress stack" style={{ gap: 12, alignSelf: "start" }}>
         <div className="row">
           {!ready && <span className="dot-live" />}
           <span className="eyebrow">{ready ? "Ready" : "Waiting for runs"}</span>
