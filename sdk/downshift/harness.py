@@ -184,6 +184,15 @@ class Harness(BaseModel):
                 )
             if provider:
                 table.resolve(m, provider)
+        if provider and hasattr(table, "supports_reasoning"):
+            for s in self.steps:
+                if not s.enabled:
+                    continue
+                p = self.params(s)
+                if p.reasoning is not None and not table.supports_reasoning(p.model, provider, p.reasoning):
+                    raise HarnessError(
+                        f"step '{s.id}': model '{p.model}' does not support reasoning: {p.reasoning} on provider '{provider}'"
+                    )
 
     # ---- serialisation --------------------------------------------------------------------
     def to_dict(self) -> dict[str, Any]:

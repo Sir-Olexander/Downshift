@@ -62,6 +62,10 @@ providers:
       medium: { reasoning_effort: medium }
       high: { reasoning_effort: high }
 
+# A model entry may carry its own `reasoning:` mapping per provider when the provider-wide one does
+# not fit it (checked with `python -m downshift.probe`): {provider: {level: request fields}}. A level
+# mapped to null is unsupported for that model, and a harness that asks for it is rejected, so the
+# optimizer never relies on a switch that does nothing.
 models:
   nemotron-3-nano:
     display: Nemotron 3 Nano

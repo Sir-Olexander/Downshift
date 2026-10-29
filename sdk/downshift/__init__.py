@@ -18,7 +18,7 @@ from typing import Any
 
 from .harness import Harness, HarnessError, Step, StepParams, ToolSpec, FewShot, Defaults
 from .adapter import AgentAdapter, Task, render
-from .pricing import ModelTable, ModelInfo, ProviderInfo, default_table, UnknownModelError
+from .pricing import ModelTable, ModelInfo, ProviderInfo, default_table, UnknownModelError, UnsupportedReasoningError
 from .providers import LLM, LLMError, ChatResult, ToolCallRequest, active_provider_name
 from .replay import ReplayCache, ReplayRun, ReplayMiss, extract_urls, norm_url
 from .tracing import Run, RunRecord, ModelCallEvent, ToolCallEvent, Totals, SDK_VERSION
@@ -27,7 +27,7 @@ from .transport import HttpTransport, FileTransport, MemoryTransport, NullTransp
 __version__ = SDK_VERSION
 __all__ = [
     "Downshift", "AgentAdapter", "Task", "render", "Harness", "HarnessError", "Step", "StepParams", "ToolSpec", "FewShot", "Defaults",
-    "ModelTable", "ModelInfo", "ProviderInfo", "default_table", "UnknownModelError",
+    "ModelTable", "ModelInfo", "ProviderInfo", "default_table", "UnknownModelError", "UnsupportedReasoningError",
     "LLM", "LLMError", "ChatResult", "ToolCallRequest", "active_provider_name",
     "ReplayCache", "ReplayRun", "ReplayMiss", "extract_urls", "norm_url",
     "Run", "RunRecord", "ModelCallEvent", "ToolCallEvent", "Totals",
