@@ -95,6 +95,16 @@ replay are stored as they happen. `uv run python -m app.cli redo <optimization i
 held-out tasks that failed or are missing for that option and rebuilds the summary;
 `uv run python -m app.cli resummarize <optimization id>` recomputes checks, metrics and the summary from
 the stored replays without spending tokens (for example after a fix to the automatic checks).
+`uv run python -m app.cli verify <optimization id> --trials 2` runs every chosen harness, the plain model
+swap and the baseline harness again on the held-out tasks with new model calls, and prints the fresh
+numbers next to the replay-based ones.
+
+Held-out numbers can use several replays per task (`--trials`, reported as pass^1 and pass^k), the plain
+swap is replayed on the same held-out tasks so "the rewrite beats the swap" is a paired comparison, and the
+bar is a non-inferiority test (the lower 90% bound of the paired success difference must stay above
+`--margin`, 10 points by default) with an explicit "inconclusive" verdict. With `--race N`, the two best
+candidates and the swap are re-scored on N unseen optimization tasks before one is chosen, so a lucky
+small-sample score does not pick the harness.
 
 To try the whole flow on one of the extra demo agents from the UI, follow [docs/try-a-run.md](docs/try-a-run.md).
 
@@ -203,6 +213,7 @@ docs/         Deployment notes (Nebius Serverless), video script
 | `DOWNSHIFT_DEMO_MODE`, `DOWNSHIFT_MAX_LIVE_PER_HOUR` | keep live optimizations small and rate limited |
 | `DOWNSHIFT_ALLOW_FS`, `DOWNSHIFT_AGENTS_ROOT` | let the UI browse agent folders and write their harness.yaml (default on, inside your home folder); turn off on a public deployment |
 | `DOWNSHIFT_OPT_ROUNDS`, `DOWNSHIFT_OPT_SAMPLE`, `DOWNSHIFT_OPT_CONCURRENCY`, `DOWNSHIFT_TEST_FRACTION` | optimizer budget |
+| `DOWNSHIFT_TEST_TRIALS`, `DOWNSHIFT_OPT_RACE`, `DOWNSHIFT_NONINFERIORITY_PP` | replays per held-out task (default 1), racing pool size (default 0 = off), non-inferiority margin in points (default 10) |
 | `GITHUB_REPO`, `GITHUB_TOKEN`, `GITHUB_BASE_BRANCH`, `GITHUB_HARNESS_PATH` | Open PR |
 | `DOWNSHIFT_PUBLIC_WEB_URL` | web URL linked from PR descriptions |
 | `API_URL` (web) | where the Next.js server reaches the API |
