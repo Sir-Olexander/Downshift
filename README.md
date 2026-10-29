@@ -92,6 +92,8 @@ held-out tasks that failed or are missing for that option and rebuilds the summa
 `uv run python -m app.cli resummarize <optimization id>` recomputes checks, metrics and the summary from
 the stored replays without spending tokens (for example after a fix to the automatic checks).
 
+To try the whole flow on one of the extra demo agents from the UI, follow [docs/try-a-run.md](docs/try-a-run.md).
+
 Tests: `uv run pytest` (SDK, optimizer units, API, a scripted end-to-end optimization).
 
 ## Repo layout
