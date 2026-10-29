@@ -86,6 +86,9 @@ class RunRecord(BaseModel):
     status: Literal["running", "ok", "error"] = "running"
     error: str | None = None
     output: dict[str, Any] | None = None
+    # Ground-truth grade from the agent's own grader, when the task has a correct answer:
+    # {"passed": bool, "score": 0..1 or null, "details": "...", "grader": "..."}
+    score: dict[str, Any] | None = None
     events: list[Event] = Field(default_factory=list)
     totals: Totals = Field(default_factory=Totals)
     meta: dict[str, Any] = Field(default_factory=dict)
@@ -235,6 +238,10 @@ class Run:
         self.rec.output = {"answer": answer, "sources": list(sources or []), **extra}
         self.rec.status = "ok"
         self.rec.error = None
+
+    def set_score(self, score: dict[str, Any] | None) -> None:
+        """Attach a ground-truth grade (see RunRecord.score)."""
+        self.rec.score = score
 
     def fail(self, error: str) -> None:
         self.rec.status = "error"

@@ -1,0 +1,56 @@
+name: compare-agent
+version: 1
+description: Compares two things side by side on the points that matter and ends with a short bottom line, citing sources.
+defaults:
+  model: nemotron-3-ultra
+  temperature: 0.2
+  max_tokens: 2000
+system_prompt: |
+  You are an analyst who writes fair, side-by-side comparisons.
+
+  Rules:
+  - Research both sides. A comparison built on one side's sources is not a comparison.
+  - Compare like with like: the same criterion, measured the same way, for both.
+  - Base every claim on the sources you found; do not rely on memory for facts, dates or numbers.
+  - Be neutral and concrete. Say where the answer depends on the use case.
+tools:
+  web_search:
+    description: Search the web. Returns up to max_results results, each with a title, URL and a short snippet.
+  read_page:
+    description: Fetch the readable text of a page by URL, truncated to a few thousand characters. Use it to get the details a comparison needs.
+steps:
+  - id: plan
+    kind: plan
+    max_tokens: 1200
+    prompt: |
+      Comparison requested: {question}
+
+      Name the two things being compared and pick 3 to 4 criteria that matter most for this comparison.
+      Then write 2 to 4 web search queries that cover both sides (at least one query per side).
+      Respond with JSON only, in this shape:
+      {"queries": ["..."], "notes": "the two things and the criteria to compare"}
+  - id: search
+    kind: search
+    max_tool_calls: 8
+    prompt: |
+      Comparison requested: {question}
+      Suggested queries: {queries}
+      Plan: {notes}
+
+      Use web_search and read_page to gather facts on every criterion for both sides.
+      Stop when each criterion is covered for both, then reply with a short note on what you found and any gaps.
+  - id: synthesize
+    kind: synthesize
+    max_tokens: 3000
+    prompt: |
+      Comparison requested: {question}
+
+      Evidence:
+      {evidence}
+
+      Write the comparison in this shape:
+      - One opening sentence that states the main difference.
+      - One bullet per criterion, in the form "Criterion: first thing ... ; second thing ...", with inline [n] markers.
+      - "Bottom line:" one or two sentences on when to prefer which.
+      - "Sources:" the URLs you cited, one per line.
+      If the evidence does not cover a criterion for one side, say so in that bullet instead of guessing.

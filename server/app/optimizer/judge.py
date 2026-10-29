@@ -1,4 +1,9 @@
-"""Scoring: automatic checks plus a blind, order-randomised LLM judge on Nemotron 3 Ultra."""
+"""Scoring: automatic checks, plus either the task's ground truth or a blind LLM judge.
+
+When the agent's grader has scored the baseline run against the task's correct answer, the
+replay is scored the same way and no LLM judge is called (ground truth beats an opinion, and it
+is free). Otherwise a blind, order-randomised Nemotron 3 Ultra judge compares the two answers.
+"""
 
 from __future__ import annotations
 
@@ -75,8 +80,32 @@ def quality_score(scores: dict[str, Any] | None) -> float | None:
     return round(sum(vals) / (5 * len(vals)) * 100, 1)
 
 
-def auto_checks(record: dict[str, Any]) -> dict[str, Any]:
-    """Simple deterministic checks on a run record."""
+def _custom_checks(record: dict[str, Any]) -> dict[str, Any]:
+    """Checks that hold for any agent: it finished without errors and produced an output."""
+    output = record.get("output") or {}
+    answer = output.get("answer")
+    events = record.get("events") or []
+    tool_events = [e for e in events if e.get("type") == "tool_call"]
+    model_errors = [e for e in events if e.get("type") == "model_call" and e.get("error")]
+    checks: dict[str, Any] = {
+        "answer_produced": bool(str(answer).strip()) if answer is not None else False,
+        "tools_used": len(tool_events) > 0,
+        "no_errors": record.get("status") == "ok" and not model_errors,
+        "n_tool_calls": len(tool_events),
+    }
+    sc = record.get("score")
+    if sc is not None:
+        checks["ground_truth"] = bool(sc.get("passed"))
+    checks["passed"] = bool(checks["no_errors"] and (checks["answer_produced"] or sc is not None))
+    return checks
+
+
+def auto_checks(record: dict[str, Any], runtime: str | None = None) -> dict[str, Any]:
+    """Simple deterministic checks on a run record. Research runs must cite sources they found;
+    other agents (runtime 'custom') only need to finish cleanly."""
+    runtime = runtime or (record.get("harness") or {}).get("runtime") or "research"
+    if runtime != "research":
+        return _custom_checks(record)
     output = record.get("output") or {}
     answer = (output.get("answer") or "").strip()
     # Re-extract the cited URLs from the answer text, so a fix to the extractor applies to old records too.
@@ -156,6 +185,32 @@ def judge_pair(llm: LLM, model: str, question: str, baseline_answer: str, candid
         "cost_usd": llm.table.cost(model, res.tokens_in, res.tokens_out),
         "latency_ms": res.latency_ms,
     }
+
+
+def has_ground_truth(record: dict[str, Any] | None) -> bool:
+    return bool(record) and isinstance(record.get("score"), dict)
+
+
+def _gt(record: dict[str, Any]) -> dict[str, Any]:
+    """Pass/score of a run against its task's correct answer; an errored or ungraded run fails."""
+    sc = record.get("score") if record.get("status") == "ok" else None
+    if not isinstance(sc, dict):
+        why = record.get("error") or "the run produced no gradeable output"
+        return {"passed": False, "score": 0.0, "details": str(why)[:300]}
+    return {"passed": bool(sc.get("passed")), "score": float(sc.get("score") if sc.get("score") is not None else (1.0 if sc.get("passed") else 0.0)), "details": str(sc.get("details", ""))[:300]}
+
+
+def ground_truth_verdict(baseline_record: dict[str, Any], candidate_record: dict[str, Any]) -> dict[str, Any]:
+    """The judge result when both runs are graded against the task's correct answer. No model call."""
+    b, c = _gt(baseline_record), _gt(candidate_record)
+    if c["score"] > b["score"]:
+        preferred = "candidate"
+    elif c["score"] < b["score"]:
+        preferred = "baseline"
+    else:
+        preferred = "tie"
+    reason = f"candidate {'passed' if c['passed'] else 'failed'}: {c['details'] or '-'} | baseline {'passed' if b['passed'] else 'failed'}: {b['details'] or '-'}"
+    return {"method": "ground_truth", "candidate": c, "baseline": b, "candidate_quality": round(100 * c["score"], 1), "baseline_quality": round(100 * b["score"], 1), "preferred": preferred, "reason": reason[:600], "parsed": True, "cost_usd": 0.0}
 
 
 def is_success(scores: dict[str, Any] | None, checks: dict[str, Any] | None) -> bool:

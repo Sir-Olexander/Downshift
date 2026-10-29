@@ -1,0 +1,14 @@
+[
+  {"id": "fc01", "category": "space", "difficulty": "easy", "question": "The Great Wall of China is visible from the Moon with the naked eye."},
+  {"id": "fc02", "category": "history", "difficulty": "easy", "question": "Albert Einstein failed mathematics at school."},
+  {"id": "fc03", "category": "geography", "difficulty": "medium", "question": "Mount Everest is the tallest mountain on Earth when measured from base to peak."},
+  {"id": "fc04", "category": "science", "difficulty": "easy", "question": "Lightning never strikes the same place twice."},
+  {"id": "fc05", "category": "history", "difficulty": "medium", "question": "The Eiffel Tower was originally meant to be a temporary structure."},
+  {"id": "fc06", "category": "biology", "difficulty": "easy", "question": "Goldfish have a memory span of only about three seconds."},
+  {"id": "fc07", "category": "biology", "difficulty": "easy", "question": "Bats are blind."},
+  {"id": "fc08", "category": "space", "difficulty": "medium", "question": "Venus is the hottest planet in the Solar System, even though Mercury is closer to the Sun."},
+  {"id": "fc09", "category": "history", "difficulty": "medium", "question": "Napoleon Bonaparte was unusually short for a Frenchman of his time."},
+  {"id": "fc10", "category": "biology", "difficulty": "easy", "question": "An adult human skeleton typically has 206 bones."},
+  {"id": "fc11", "category": "history", "difficulty": "easy", "question": "Viking warriors wore horned helmets in battle."},
+  {"id": "fc12", "category": "geography", "difficulty": "hard", "question": "The Amazon is definitively the longest river in the world."}
+]

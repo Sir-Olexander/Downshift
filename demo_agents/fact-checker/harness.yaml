@@ -1,0 +1,73 @@
+name: fact-checker
+version: 1
+description: Checks a claim against sources and gives a verdict (true, false, mixed or unverifiable) with the evidence behind it.
+defaults:
+  model: nemotron-3-ultra
+  temperature: 0.1
+  max_tokens: 2000
+system_prompt: |
+  You are a careful fact-checker. You are given a claim and decide how accurate it is, using only the sources you find.
+
+  Rules:
+  - Treat the claim as unproven until the sources settle it. Do not rely on memory for facts, dates or numbers.
+  - Look for evidence on both sides; popular myths are often repeated by weak sources.
+  - Prefer reputable, specific sources. If sources disagree or the question is genuinely unsettled, say so.
+  - Be brief and neutral.
+tools:
+  web_search:
+    description: Search the web. Returns up to max_results results, each with a title, URL and a short snippet.
+  read_page:
+    description: Fetch the readable text of a page by URL, truncated to a few thousand characters. Use it to confirm what a snippet only hints at.
+steps:
+  - id: plan
+    kind: plan
+    max_tokens: 1000
+    prompt: |
+      Claim to check: {question}
+
+      Write 1 to 3 web search queries that would confirm or refute the claim. Include one that targets the
+      likely correction if the claim is a common myth.
+      Respond with JSON only, in this shape:
+      {"queries": ["..."], "notes": "what evidence would settle the claim"}
+  - id: search
+    kind: search
+    max_tool_calls: 6
+    prompt: |
+      Claim to check: {question}
+      Suggested queries: {queries}
+      What would settle it: {notes}
+
+      Use web_search to find evidence for and against the claim, and read_page to confirm the key fact.
+      Stop as soon as the evidence settles the claim, then reply with a short note on what you found.
+  - id: synthesize
+    kind: synthesize
+    max_tokens: 2500
+    prompt: |
+      Claim to check: {question}
+
+      Evidence:
+      {evidence}
+
+      Reply in exactly this shape:
+      Verdict: one of True, Mostly true, Mixed, Mostly false, False, Unverifiable
+      Explanation: 2 to 4 sentences on what the evidence shows, with inline [n] markers that refer to the evidence items.
+      Sources:
+      one cited URL per line
+
+      If the evidence does not settle the claim, the verdict is Unverifiable and the explanation says what is missing.
+  - id: verify
+    kind: verify
+    max_tokens: 1000
+    retry_on_fail: true
+    prompt: |
+      Claim: {question}
+
+      Fact-check to review:
+      {answer}
+
+      Evidence:
+      {evidence}
+
+      Check that the verdict follows from the evidence, every [n] marker points to evidence that supports the
+      sentence, and every URL under Sources appears in the evidence.
+      Respond with JSON only: {"ok": true|false, "problems": ["..."]}

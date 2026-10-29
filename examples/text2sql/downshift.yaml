@@ -1,0 +1,5 @@
+# How Downshift runs this agent. Not changed by the optimizer (it only rewrites harness.yaml).
+entry: downshift_agent:agent
+python: .venv/bin/python
+tasks: tasks.jsonl
+harness: harness.yaml

@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
+import subprocess
 import threading
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from downshift import Harness, HarnessError, default_table
+from downshift import LLM, Harness, HarnessError, LLMError, default_table
 
+from . import agents as agentfs
 from .db import Database
 from .github_pr import open_pr, pr_payload
 from .optimizer.engine import TARGETS, Engine, default_config
-from .settings import Settings
+from .optimizer.external import ExternalAgent, ExternalAgentError
+from .settings import REPO_DIR, Settings
 
 settings = Settings.from_env()
 db = Database(settings.db_path)
@@ -29,6 +33,9 @@ async def lifespan(app: FastAPI):
     if db.is_empty() and settings.seed_path.exists():
         counts = db.import_from_file(settings.seed_path)
         print(f"[downshift] seeded demo data from {settings.seed_path}: {counts}")
+    demo = REPO_DIR / "demo_agent"
+    if db.agents_table_created and db.get_project("research-agent") and demo.is_dir():
+        db.upsert_agent("research-agent", "research-agent", str(demo))  # once; removing it later sticks
     yield
 
 
@@ -94,7 +101,7 @@ def _get_option_or_404(opt: dict[str, Any], key: str) -> dict[str, Any]:
 # ---- basic ----------------------------------------------------------------------------------------
 @app.get("/healthz")
 def healthz() -> dict[str, Any]:
-    return {"ok": True, "provider": settings.provider, "demo_mode": settings.demo_mode, "running": list(_running)}
+    return {"ok": True, "provider": settings.provider, "demo_mode": settings.demo_mode, "running": list(_running), "allow_fs": settings.allow_fs, "agents_root": str(settings.agents_root) if settings.allow_fs else None}
 
 
 @app.get("/v1/models")
@@ -160,6 +167,144 @@ def list_project_runs(project_id: str, tag: str | None = None, limit: int = Quer
     return [_run_public(r) for r in db.list_runs(project_id, tag=tag, limit=limit)]
 
 
+# ---- agents (folders the user tests) ------------------------------------------------------------------
+def _require_fs() -> None:
+    if not settings.allow_fs:
+        raise HTTPException(status_code=403, detail="folder access is turned off on this server (DOWNSHIFT_ALLOW_FS)")
+
+
+def _agent_public(agent_id: str, agent: dict[str, Any] | None) -> dict[str, Any]:
+    project = db.get_project(agent_id)
+    path = Path(agent["path"]) if agent else None
+    h = project.get("harness_json") if project else None
+    ok_tasks = {r["task_id"] for r in db.list_runs(agent_id, status="ok", limit=5000)} if project else set()
+    opts = db.list_optimizations(agent_id, limit=20) if project else []
+    active = next((o for o in opts if o["status"] in ("queued", "running")), None)
+    latest = next((o for o in opts if o["status"] == "done"), None)
+    return {
+        "id": agent_id, "name": (agent or {}).get("name") or agent_id, "path": str(path) if path else None, "registered": agent is not None,
+        "created_at": (agent or project or {}).get("created_at"), "folder_exists": bool(path and path.is_dir()),
+        "harness_on_disk": bool(path and (path / agentfs.HARNESS_FILE).is_file()), "harness_fingerprint": (project or {}).get("harness_fingerprint"),
+        "models_used": Harness.from_dict(h).models_used() if h else [], "run_count": len(db.list_runs(agent_id, limit=5000)) if project else 0,
+        "ok_task_count": len(ok_tasks), "active": _optimization_public(active, with_options=False) if active else None,
+        "latest": _optimization_public(latest, with_options=False) if latest else None, "optimization_count": len(opts),
+    }
+
+
+class AgentRequest(BaseModel):
+    path: str
+    id: str | None = None
+    name: str | None = None
+
+
+class HarnessWrite(BaseModel):
+    yaml: str
+    overwrite: bool = False
+
+
+@app.get("/v1/agents")
+def list_agents() -> list[dict[str, Any]]:
+    return [_agent_public(a["id"], a) for a in db.list_agents()]
+
+
+@app.get("/v1/agents/{agent_id}")
+def get_agent(agent_id: str) -> dict[str, Any]:
+    agent = db.get_agent(agent_id)
+    if not agent and not db.get_project(agent_id):
+        raise HTTPException(status_code=404, detail="agent not found")
+    out = _agent_public(agent_id, agent)
+    out["optimizations"] = [_optimization_public(o, with_options=False) for o in db.list_optimizations(agent_id, limit=50)]
+    return out
+
+
+@app.post("/v1/agents", status_code=201)
+def add_agent(req: AgentRequest) -> dict[str, Any]:
+    _require_fs()
+    try:
+        info = agentfs.inspect_folder(settings.agents_root, req.path)
+    except agentfs.FolderError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    agent_id = agentfs.slug(req.id or info["suggested_id"])
+    other = db.get_agent(agent_id)
+    if other and other["path"] != info["path"]:
+        raise HTTPException(status_code=409, detail=f"an agent called '{agent_id}' already points at {other['path']}; pick another id")
+    db.upsert_agent(agent_id, (req.name or "").strip() or agent_id, info["path"])
+    return {**_agent_public(agent_id, db.get_agent(agent_id)), "folder": info}
+
+
+@app.delete("/v1/agents/{agent_id}")
+def remove_agent(agent_id: str) -> dict[str, Any]:
+    if not db.delete_agent(agent_id):
+        raise HTTPException(status_code=404, detail="agent not found")
+    return {"ok": True, "id": agent_id, "note": "recorded runs and results are kept"}
+
+
+def _agent_folder(agent_id: str) -> Path:
+    _require_fs()
+    agent = db.get_agent(agent_id)
+    if not agent:
+        raise HTTPException(status_code=404, detail="agent not found")
+    try:
+        return agentfs.resolve_inside(settings.agents_root, agent["path"])
+    except agentfs.FolderError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.get("/v1/agents/{agent_id}/folder")
+def agent_folder(agent_id: str) -> dict[str, Any]:
+    try:
+        return agentfs.inspect_folder(settings.agents_root, str(_agent_folder(agent_id)))
+    except agentfs.FolderError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/v1/agents/{agent_id}/harness/draft")
+def draft_agent_harness(agent_id: str) -> dict[str, Any]:
+    folder = _agent_folder(agent_id)
+    info = agentfs.inspect_folder(settings.agents_root, str(folder))
+    if info.get("adapter") and not info["adapter"].get("error"):
+        try:  # the adapter knows the agent's real prompts and tools
+            text = agentfs.adapter_default_harness(folder)
+            return {"yaml": text, "validation": agentfs.validate_yaml(text), "tools_detected": agentfs.validate_yaml(text).get("tools") or [], "source": "adapter"}
+        except (agentfs.FolderError, OSError, subprocess.TimeoutExpired) as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+    text = agentfs.draft_harness(agent_id, info["description"], info["tools"])
+    return {"yaml": text, "validation": agentfs.validate_yaml(text), "tools_detected": list(info["tools"]), "source": "draft"}
+
+
+@app.put("/v1/agents/{agent_id}/harness")
+def write_agent_harness(agent_id: str, req: HarnessWrite) -> dict[str, Any]:
+    folder = _agent_folder(agent_id)
+    try:
+        return agentfs.write_harness(folder, req.yaml, overwrite=req.overwrite)
+    except agentfs.FolderError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
+    except HarnessError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.get("/v1/fs/browse")
+def fs_browse(path: str | None = None) -> dict[str, Any]:
+    _require_fs()
+    try:
+        return agentfs.browse(settings.agents_root, path)
+    except agentfs.FolderError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+class FolderRequest(BaseModel):
+    path: str
+
+
+@app.post("/v1/fs/inspect")
+def fs_inspect(req: FolderRequest) -> dict[str, Any]:
+    _require_fs()
+    try:
+        return agentfs.inspect_folder(settings.agents_root, req.path)
+    except agentfs.FolderError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
 # ---- optimizations ------------------------------------------------------------------------------------
 class OptimizationRequest(BaseModel):
     project_id: str = "research-agent"
@@ -192,9 +337,18 @@ def create_optimization(req: OptimizationRequest) -> dict[str, Any]:
     project = db.get_project(req.project_id)
     if not project or not project.get("harness_json"):
         raise HTTPException(status_code=400, detail=f"project '{req.project_id}' has no recorded baseline runs")
-    n_ok = len([r for r in db.latest_runs_per_task(req.project_id, tag=req.tag) if (r["record_json"].get("output") or {}).get("answer")])
+    n_ok = len([r for r in db.latest_runs_per_task(req.project_id, tag=req.tag) if r["record_json"].get("status") == "ok" and ((r["record_json"].get("output") or {}).get("answer") or isinstance(r["record_json"].get("score"), dict))])
     if n_ok < 4:
         raise HTTPException(status_code=400, detail=f"need at least 4 successful recorded runs, found {n_ok}")
+    if (project.get("harness_json") or {}).get("runtime") == "custom":
+        try:  # the agent's own code runs the replays: its folder must be registered and reachable
+            ExternalAgent.for_project(db, settings, req.project_id)
+        except ExternalAgentError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+    try:  # fail before queueing, so a missing key does not use up the demo's hourly allowance
+        LLM(settings.provider)
+    except LLMError as e:
+        raise HTTPException(status_code=400, detail=f"{e}. Add it to .env and restart the API.") from e
     cfg = default_config(settings)
     targets = list(dict.fromkeys(t for t in req.targets if t in TARGETS))
     if not targets:
@@ -314,4 +468,4 @@ def validate_harness(body: dict[str, Any]) -> dict[str, Any]:
         h.validate_models(default_table())
     except HarnessError as e:
         return {"ok": False, "error": str(e)}
-    return {"ok": True, "fingerprint": h.fingerprint(), "models_used": h.models_used(), "yaml": h.to_yaml()}
+    return {"ok": True, "name": h.name, "fingerprint": h.fingerprint(), "models_used": h.models_used(), "steps": [s.id for s in h.steps if s.enabled], "tools": list(h.tools), "yaml": h.to_yaml()}

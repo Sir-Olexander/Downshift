@@ -21,6 +21,33 @@ Runs are POSTed to the backend with the API key; if it is unreachable they are s
 `.downshift/spool/` and can be resent with `HttpTransport.flush()`. Set `DOWNSHIFT_OFFLINE_DIR` to
 write JSON files instead.
 
+## Adapters: agents you did not write
+
+For an existing agent, subclass `AgentAdapter` in a `downshift_agent.py` next to it:
+
+```python
+from downshift import AgentAdapter, Harness, Run, Task
+
+class MyAgent(AgentAdapter):
+    name = "my-agent"
+    reuse_tool_results = True          # False if tools change state
+
+    def run(self, task: Task, harness: Harness, run: Run) -> None:
+        ...                            # the agent's own loop, with run.chat(step, ...) and run.tool(...)
+        run.finish(answer)
+
+    def score(self, task: Task, output: dict) -> dict | None:
+        return {"passed": output["answer"] == task.expected, "details": "..."}
+
+agent = MyAgent()
+```
+
+`python -m downshift.runner check | init-harness | record | replay` runs it from the agent's own
+environment. `record` grades each run against the task's `expected` answer and stores the grade on the
+run (`RunRecord.score`); the server replays candidates through `runner replay` and scores them the same
+way. A harness for such an agent sets `runtime: custom`: step kinds and tool names are free, and
+`contract` states what the agent's code requires from the model.
+
 ## Provider layer
 
 Every model call goes through `downshift.LLM`, an OpenAI-compatible client configured from
@@ -55,4 +82,6 @@ steps:
 ```
 
 `Harness.load()` validates the file (unknown fields are rejected, so typos are caught), and
-`harness.params(step)` merges step settings with the defaults.
+`harness.params(step)` merges step settings with the defaults. `temperature: null` / `max_tokens: null`
+in `defaults` mean "send nothing, use the provider default". The research runtime (the default) needs
+`plan`/`search`/`synthesize`/`verify` steps; `runtime: custom` accepts any step kinds and tools.

@@ -145,17 +145,23 @@ class ReplayCache:
 
 
 class ReplayRun(Run):
-    """A Run whose tool calls are answered from a recording when they match."""
+    """A Run whose tool calls are answered from a recording when they match.
 
-    def __init__(self, *, recorded: dict[str, Any], allow_live: bool = True, **kwargs: Any):
+    reuse_tool_results=False runs every tool live: use it for agents whose tools change state
+    (a recorded "refund issued" must not stand in for a refund the replay never made)."""
+
+    def __init__(self, *, recorded: dict[str, Any], allow_live: bool = True, reuse_tool_results: bool = True, **kwargs: Any):
         meta = dict(kwargs.pop("meta", None) or {})
         meta.setdefault("replay_of", recorded.get("id"))
         super().__init__(meta=meta, mode="replay", **kwargs)
         self.recorded = recorded
         self.cache = ReplayCache(recorded.get("events") or [])
         self.allow_live = allow_live
+        self.reuse_tool_results = reuse_tool_results
 
     def tool(self, name: str, args: dict[str, Any], fn: Callable[[], Any], *, step: str | None = None) -> Any:
+        if not self.reuse_tool_results:
+            return super().tool(name, args, fn, step=step)
         hit = self.cache.lookup(name, args)
         if hit is not None:
             ev = ToolCallEvent(

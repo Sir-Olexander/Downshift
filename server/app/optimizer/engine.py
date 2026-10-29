@@ -15,8 +15,9 @@ from research_agent.tools import SearchTools
 from ..db import Database, now_iso
 from ..settings import Settings
 from .analyze import analyze_runs
+from .external import ExternalAgent, ExternalAgentError
 from .guidance import guidance_text, lookup_guidance
-from .judge import auto_checks, judge_pair
+from .judge import auto_checks, ground_truth_verdict, has_ground_truth, judge_pair
 from .metrics import aggregate, bar_tolerance_pp, baseline_run_metrics, deltas, meets_bar, objective, replay_metrics
 from .replay import replay_many
 from .rewrite import propose_harness
@@ -40,6 +41,9 @@ def default_config(settings: Settings) -> dict[str, Any]:
         "max_cost_usd": 6.0,
         "test_limit": None,  # cap on held-out runs evaluated (live demo runs); None = all of them
         "seed": 42,
+        # Try the original harness with only the model changed before any rewrite, so a rewrite has to
+        # beat the plain swap to be kept (and the report shows what the swap alone does).
+        "model_swap_candidate": True,
         "judge_model": settings.judge_model,
         "analysis_model": settings.analysis_model,
         "rewrite_model": settings.rewrite_model,
@@ -102,13 +106,44 @@ class Engine:
         out = []
         for x in ranked[:n]:
             checks = x["checks"]
-            failed = [k for k in ("answer_produced", "has_sources", "sources_from_evidence", "no_errors") if not checks.get(k)]
+            failed = [k for k in ("answer_produced", "has_sources", "sources_from_evidence", "no_errors", "ground_truth") if k in checks and not checks.get(k)]
             out.append({
                 "task_id": x["task_id"], "question": x["question"], "reason": (x["judge"] or {}).get("reason", ""),
                 "checks": ("failed: " + ", ".join(failed)) if failed else "all passed",
                 "answer_excerpt": ((x["record"].get("output") or {}).get("answer") or x["record"].get("error") or "")[:240],
             })
         return out
+
+    def _replayer(self, project_id: str, harness: Harness, sdk: Downshift, tools: SearchTools) -> tuple[Any, str]:
+        """How replays run: the built-in research agent in-process, or the project's own agent code
+        through its adapter (harness runtime: custom)."""
+        if harness.runtime == "research":
+            def research(h: Harness, records: list[dict[str, Any]], *, concurrency: int, meta: dict[str, Any], on_each: Any) -> list[dict[str, Any]]:
+                return replay_many(sdk, h, records, tools, concurrency=concurrency, meta=meta, on_each=on_each)
+            return research, "the built-in research agent"
+        try:
+            agent = ExternalAgent.for_project(self.db, self.settings, project_id)
+        except ExternalAgentError as e:
+            raise RuntimeError(str(e)) from e
+        return agent.replay_many, f"the agent's own code ({agent.describe()})"
+
+    @staticmethod
+    def _model_swap(h: Harness, model: str, target: str) -> Harness:
+        data = h.to_dict()
+        data["defaults"]["model"] = model
+        for step in data["steps"]:
+            if step.get("model"):
+                step["model"] = model
+        data["version"] = f"{h.version}-{target}-swap"
+        data["changelog"] = [f"Model swap only: every step on {model}; prompts and settings unchanged."]
+        return Harness.from_dict(data)
+
+    @staticmethod
+    def _scoring(records: list[dict[str, Any]]) -> str:
+        graded = sum(1 for r in records if has_ground_truth(r))
+        if graded and graded == len(records):
+            return "ground_truth"
+        return "mixed" if graded else "judge"
 
     # ---- the pipeline ---------------------------------------------------------------------------
     def _run(self, opt: dict[str, Any]) -> None:
@@ -120,7 +155,9 @@ class Engine:
             raise RuntimeError(f"project '{project_id}' has no recorded harness; record baseline runs first")
         baseline_harness = Harness.from_dict(project["harness_json"])
         runs = [r["record_json"] for r in self.db.latest_runs_per_task(project_id, tag=cfg.get("tag"))]
-        runs = [r for r in runs if r.get("status") == "ok" and (r.get("output") or {}).get("answer")]
+        # A graded run counts even when its answer was wrong or empty: that is a baseline failure,
+        # and leaving it out would flatter the baseline.
+        runs = [r for r in runs if r.get("status") == "ok" and ((r.get("output") or {}).get("answer") or has_ground_truth(r))]
         if len(runs) < 4:
             raise RuntimeError(f"need at least 4 successful recorded runs, found {len(runs)}")
 
@@ -128,6 +165,9 @@ class Engine:
         llm = LLM(provider, table=self.table)
         sdk = Downshift(transport=NullTransport(), llm=llm, table=self.table, project=project_id)
         tools = SearchTools()
+        replayer, runs_with = self._replayer(project_id, baseline_harness, sdk, tools)
+        scoring = self._scoring(runs)
+        self._event(oid, f"Replays run {runs_with}. Scoring: " + {"ground_truth": "each task's correct answer, graded by the agent's own grader (no LLM judge).", "mixed": "the correct answer where a task has one, the blind LLM judge otherwise.", "judge": "blind pairwise LLM judge."}[scoring], phase="split")
         spent = {"usd": 0.0}
         spent_lock = threading.Lock()
 
@@ -183,6 +223,19 @@ class Engine:
             previous: list[dict[str, Any]] = []
             best: dict[str, Any] | None = None
             rounds_log: list[dict[str, Any]] = []
+            if cfg.get("model_swap_candidate", True) and len(spec["allowed"]) == 1:
+                swap = self._model_swap(baseline_harness, spec["allowed"][0], target)
+                self._progress(oid, f"optimize:{target}", base_pct + per_target * 0.05, f"{spec['label']}: trying the model swap alone (no prompt changes)")
+                items = self._replay_and_score(oid, option["id"], swap, sample, "opt", 0, replayer, llm, cfg, add_cost, lambda d, t, label=spec["label"]: self._progress(oid, f"optimize:{target}", base_pct + per_target * 0.05, f"{label}: model swap alone, {d}/{t} runs"))
+                agg = aggregate([x["metrics"] for x in items])
+                base_agg = aggregate([x["baseline_metrics"] for x in items])
+                score = objective(agg, base_agg)
+                entry = {"round": 0, "kind": "model_swap", "fingerprint": swap.fingerprint(), "models_used": swap.models_used(), "metrics": agg, "baseline_metrics": base_agg, "objective": score, "changelog": swap.changelog, "rationale": "The original harness with only the model changed.", "worst_examples": self._worst_examples(items), "n": len(items), "harness": swap.to_dict()}
+                rounds_log.append(entry)
+                self.db.update_option(option["id"], rounds_json=rounds_log)
+                self._event(oid, f"{spec['label']} model swap alone (no prompt changes): success {agg.get('success_rate')}% vs baseline {base_agg.get('success_rate')}%, cost ${agg.get('cost_per_run')} vs ${base_agg.get('cost_per_run')} per run (optimization sample, n={len(items)}). Rewrites must beat this.", phase=f"optimize:{target}", data={"metrics": agg, "baseline": base_agg, "objective": score})
+                previous.append({"round": "0 (model swap only, prompts unchanged)", "metrics": agg, "baseline_success_rate": base_agg.get("success_rate"), "baseline_quality": base_agg.get("quality"), "baseline_cost": base_agg.get("cost_per_run"), "worst_examples": entry["worst_examples"], "changelog": swap.changelog})
+                best = {"harness": swap, "score": score, "round": 0, "rationale": "The model swap alone did at least as well as any rewrite on the optimization sample, so the prompts are kept as they are."}
             for round_no in range(1, rounds + 1):
                 if spent["usd"] > float(cfg["max_cost_usd"]):
                     self._event(oid, f"Budget cap ${cfg['max_cost_usd']} reached (${spent['usd']:.2f} spent); stopping rounds for {spec['label']}.", phase=f"optimize:{target}", level="warn")
@@ -190,7 +243,7 @@ class Engine:
                 r_pct = base_pct + per_target * (0.1 + 0.6 * (round_no - 1) / rounds)
                 self._progress(oid, f"optimize:{target}", r_pct, f"{spec['label']}: round {round_no}/{rounds}, {cfg['rewrite_model']} is rewriting the harness")
                 try:
-                    proposal = propose_harness(llm, cfg["rewrite_model"], current=current, target=target, allowed_models=spec["allowed"], analysis_text=analysis_text, guidance=guidance, previous=previous, round_no=round_no, table=self.table, provider=llm.provider_name, base_version=baseline_harness.version)
+                    proposal = propose_harness(llm, cfg["rewrite_model"], current=current, target=target, allowed_models=spec["allowed"], analysis_text=analysis_text, guidance=guidance, previous=previous, round_no=round_no, table=self.table, provider=llm.provider_name, base_version=baseline_harness.version, scoring=scoring)
                 except Exception as e:
                     self._event(oid, f"{spec['label']} round {round_no}: rewrite failed ({e}).", phase=f"optimize:{target}", level="warn")
                     continue
@@ -201,7 +254,7 @@ class Engine:
                 def on_round_progress(d: int, t: int, *, target: str = target, r_pct: float = r_pct, label: str = spec["label"], round_no: int = round_no) -> None:
                     self._progress(oid, f"optimize:{target}", r_pct + per_target * 0.5 * d / max(1, t) / rounds, f"{label}: round {round_no}/{rounds}, replayed and judged {d}/{t} runs")
 
-                items = self._replay_and_score(oid, option["id"], cand, sample, "opt", round_no, sdk, tools, llm, cfg, add_cost, on_round_progress)
+                items = self._replay_and_score(oid, option["id"], cand, sample, "opt", round_no, replayer, llm, cfg, add_cost, on_round_progress)
                 agg = aggregate([x["metrics"] for x in items])
                 base_agg = aggregate([x["baseline_metrics"] for x in items])
                 score = objective(agg, base_agg)
@@ -227,7 +280,7 @@ class Engine:
             def on_test_progress(d: int, t: int, *, target: str = target, t_pct: float = t_pct, label: str = spec["label"]) -> None:
                 self._progress(oid, f"test:{target}", t_pct + per_target * 0.26 * d / max(1, t), f"{label}: held-out evaluation {d}/{t}")
 
-            items = self._replay_and_score(oid, option["id"], best["harness"], test_set, "test", 0, sdk, tools, llm, cfg, add_cost, on_test_progress)
+            items = self._replay_and_score(oid, option["id"], best["harness"], test_set, "test", 0, replayer, llm, cfg, add_cost, on_test_progress)
             agg = aggregate([x["metrics"] for x in items])
             base_agg = aggregate([x["baseline_metrics"] for x in items])
             baseline_test_items.extend(x["baseline_metrics"] for x in items)
@@ -251,7 +304,7 @@ class Engine:
             o["metrics"]["deltas"] = deltas(t_agg, baseline_agg)
             o["metrics"]["meets_bar"] = meets_bar(t_agg, baseline_agg)
             self.db.update_option(o["option_id"], metrics_json=o["metrics"])
-        summary = self._summary(baseline_agg, option_results, len(opt_set), len(test_set), spent["usd"], cfg, tools.provider, llm.provider_name, analysis)
+        summary = self._summary(baseline_agg, option_results, len(opt_set), len(test_set), spent["usd"], cfg, tools.provider, llm.provider_name, analysis, scoring=scoring, runtime=baseline_harness.runtime)
         self.db.update_optimization(oid, status="done", finished_at=now_iso(), summary_json=summary)
         self._progress(oid, "done", 100, summary.get("headline", {}).get("text", "done"))
         self._event(oid, "Done. " + summary.get("headline", {}).get("text", ""), phase="done", data={"spent_usd": round(spent["usd"], 4)})
@@ -291,6 +344,7 @@ class Engine:
         llm = LLM(self.settings.provider, table=self.table)
         sdk = Downshift(transport=NullTransport(), llm=llm, table=self.table, project=opt["project_id"])
         tools = SearchTools()
+        replayer, _ = self._replayer(opt["project_id"], harness, sdk, tools)
         spent = {"usd": 0.0}
         lock = threading.Lock()
 
@@ -299,7 +353,7 @@ class Engine:
                 spent["usd"] += float(x or 0.0)
 
         self._event(optimization_id, f"Redoing {len(todo)} held-out replays for {option['label']} ({', '.join(todo)}).", phase=f"redo:{option_key}")
-        self._replay_and_score(optimization_id, option["id"], harness, [runs[t] for t in todo], "test", 0, sdk, tools, llm, cfg, add_cost, lambda d, n: self._progress(optimization_id, f"redo:{option_key}", 90 + 9 * d / max(1, n), f"{option['label']}: redoing held-out replays {d}/{n}"))
+        self._replay_and_score(optimization_id, option["id"], harness, [runs[t] for t in todo], "test", 0, replayer, llm, cfg, add_cost, lambda d, n: self._progress(optimization_id, f"redo:{option_key}", 90 + 9 * d / max(1, n), f"{option['label']}: redoing held-out replays {d}/{n}"))
         metrics = dict(option.get("metrics_json") or {})
         if "best_round" not in metrics and option.get("rounds_json"):
             best = max(option["rounds_json"], key=lambda r: r.get("objective", 0))
@@ -326,6 +380,7 @@ class Engine:
         baseline_runs = {r["task_id"]: r["record_json"] for r in self.db.latest_runs_per_task(opt["project_id"], tag=cfg.get("tag"))}
         option_results: list[dict[str, Any]] = []
         baseline_test_items: list[dict[str, Any]] = []
+        judge_methods: set[str] = set()
         for o in options:
             if o["key"] == "baseline" or o["status"] != "done":
                 continue
@@ -337,6 +392,7 @@ class Engine:
                     continue
                 rec = rep["record_json"]
                 judge = rep.get("judge_json") or {}
+                judge_methods.add(judge.get("method") or "judge")
                 checks, base_checks = auto_checks(rec), auto_checks(base_rec)
                 m, bm = replay_metrics(rec, judge, checks), baseline_run_metrics(base_rec, judge, base_checks)
                 bm["task_id"] = rep["task_id"]
@@ -363,13 +419,17 @@ class Engine:
             self.db.update_option(o["option_id"], metrics_json=o["metrics"])
         old = opt.get("summary_json") or {}
         analysis = {"recommendations": (old.get("analysis") or {}).get("recommendations"), "per_step": (old.get("analysis") or {}).get("per_step")}
-        summary = self._summary(baseline_agg, option_results, len(split.get("opt") or []), len(split.get("test") or []), float(old.get("spent_usd") or 0.0) + float(extra_spent_usd or 0.0), cfg, old.get("search_provider") or SearchTools().provider, old.get("provider") or (self.settings.provider or "ollama"), analysis)
+        scoring = "ground_truth" if judge_methods == {"ground_truth"} else ("mixed" if "ground_truth" in judge_methods else "judge")
+        project = self.db.get_project(opt["project_id"]) or {}
+        runtime = (project.get("harness_json") or {}).get("runtime") or "research"
+        summary = self._summary(baseline_agg, option_results, len(split.get("opt") or []), len(split.get("test") or []), float(old.get("spent_usd") or 0.0) + float(extra_spent_usd or 0.0), cfg, old.get("search_provider") or SearchTools().provider, old.get("provider") or (self.settings.provider or "ollama"), analysis, scoring=scoring, runtime=runtime)
         self.db.update_optimization(optimization_id, summary_json=summary)
         self.db.add_event(optimization_id, "Recomputed checks, metrics and summary from the stored replays (judge verdicts unchanged). " + summary["headline"]["text"], phase="resummarize")
         return summary
 
-    def _replay_and_score(self, oid: str, option_id: str, harness: Harness, records: list[dict[str, Any]], split: str, round_no: int, sdk: Downshift, tools: SearchTools, llm: LLM, cfg: dict[str, Any], add_cost: Any, on_progress: Any) -> list[dict[str, Any]]:
-        """Replay each record with the harness, run checks and the blind judge, store everything."""
+    def _replay_and_score(self, oid: str, option_id: str, harness: Harness, records: list[dict[str, Any]], split: str, round_no: int, replayer: Any, llm: LLM, cfg: dict[str, Any], add_cost: Any, on_progress: Any) -> list[dict[str, Any]]:
+        """Replay each record with the harness, run checks and score it (ground truth when the baseline
+        run was graded against the task's correct answer, the blind judge otherwise); store everything."""
         done = {"n": 0}
         lock = threading.Lock()
         out: list[dict[str, Any]] = []
@@ -379,12 +439,14 @@ class Engine:
         def score_one(base_rec: dict[str, Any], rec: dict[str, Any]) -> None:
             checks = auto_checks(rec)
             base_checks = auto_checks(base_rec)
-            judge = None
-            try:
-                judge = judge_pair(llm, judge_model, base_rec.get("input", ""), (base_rec.get("output") or {}).get("answer", ""), (rec.get("output") or {}).get("answer", ""), rng=random.Random(f"{seed}:{option_id}:{split}:{round_no}:{base_rec['task_id']}"))
-                add_cost(judge.get("cost_usd"))
-            except Exception as e:
-                judge = {"error": f"{type(e).__name__}: {e}"[:300], "preferred": None, "candidate": None, "baseline": None}
+            if has_ground_truth(base_rec):  # the task has a correct answer: no judge needed
+                judge = ground_truth_verdict(base_rec, rec)
+            else:
+                try:
+                    judge = judge_pair(llm, judge_model, base_rec.get("input", ""), (base_rec.get("output") or {}).get("answer", ""), (rec.get("output") or {}).get("answer", ""), rng=random.Random(f"{seed}:{option_id}:{split}:{round_no}:{base_rec['task_id']}"))
+                    add_cost(judge.get("cost_usd"))
+                except Exception as e:
+                    judge = {"error": f"{type(e).__name__}: {e}"[:300], "preferred": None, "candidate": None, "baseline": None}
             m = replay_metrics(rec, judge, checks)
             bm = baseline_run_metrics(base_rec, judge, base_checks)
             bm["task_id"] = base_rec["task_id"]
@@ -396,7 +458,7 @@ class Engine:
                 n = done["n"]
             on_progress(n, len(records))
 
-        replay_many(sdk, harness, records, tools, concurrency=int(cfg["concurrency"]), meta={"optimization_id": oid, "option_id": option_id, "split": split, "round": round_no}, on_each=score_one)
+        replayer(harness, records, concurrency=int(cfg["concurrency"]), meta={"optimization_id": oid, "option_id": option_id, "split": split, "round": round_no}, on_each=score_one)
         out.sort(key=lambda x: x["task_id"])
         return out
 
@@ -407,7 +469,7 @@ class Engine:
         return f"{float(x):+.0f}" if signed else f"{float(x):.0f}"
 
     @staticmethod
-    def _summary(baseline: dict[str, Any], options: list[dict[str, Any]], n_opt: int, n_test: int, spent: float, cfg: dict[str, Any], search_provider: str, provider: str, analysis: dict[str, Any]) -> dict[str, Any]:
+    def _summary(baseline: dict[str, Any], options: list[dict[str, Any]], n_opt: int, n_test: int, spent: float, cfg: dict[str, Any], search_provider: str, provider: str, analysis: dict[str, Any], scoring: str = "judge", runtime: str = "research") -> dict[str, Any]:
         rows = []
         for o in options:
             t = o["metrics"]["test"]
@@ -439,7 +501,13 @@ class Engine:
             "bar": {"success_tol_pp": bar_tolerance_pp(n_test or baseline.get("n")), "quality_tol_pts": 5.0, "note": "Within the bar: task success no more than one held-out run (or 5 pp) below the baseline and quality within 5 points."},
             "spent_usd": round(spent, 4),
             "budget": {"rounds": cfg.get("rounds"), "sample_size": cfg.get("sample_size"), "max_cost_usd": cfg.get("max_cost_usd")},
-            "judge": {"model": cfg.get("judge_model"), "method": "blind pairwise, random order, rubric: correct / complete / supported (0-5 each)"},
+            "judge": {
+                "ground_truth": {"model": None, "method": "ground truth: each task's correct answer, graded by the agent's own grader; quality = mean grader score (0-100). No LLM judge."},
+                "mixed": {"model": cfg.get("judge_model"), "method": "ground truth where the task has a correct answer, otherwise blind pairwise LLM judge (correct / complete / supported, 0-5 each)"},
+                "judge": {"model": cfg.get("judge_model"), "method": "blind pairwise, random order, rubric: correct / complete / supported (0-5 each)"},
+            }[scoring],
+            "scoring": scoring,
+            "runtime": runtime,
             "analysis": {"model": cfg.get("analysis_model"), "recommendations": analysis.get("recommendations"), "per_step": analysis.get("per_step")},
             "provider": provider,
             "search_provider": search_provider,

@@ -7,13 +7,23 @@ from typing import Any
 from .judge import is_success, quality_score
 
 
+def _outcome(record: dict[str, Any], judge: dict[str, Any] | None, side: str, checks: dict[str, Any]) -> tuple[bool, bool, float | None]:
+    """(judged, success, quality) from ground truth when the run was graded that way, else the judge."""
+    if (judge or {}).get("method") == "ground_truth":
+        gt = (judge or {}).get(side) or {}
+        passed = bool(gt.get("passed")) and bool(checks.get("no_errors", True))
+        return True, passed, round(100 * float(gt.get("score") or 0.0), 1)
+    scores = (judge or {}).get(side)
+    return scores is not None, is_success(scores, checks), quality_score(scores)
+
+
 def replay_metrics(record: dict[str, Any], judge: dict[str, Any] | None, checks: dict[str, Any]) -> dict[str, Any]:
     totals = record.get("totals") or {}
-    scores = (judge or {}).get("candidate")
+    judged, success, quality = _outcome(record, judge, "candidate", checks)
     return {
-        "judged": scores is not None,
-        "success": is_success(scores, checks),
-        "quality": quality_score(scores),
+        "judged": judged,
+        "success": success,
+        "quality": quality,
         "checks_passed": bool(checks.get("passed")),
         "cost_usd": float(totals.get("cost_usd") or 0.0),
         "latency_ms": int(totals.get("latency_ms") or 0),
@@ -30,11 +40,11 @@ def replay_metrics(record: dict[str, Any], judge: dict[str, Any] | None, checks:
 
 def baseline_run_metrics(record: dict[str, Any], judge: dict[str, Any] | None, checks: dict[str, Any]) -> dict[str, Any]:
     totals = record.get("totals") or {}
-    scores = (judge or {}).get("baseline")
+    judged, success, quality = _outcome(record, judge, "baseline", checks)
     return {
-        "judged": scores is not None,
-        "success": is_success(scores, checks),
-        "quality": quality_score(scores),
+        "judged": judged,
+        "success": success,
+        "quality": quality,
         "checks_passed": bool(checks.get("passed")),
         "cost_usd": float(totals.get("cost_usd") or 0.0),
         "latency_ms": int(totals.get("latency_ms") or 0),

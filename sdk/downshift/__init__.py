@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from .harness import Harness, HarnessError, Step, StepParams, ToolSpec, FewShot, Defaults
+from .adapter import AgentAdapter, Task, render
 from .pricing import ModelTable, ModelInfo, ProviderInfo, default_table, UnknownModelError
 from .providers import LLM, LLMError, ChatResult, ToolCallRequest, active_provider_name
 from .replay import ReplayCache, ReplayRun, ReplayMiss, extract_urls, norm_url
@@ -25,7 +26,7 @@ from .transport import HttpTransport, FileTransport, MemoryTransport, NullTransp
 
 __version__ = SDK_VERSION
 __all__ = [
-    "Downshift", "Harness", "HarnessError", "Step", "StepParams", "ToolSpec", "FewShot", "Defaults",
+    "Downshift", "AgentAdapter", "Task", "render", "Harness", "HarnessError", "Step", "StepParams", "ToolSpec", "FewShot", "Defaults",
     "ModelTable", "ModelInfo", "ProviderInfo", "default_table", "UnknownModelError",
     "LLM", "LLMError", "ChatResult", "ToolCallRequest", "active_provider_name",
     "ReplayCache", "ReplayRun", "ReplayMiss", "extract_urls", "norm_url",
@@ -74,10 +75,11 @@ class Downshift:
     def run(self, *, task_id: str, input: str, harness: Harness, meta: dict[str, Any] | None = None, run_id: str | None = None) -> Run:
         return Run(project=self.project, task_id=task_id, input=input, harness=harness, llm=self.llm, table=self.table, transport=self.transport, meta=meta, run_id=run_id)
 
-    def replay(self, *, recorded: dict[str, Any], harness: Harness, meta: dict[str, Any] | None = None, allow_live: bool = True, run_id: str | None = None, transport: Any = None) -> ReplayRun:
+    def replay(self, *, recorded: dict[str, Any], harness: Harness, meta: dict[str, Any] | None = None, allow_live: bool = True, reuse_tool_results: bool = True, run_id: str | None = None, transport: Any = None) -> ReplayRun:
         return ReplayRun(
             recorded=recorded,
             allow_live=allow_live,
+            reuse_tool_results=reuse_tool_results,
             project=recorded.get("project") or self.project,
             task_id=recorded.get("task_id", ""),
             input=recorded.get("input", ""),

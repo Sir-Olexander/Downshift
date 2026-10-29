@@ -33,3 +33,6 @@ node_modules/
 
 # Browser screenshots taken during development
 .playwright-mcp/
+
+# Local test copies of third-party agents and their data (large; not part of the repo)
+demo_agents_2/

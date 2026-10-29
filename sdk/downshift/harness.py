@@ -3,6 +3,13 @@
 System prompt, tool descriptions, the step plan and the model + parameters for each step all
 live here, not in Python. The SDK loads it at runtime; the optimizer writes new versions of it;
 a pull request that changes this file is how improvements ship.
+
+Two runtimes:
+  research  the built-in research agent (plan / search / synthesize / verify steps, web_search and
+            read_page tools). This is the default, so existing harness files keep working.
+  custom    any other agent, run by its own code through an adapter (see downshift.adapter). Step
+            kinds and tool names are whatever that agent uses; `contract` says what its code
+            expects from the model, and the optimizer keeps steps, tools and contract unchanged.
 """
 
 from __future__ import annotations
@@ -13,14 +20,29 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 StepKind = Literal["plan", "search", "synthesize", "verify"]
+RESEARCH_STEP_KINDS = ("plan", "search", "synthesize", "verify")
+Runtime = Literal["research", "custom"]
 Reasoning = Literal["on", "off", "low", "medium", "high"]
 
 
 class HarnessError(ValueError):
     pass
+
+
+def _reasoning(v: Any) -> Any:
+    """YAML reads unquoted on/off as booleans; accept those (and "none") for the reasoning switch."""
+    if v is True:
+        return "on"
+    if v is False:
+        return "off"
+    if isinstance(v, str) and v.strip().lower() in ("none", "false", "disabled"):
+        return "off"
+    if isinstance(v, str) and v.strip().lower() in ("true", "enabled"):
+        return "on"
+    return v
 
 
 class ToolSpec(BaseModel):
@@ -42,16 +64,22 @@ class Defaults(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     model: str
-    temperature: float = 0.2
-    max_tokens: int = 1024
+    # null means "don't send it; use the provider's default" (how many agents call their model).
+    temperature: float | None = 0.2
+    max_tokens: int | None = 1024
     reasoning: Reasoning | None = None
+
+    _norm_reasoning = field_validator("reasoning", mode="before")(_reasoning)
 
 
 class Step(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str
-    kind: StepKind
+    # research runtime: plan | search | synthesize | verify. custom runtime: any label the agent uses.
+    kind: str
+    # What the step does, in plain words. The optimizer reads it; custom agents should fill it in.
+    description: str = ""
     prompt: str = ""
     model: str | None = None
     temperature: float | None = None
@@ -64,11 +92,13 @@ class Step(BaseModel):
     retry_on_fail: bool = False
     enabled: bool = True
 
+    _norm_reasoning = field_validator("reasoning", mode="before")(_reasoning)
+
 
 class StepParams(BaseModel):
     model: str
-    temperature: float
-    max_tokens: int
+    temperature: float | None = None
+    max_tokens: int | None = None
     reasoning: Reasoning | None = None
 
 
@@ -78,6 +108,10 @@ class Harness(BaseModel):
     name: str
     version: int | str = 1
     description: str = ""
+    runtime: Runtime = "research"
+    # custom runtime: what the agent's code requires of the model (output format, placeholders the
+    # prompts may use). The optimizer must respect it and cannot change it.
+    contract: str = ""
     defaults: Defaults
     system_prompt: str
     tools: dict[str, ToolSpec] = Field(default_factory=dict)
@@ -90,12 +124,26 @@ class Harness(BaseModel):
         ids = [s.id for s in self.steps]
         if len(ids) != len(set(ids)):
             raise ValueError(f"step ids must be unique, got {ids}")
-        kinds = [s.kind for s in self.steps if s.enabled]
-        if "search" not in kinds:
-            raise ValueError("the harness needs an enabled step of kind 'search'")
-        if "synthesize" not in kinds:
-            raise ValueError("the harness needs an enabled step of kind 'synthesize'")
+        if not self.steps:
+            raise ValueError("the harness needs at least one step")
+        if any(not s.kind.strip() for s in self.steps):
+            raise ValueError("every step needs a kind")
+        if self.runtime == "research":
+            bad = sorted({s.kind for s in self.steps if s.kind not in RESEARCH_STEP_KINDS})
+            if bad:
+                raise ValueError(f"research harness step kinds must be one of {list(RESEARCH_STEP_KINDS)}, got {bad} (set runtime: custom for other agents)")
+            kinds = [s.kind for s in self.steps if s.enabled]
+            if "search" not in kinds:
+                raise ValueError("the harness needs an enabled step of kind 'search'")
+            if "synthesize" not in kinds:
+                raise ValueError("the harness needs an enabled step of kind 'synthesize'")
+        elif not any(s.enabled for s in self.steps):
+            raise ValueError("the harness needs at least one enabled step")
         return self
+
+    @property
+    def is_custom(self) -> bool:
+        return self.runtime == "custom"
 
     # ---- lookups -------------------------------------------------------------------------
     def step(self, step_id: str) -> Step:
@@ -104,7 +152,7 @@ class Harness(BaseModel):
                 return s
         raise HarnessError(f"no step with id '{step_id}' (have {[s.id for s in self.steps]})")
 
-    def steps_of_kind(self, kind: StepKind) -> list[Step]:
+    def steps_of_kind(self, kind: str) -> list[Step]:
         return [s for s in self.steps if s.kind == kind and s.enabled]
 
     def params(self, step: Step | str) -> StepParams:
@@ -139,7 +187,19 @@ class Harness(BaseModel):
 
     # ---- serialisation --------------------------------------------------------------------
     def to_dict(self) -> dict[str, Any]:
-        return self.model_dump(mode="json", exclude_none=True)
+        d = self.model_dump(mode="json", exclude_none=True)
+        # An explicit null default means "provider default"; keep it so it survives a round trip.
+        for k in ("temperature", "max_tokens"):
+            if getattr(self.defaults, k) is None:
+                d["defaults"][k] = None
+        if self.runtime == "research":
+            d.pop("runtime", None)  # the default; keeps existing harness files and fingerprints unchanged
+        if not self.contract:
+            d.pop("contract", None)
+        for step in d.get("steps") or []:
+            if not step.get("description"):
+                step.pop("description", None)
+        return d
 
     def fingerprint(self) -> str:
         """Short content hash. Trailing whitespace and final newlines don't count as changes."""

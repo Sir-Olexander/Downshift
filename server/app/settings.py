@@ -57,6 +57,9 @@ class Settings:
     github_base: str
     harness_path: str
     public_web_url: str
+    # Agent folders: the UI may browse and write harness.yaml only inside this root.
+    allow_fs: bool = True
+    agents_root: Path = field(default_factory=Path.home)
     targets: list[str] = field(default_factory=lambda: ["super", "nano", "mix"])
 
     @classmethod
@@ -85,4 +88,6 @@ class Settings:
             github_base=os.environ.get("GITHUB_BASE_BRANCH") or "main",
             harness_path=os.environ.get("GITHUB_HARNESS_PATH") or "demo_agent/harness.yaml",
             public_web_url=os.environ.get("DOWNSHIFT_PUBLIC_WEB_URL") or "http://localhost:3000",
+            allow_fs=_bool("DOWNSHIFT_ALLOW_FS", True),
+            agents_root=Path(os.environ.get("DOWNSHIFT_AGENTS_ROOT") or Path.home()).expanduser().resolve(),
         )

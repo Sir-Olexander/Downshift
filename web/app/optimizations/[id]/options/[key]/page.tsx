@@ -35,7 +35,7 @@ export default async function OptionPage({ params }: { params: Promise<{ id: str
   const existingPr = o.prs.find((p) => p.url)?.url ?? null;
   return (
     <main className="shell">
-      <TopBar crumbs={[{ label: "Results", href: `/optimizations/${o.optimization.id}` }, { label: o.label }]} projectId={o.optimization.project_id} />
+      <TopBar crumbs={[{ label: "Results", href: `/optimizations/${o.optimization.id}` }, { label: o.label }]} projectId={o.optimization.project_id} active="results" />
       <section className="section">
         <div className="row" style={{ gap: 10 }}>
           <span className={`swatch ${isBaseline ? "ring" : ""}`} style={isBaseline ? undefined : { background: seriesColor(o.key) }} />
@@ -112,7 +112,7 @@ export default async function OptionPage({ params }: { params: Promise<{ id: str
             {o.rounds.map((r) => (
               <div className="r" key={r.round}>
                 <div className="n">
-                  Round {r.round}
+                  {r.round === 0 ? "Model swap" : `Round ${r.round}`}
                   {m?.best_round === r.round && (
                     <div>
                       <span className="tag soft">kept</span>
@@ -177,19 +177,22 @@ export default async function OptionPage({ params }: { params: Promise<{ id: str
                         <span className="small muted mono">{r.task_id}</span>
                       </td>
                       <td className="pref">
-                        {r.judge?.preferred === "candidate" ? <span className="pill good">preferred</span> : r.judge?.preferred === "tie" ? <span className="pill">tie</span> : r.judge?.preferred === "baseline" ? <span className="pill bad">baseline better</span> : <span className="pill">no verdict</span>}
+                        {r.judge?.method === "ground_truth" ? (
+                          r.judge.candidate?.passed ? <span className="pill good">correct</span> : <span className="pill bad">wrong</span>
+                        ) : r.judge?.preferred === "candidate" ? <span className="pill good">preferred</span> : r.judge?.preferred === "tie" ? <span className="pill">tie</span> : r.judge?.preferred === "baseline" ? <span className="pill bad">baseline better</span> : <span className="pill">no verdict</span>}
                       </td>
                       <td className="num">{cm?.quality ?? "–"}</td>
                       <td>
                         {ck &&
                           (
                             [
+                              ["ground_truth", "G"],
                               ["answer_produced", "A"],
                               ["has_sources", "S"],
                               ["sources_from_evidence", "E"],
                               ["no_errors", "✓"],
                             ] as const
-                          ).map(([k, lbl]) => (
+                          ).filter(([k]) => ck[k] !== undefined).map(([k, lbl]) => (
                             <span key={k} className={`check ${ck[k] ? "ok" : "no"}`} title={k.replace(/_/g, " ")}>
                               {lbl}
                             </span>
@@ -207,7 +210,7 @@ export default async function OptionPage({ params }: { params: Promise<{ id: str
               </tbody>
             </table>
             <div className="small muted" style={{ padding: "10px 12px 14px" }}>
-              Checks: A answer produced · S sources listed · E every cited source came from the evidence · ✓ no errors.
+              Checks: G matches the task's correct answer · A answer produced · S sources listed · E every cited source came from the evidence · ✓ no errors (only the checks that apply to this agent are shown).
             </div>
           </div>
         </section>

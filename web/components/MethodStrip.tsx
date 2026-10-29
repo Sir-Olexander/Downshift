@@ -11,7 +11,13 @@ export function MethodStrip({ summary }: { summary: Summary }) {
       </div>
       <div>
         <div className="k">Scoring</div>
-        <div className="v">Automatic checks + {summary.judge.model} judging both answers blind, in random order</div>
+        <div className="v">
+          {summary.scoring === "ground_truth"
+            ? "Automatic checks + each task's correct answer, graded by the agent's own grader (no LLM judge)"
+            : summary.scoring === "mixed"
+            ? `Each task's correct answer where it has one; otherwise ${summary.judge.model} judging both answers blind`
+            : `Automatic checks + ${summary.judge.model} judging both answers blind, in random order`}
+        </div>
       </div>
       <div>
         <div className="k">Cost</div>

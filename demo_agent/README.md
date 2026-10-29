@@ -8,7 +8,9 @@ whole behaviour lives in `harness.yaml`, which is the file the optimizer rewrite
 - `questions.json` – 42 research questions used to record baseline runs
 - `research_agent/agent.py` – interprets the step plan (`plan`, `search`, `synthesize`, `verify`)
 - `research_agent/tools.py` – read-only tools: `web_search` and `read_page` (Tavily, or Wikipedia without a key)
-- `record_baseline.py` – records a run per question with the SDK
+- `record_baseline.py` – records a run per question with the SDK (shared logic in `research_agent/recorder.py`)
+
+Four more agents built on this runtime live in `../demo_agents/`.
 
 ```bash
 uv run python demo_agent/record_baseline.py --limit 3
