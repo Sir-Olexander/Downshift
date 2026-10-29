@@ -4,7 +4,8 @@ A run in Downshift has four stages: **add an agent → record baseline runs → 
 read the results**. This walks through it with one of the demo agents in `demo_agents/`.
 
 Budget: the Token Factory key has a **$15 limit**. The path below costs about **$0.50** per agent
-(12 baseline runs on Ultra ≈ $0.40, one demo-mode optimization ≈ $0.10 to $0.50 depending on targets).
+(12 baseline runs on Ultra ≈ $0.40; a demo-mode optimization is cheap: Nano alone on 5 runs cost
+$0.02 in testing, all three options a few times that).
 
 ## 0. Start the app (once per session)
 
