@@ -5,7 +5,7 @@
 # https://nebius.com/services/token-factory/models/nvidia-nemotron-models-inference.
 # Downshift always prices a call from its token counts with these numbers, whichever provider
 # actually served it, so a run replayed on Ollama is costed as if it ran on Token Factory.
-# The `tokenfactory` IDs were read from the catalog links; verify them in the console before relying on them.
+# The `tokenfactory` IDs were checked against the live /v1/models list on 2026-10-29.
 
 pricing:
   currency: USD
@@ -18,8 +18,10 @@ providers:
     label: Nebius Token Factory
     base_url: https://api.tokenfactory.nebius.com/v1/
     api_key_env: NEBIUS_API_KEY
+    api_key_env_aliases: [TOKEN_FACTORY_API_KEY]
     # How a harness `reasoning` setting is sent. Token Factory serves Nemotron with vLLM, which takes
-    # the chat-template flag below. Not yet verified against a live key.
+    # the chat-template flag below. Verified 2026-10-29 on all three models: enable_thinking=false
+    # removes the reasoning output (completion tokens ~40 -> 3 on the same prompt).
     reasoning:
       "off": { chat_template_kwargs: { enable_thinking: false } }
       "on": {}
@@ -80,7 +82,7 @@ models:
     context: 262144
     price_per_1m: { input: 0.30, output: 0.90, cached_input: 0.06 }
     ids:
-      tokenfactory: nvidia/Nemotron-3-Super-120b-a12b
+      tokenfactory: nvidia/nemotron-3-super-120b-a12b
       ollama: nemotron-3-super
       ollama-local: nemotron-3-super
   nemotron-3-ultra:

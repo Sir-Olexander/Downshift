@@ -35,9 +35,8 @@ standard container shape it expects.
 
 ## Switching from Ollama to Token Factory
 
-The build used Ollama Cloud because no Token Factory key was available. Switching is configuration:
-set `NEBIUS_API_KEY` and `DOWNSHIFT_PROVIDER=tokenfactory`. Model IDs and prices live in
-`sdk/downshift/models.yaml`; verify the three Nemotron IDs in the Token Factory console before the
-first run (they were read from the public catalog links on 2026-10-26). The `reasoning: off` mapping
-for Token Factory (`chat_template_kwargs.enable_thinking=false`) is the vLLM convention and has not
-been exercised against a live key yet.
+The shipped results were measured on Ollama Cloud. Switching is configuration: set `NEBIUS_API_KEY`
+(or `TOKEN_FACTORY_API_KEY`) and `DOWNSHIFT_PROVIDER=tokenfactory`. Model IDs and prices live in
+`sdk/downshift/models.yaml`. On 2026-10-29 the three Nemotron IDs were checked against the live
+`/v1/models` list, and the `reasoning: off` mapping (`chat_template_kwargs.enable_thinking=false`)
+was confirmed to remove the reasoning output on all three models.

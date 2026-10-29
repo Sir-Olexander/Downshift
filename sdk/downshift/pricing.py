@@ -69,9 +69,14 @@ class ProviderInfo:
     api_key_env: str
     api_key_optional: bool
     reasoning: dict[str, dict[str, Any]]
+    # Other variable names that may hold the same key (e.g. TOKEN_FACTORY_API_KEY for NEBIUS_API_KEY)
+    api_key_env_aliases: tuple[str, ...] = ()
 
     def api_key(self) -> str | None:
-        return os.environ.get(self.api_key_env) or None
+        for name in (self.api_key_env, *self.api_key_env_aliases):
+            if os.environ.get(name):
+                return os.environ[name]
+        return None
 
     def reasoning_params(self, setting: str | None) -> dict[str, Any]:
         """Extra request fields that express a harness `reasoning` setting on this provider."""
@@ -93,6 +98,7 @@ class ModelTable:
                 api_key_env=p.get("api_key_env", ""),
                 api_key_optional=bool(p.get("api_key_optional", False)),
                 reasoning={str(k): dict(v or {}) for k, v in (p.get("reasoning") or {}).items()},
+                api_key_env_aliases=tuple(p.get("api_key_env_aliases") or ()),
             )
         self._models: dict[str, ModelInfo] = {}
         for mid, m in (data.get("models") or {}).items():

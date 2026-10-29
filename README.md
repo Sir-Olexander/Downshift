@@ -113,13 +113,13 @@ docs/         Deployment notes (Nebius Serverless), video script
 - **Prices.** Costs are always computed from recorded token counts at **Nebius Token Factory list
   prices** (Nano $0.06/$0.24, Super $0.30/$0.90, Ultra $1.00/$3.00 per 1M input/output tokens,
   checked 2026-10-26), whichever provider served the call. IDs and prices live in one file,
-  `sdk/downshift/models.yaml`; the Token Factory model IDs were read from the public catalog and
-  should be verified in the console before a production rollout.
+  `sdk/downshift/models.yaml`; the Token Factory model IDs were checked against the live model list
+  on 2026-10-29.
 - **Search.** The demo agent uses Tavily when `TAVILY_API_KEY` is set and falls back to the keyless
   Wikipedia API otherwise. The shipped results were recorded with the Wikipedia fallback.
 - **Reasoning.** On Ollama Cloud, `reasoning: off` in a harness maps to `reasoning_effort: "none"`
-  (verified: it removes Nemotron's thinking tokens). The Token Factory mapping uses the vLLM
-  `chat_template_kwargs.enable_thinking=false` convention and is not yet verified.
+  (verified: it removes Nemotron's thinking tokens). On Token Factory it maps to
+  `chat_template_kwargs.enable_thinking=false` (verified 2026-10-29 on Nano, Super and Ultra).
 - **Read the results with the sample size in mind.** The held-out set is 17 runs, so one run is 5.9
   points of task success; Super and Nano each lost exactly one run against the baseline. The bar counts a
   one-run drop as within tolerance, and says so. In blind pairwise judging the baseline was still
@@ -147,7 +147,7 @@ docs/         Deployment notes (Nebius Serverless), video script
 
 | Variable | Purpose |
 |---|---|
-| `NEBIUS_API_KEY` / `OLLAMA_API_KEY` / `OPENAI_API_KEY` | provider keys; the first configured provider wins |
+| `NEBIUS_API_KEY` (or `TOKEN_FACTORY_API_KEY`) / `OLLAMA_API_KEY` / `OPENAI_API_KEY` | provider keys; the first configured provider wins |
 | `DOWNSHIFT_PROVIDER` | force `tokenfactory`, `ollama`, `ollama-local` or `openai` |
 | `TAVILY_API_KEY` | search provider for the demo agent (Wikipedia fallback without it) |
 | `DOWNSHIFT_API_KEYS` | keys the SDK may use to send runs (default `ds_dev`) |
