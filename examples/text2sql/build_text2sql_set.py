@@ -1,6 +1,9 @@
 """Build the text2sql test set: the agent author's own 19 Spider questions + 21 random Spider dev questions.
 
-    python3 build_text2sql_set.py <data dir> <text2sql-framework folder>
+    python3 build_text2sql_set.py <data dir> <text2sql-framework folder> [extra]
+
+`extra` (default 0) adds that many more random Spider dev questions (seed 43, ids sp041...) after the
+original 40, which keep their ids, so a larger held-out set can be built without touching recorded runs.
 
 <data dir> must hold spider_db/<db_id>.sqlite for the 20 Spider dev databases and spider_dev.json
 (the Spider dev questions: [{"db_id", "question", "query"}]). Writes <data dir>/spider_dev_merged.sqlite
@@ -48,8 +51,14 @@ pool = [r for r in dev if norm(r["question"]) not in used and r["db_id"] not in 
 rng = random.Random(42)
 for r in rng.sample(pool, 21):
     tasks.append({**r, "source": "random_dev_seed42"})
+extra = int(sys.argv[3]) if len(sys.argv) > 3 else 0
+if extra:
+    used = {norm(t["question"]) for t in tasks}
+    pool = [r for r in dev if norm(r["question"]) not in used and r["db_id"] not in skipped_dbs]
+    for r in random.Random(43).sample(pool, extra):
+        tasks.append({**r, "source": "random_dev_seed43_extra"})
 for i, t in enumerate(tasks, 1):
-    t["id"] = f"sp{i:02d}"
+    t["id"] = f"sp{i:02d}" if i <= 40 else f"sp{i:03d}"
 (DATA / "text2sql_tasks.json").write_text(json.dumps(tasks, indent=1))
 with (T2S / "tasks.jsonl").open("w") as f:
     for t in tasks:
