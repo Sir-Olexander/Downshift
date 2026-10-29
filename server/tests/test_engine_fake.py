@@ -128,7 +128,9 @@ def test_engine_runs_end_to_end(tmp_path, monkeypatch):
         assert o["metrics_json"]["test"]["n"] == 3
     mix = db.get_option_by_key(opt["id"], "mix")
     assert "nemotron-3-ultra" in Harness.from_dict(mix["harness_json"]).models_used()
-    assert len(mix["rounds_json"]) == 2
+    assert len(mix["rounds_json"]) == 2  # no model-swap round for the per-step mix
+    nano_rounds = db.get_option_by_key(opt["id"], "nano")["rounds_json"]
+    assert nano_rounds[0]["kind"] == "model_swap" and nano_rounds[0]["models_used"] == ["nemotron-3-nano"] and len(nano_rounds) == 3
     test_replays = db.list_replays(mix["id"], split="test")
     assert len(test_replays) == 3 and all(r["judge_json"]["preferred"] in {"candidate", "baseline", "tie"} for r in test_replays)
     # replayed tool calls were served from the recording
@@ -156,7 +158,7 @@ def test_engine_runs_end_to_end(tmp_path, monkeypatch):
     db.update_optimization(opt["id"], status="running", summary_json=None)
     out = engine.redo_test_replays(opt["id"], "nano")
     nano = db.get_option_by_key(opt["id"], "nano")
-    assert out["redone"] == 3 and nano["status"] == "done" and nano["harness_json"] and nano["metrics_json"]["best_round"]
+    assert out["redone"] == 3 and nano["status"] == "done" and nano["harness_json"] and nano["metrics_json"]["best_round"] is not None
     final = db.get_optimization(opt["id"])
     assert final["status"] == "done" and final["summary_json"]["headline"]["text"]
     # seed round trip keeps everything

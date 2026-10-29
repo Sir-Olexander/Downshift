@@ -7,11 +7,16 @@ load. Everything stays inside the configured agents root.
 from __future__ import annotations
 
 import ast
+import json
 import re
+import shlex
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
 from downshift import Harness, HarnessError, default_table
+from downshift.adapter import has_adapter, load_agent_config
 
 HARNESS_FILE = "harness.yaml"
 QUESTION_FILES = ("questions.json", "tasks.json", "questions.jsonl", "tasks.jsonl")
@@ -99,6 +104,37 @@ def detect_tools(folder: Path) -> dict[str, str]:
     return tools
 
 
+def adapter_info(folder: Path) -> dict[str, Any] | None:
+    """The adapter that lets Downshift run this agent's own code, if the folder has one."""
+    if not has_adapter(folder):
+        return None
+    try:
+        cfg = load_agent_config(folder)
+    except Exception as e:
+        return {"error": f"downshift.yaml: {e}"}
+    py = cfg.get("python") or "python"
+    return {"entry": cfg["entry"], "python": cfg.get("python"), "tasks": cfg["tasks"], "harness": cfg["harness"], "python_cmd": py}
+
+
+def record_command(folder: Path, agent_id: str, adapter: dict[str, Any] | None, record_script: str | None) -> str | None:
+    if adapter and not adapter.get("error"):
+        return f"cd {shlex.quote(str(folder))}\n{adapter['python_cmd']} -m downshift.runner record --project {agent_id}"
+    if record_script:
+        return f"cd {shlex.quote(str(folder))}\nuv run python {record_script} --project {agent_id}"
+    return None
+
+
+def adapter_default_harness(folder: Path, timeout: float = 60.0) -> str:
+    """Ask the agent's adapter for its default harness, in the agent's own Python (not imported here)."""
+    info = adapter_info(folder) or {}
+    py = info.get("python")
+    python = str((folder / py) if py and not Path(py).is_absolute() else (py or sys.executable))
+    proc = subprocess.run([python, "-m", "downshift.runner", "init-harness", "--stdout", "--folder", str(folder)], cwd=str(folder), capture_output=True, text=True, timeout=timeout)
+    if proc.returncode != 0:
+        raise FolderError(f"the adapter could not produce a harness: {(proc.stderr or proc.stdout).strip()[-400:]}")
+    return proc.stdout
+
+
 def inspect_folder(root: Path, raw: str) -> dict[str, Any]:
     folder = resolve_inside(root, raw)
     if not folder.exists():
@@ -113,11 +149,15 @@ def inspect_folder(root: Path, raw: str) -> dict[str, Any]:
     py = _python_files(folder)
     uses_sdk = any("downshift" in f.read_text(encoding="utf-8", errors="replace") for f in py[:80])
     name = (harness_info or {}).get("name") or slug(folder.name)
+    adapter = adapter_info(folder)
+    if adapter and not adapter.get("error"):
+        questions = adapter["tasks"] if (folder / adapter["tasks"]).is_file() else questions
+    tools = {k: "" for k in (harness_info or {}).get("tools") or []} if (harness_info or {}).get("ok") else detect_tools(folder)
     return {
         "path": str(folder), "name": name, "suggested_id": slug(name),
         "description": _readme_summary(folder), "harness_yaml": harness_yaml, "harness": harness_info,
-        "questions_file": questions, "record_script": record, "python_files": len(py), "uses_sdk": uses_sdk,
-        "tools": detect_tools(folder),
+        "questions_file": questions, "record_script": record, "python_files": len(py), "uses_sdk": uses_sdk or bool(adapter),
+        "tools": tools, "adapter": adapter, "record_command": record_command(folder, slug(name), adapter, record),
     }
 
 
@@ -127,7 +167,7 @@ def validate_yaml(text: str) -> dict[str, Any]:
         h.validate_models(default_table())
     except HarnessError as e:
         return {"ok": False, "error": str(e)}
-    return {"ok": True, "name": h.name, "fingerprint": h.fingerprint(), "models_used": h.models_used(), "steps": [s.id for s in h.steps if s.enabled], "tools": list(h.tools)}
+    return {"ok": True, "name": h.name, "runtime": h.runtime, "fingerprint": h.fingerprint(), "models_used": h.models_used(), "steps": [s.id for s in h.steps if s.enabled], "tools": list(h.tools)}
 
 
 def draft_harness(name: str, description: str, tools: dict[str, str], model: str = "nemotron-3-ultra") -> str:

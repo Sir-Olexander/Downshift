@@ -395,7 +395,9 @@ function RecordStep({ agentId }: { agentId: string }) {
 
   const n = agent?.ok_task_count ?? 0;
   const ready = n >= MIN_RUNS;
-  const cmd = folder?.record_script
+  const cmd = folder?.record_command
+    ? folder.record_command.replace(/--project \S+/, `--project ${agentId}`)
+    : folder?.record_script
     ? `cd ${folder.path}\nuv run python ${folder.record_script} --project ${agentId}`
     : `from downshift import Downshift\n\nds = Downshift(project="${agentId}")\nharness = ds.load_harness("harness.yaml")\n\nfor task in tasks:\n    with ds.run(task_id=task["id"], input=task["question"],\n                harness=harness) as run:\n        ...  # run.chat(...), run.tool(...)\n        run.finish(answer=answer, sources=urls)`;
 
@@ -408,13 +410,15 @@ function RecordStep({ agentId }: { agentId: string }) {
             Run your agent on its current model with the SDK. Each run is recorded and becomes a test case: Downshift keeps 60% to optimize on and reports results only on the other 40%.
           </p>
         </div>
-        <div className="eyebrow">{folder?.record_script ? "In a terminal" : "In your agent's code"}</div>
+        <div className="eyebrow">{folder?.record_command || folder?.record_script ? "In a terminal" : "In your agent's code"}</div>
         <div className="cmd">
           <pre>{cmd}</pre>
           <CopyButton text={cmd} />
         </div>
         <p className="small muted">
-          {folder?.record_script
+          {folder?.adapter
+            ? `Runs your agent's own code through its adapter (downshift_agent.py). Tasks with an "expected" answer are graded against it. Add --limit 5 for a quick first batch.`
+            : folder?.record_script
             ? `Add --limit 5 for a quick first batch. More runs give a firmer result; the demo agent uses 42.`
             : `Record at least ${MIN_RUNS} tasks; more runs give a firmer result.`}
         </p>

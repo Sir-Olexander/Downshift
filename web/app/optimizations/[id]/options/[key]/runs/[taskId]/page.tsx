@@ -25,7 +25,8 @@ export default async function RunPage({ params, searchParams }: { params: Promis
     );
   }
   const j = r.judge;
-  const verdict = j?.preferred === "candidate" ? "judge preferred this one" : j?.preferred === "tie" ? "judge: tie" : j?.preferred === "baseline" ? "judge preferred this one" : undefined;
+  const gt = j?.method === "ground_truth";
+  const verdict = gt ? undefined : j?.preferred === "candidate" ? "judge preferred this one" : j?.preferred === "tie" ? "judge: tie" : j?.preferred === "baseline" ? "judge preferred this one" : undefined;
   return (
     <main className="shell">
       <TopBar crumbs={[{ label: "Results", href: `/optimizations/${id}` }, { label: r.option.label, href: `/optimizations/${id}/options/${key}` }, { label: r.task_id }]} projectId={r.candidate.project} active="results" />
@@ -36,10 +37,21 @@ export default async function RunPage({ params, searchParams }: { params: Promis
         <h2 style={{ marginTop: 8, fontSize: 24, maxWidth: "40ch" }}>{r.question}</h2>
       </section>
       <section className="section compare">
-        <AnswerCard record={r.baseline} title="Baseline · Nemotron 3 Ultra" colorKey="baseline" verdict={j?.preferred === "baseline" ? verdict : undefined} />
-        <AnswerCard record={r.candidate} title={r.option.label} colorKey={r.option.key} verdict={j?.preferred === "candidate" || j?.preferred === "tie" ? verdict : undefined} />
+        <AnswerCard record={r.baseline} title="Baseline · Nemotron 3 Ultra" colorKey="baseline" verdict={gt ? (j?.baseline?.passed ? "correct" : "wrong") : j?.preferred === "baseline" ? verdict : undefined} />
+        <AnswerCard record={r.candidate} title={r.option.label} colorKey={r.option.key} verdict={gt ? (j?.candidate?.passed ? "correct" : "wrong") : j?.preferred === "candidate" || j?.preferred === "tie" ? verdict : undefined} />
       </section>
-      {j && (
+      {j && gt && (
+        <section className="section">
+          <div className="card judge">
+            <div className="eyebrow">Ground truth · graded against the task&apos;s correct answer by the agent&apos;s own grader · no LLM judge</div>
+            <div className="scores">
+              <div className="sc">baseline: {j.baseline?.passed ? "correct" : "wrong"} — {j.baseline?.details || "–"}</div>
+              <div className="sc">{r.option.label}: {j.candidate?.passed ? "correct" : "wrong"} — {j.candidate?.details || "–"}</div>
+            </div>
+          </div>
+        </section>
+      )}
+      {j && !gt && (
         <section className="section">
           <div className="card judge">
             <div className="eyebrow">Judge · {j.model || "Nemotron 3 Ultra"} · answers shown {j.order === "candidate_first" ? "candidate first" : "baseline first"}, blind</div>

@@ -20,13 +20,17 @@ shows a clear cost vs quality result with a pull request ready to merge.
                                          ├─ 2. analyze    Nemotron 3 Nano labels every recorded step (kind, difficulty)
                                          ├─ 3. rewrite    Nemotron 3 Ultra proposes a harness.yaml per target
                                          ├─ 4. replay     run the agent on the target; matching tool calls come from the recording
-                                         ├─ 5. score      auto checks + Ultra judge, blind pairwise, random order
+                                         │                (the built-in research agent, or your own agent's code through its adapter)
+                                         ├─ 5. score      the task's correct answer when it has one (the agent's own grader);
+                                         │                otherwise auto checks + Ultra judge, blind pairwise, random order
                                          ├─ 6. report     success, quality, cost/run, latency vs baseline (held-out only)
                                          └─ 7. PR         new harness.yaml + results table on the agent's repo
 ```
 
 Targets: **Nemotron 3 Super**, **Nemotron 3 Nano**, and a **per-step mix** (cheapest model that can
-handle each step). Two rounds per target (propose → replay → score → keep the best), capped by a budget.
+handle each step). For Super and Nano the optimizer first tries the **model swap alone** (prompts
+unchanged); then two rewrite rounds (propose → replay → score), keeping whichever candidate scores best,
+so a rewrite is only kept if it beats the plain swap. Capped by a budget.
 
 The key design choice is the **harness config**: the agent's system prompt, tool descriptions, step
 plan and per-step model and parameters live in `demo_agent/harness.yaml`, not in Python. The SDK
@@ -96,6 +100,32 @@ To try the whole flow on one of the extra demo agents from the UI, follow [docs/
 
 Tests: `uv run pytest` (SDK, optimizer units, API, a scripted end-to-end optimization).
 
+## Bring your own agent
+
+Downshift can record, replay and optimize an agent it did not build. The agent's folder gets four
+small files; the agent's own code is not changed:
+
+| file | what it is |
+|---|---|
+| `downshift_agent.py` | an `AgentAdapter` (from the SDK) exposed as `agent`: runs one task with the agent's own code, sending model calls through `run.chat` and tool calls through `run.tool`, and grades an output against the task's correct answer (`score`) |
+| `harness.yaml` | `runtime: custom`: the agent's prompts, tool descriptions and models, plus a `contract` that says what its code needs from the model. The optimizer may rewrite prompts, examples and model settings, never the steps, tools or contract |
+| `tasks.jsonl` | one task per line: `{"id", "input", "expected"}`. With `expected`, runs are graded against the correct answer and no LLM judge is used |
+| `downshift.yaml` | which Python runs the agent (its own environment) |
+
+```bash
+cd my-agent && uv pip install -e path/to/downshift/sdk     # the SDK, into the agent's own environment
+.venv/bin/python -m downshift.runner init-harness           # write the adapter's default harness.yaml
+.venv/bin/python -m downshift.runner check                  # adapter, harness and tasks load; no model calls
+.venv/bin/python -m downshift.runner record --project my-agent   # baseline runs, graded, sent to the API
+```
+
+Register the folder on the Agents screen (or `POST /v1/agents` with the same id), then optimize as
+usual. Replays run `python -m downshift.runner replay` in the agent's folder with its own Python, so the
+server never imports the agent's code; this needs `DOWNSHIFT_ALLOW_FS=true` and the folder inside
+`DOWNSHIFT_AGENTS_ROOT`. Agents whose tools change state set `reuse_tool_results = False` so replays
+run every tool live. `examples/text2sql/` is a complete adapter for
+[text2sql-framework](https://github.com/Text2SqlAgent/text2sql-framework).
+
 ## Repo layout
 
 ```
@@ -104,6 +134,7 @@ server/       FastAPI backend: storage (SQLite), optimizer (split, analyze, rewr
 web/          Next.js UI: agents, onboarding (folder → harness.yaml → baseline runs), Run screen, results, harness diff, Open PR
 demo_agent/   The "user's agent": research agent (web_search + read_page), harness.yaml, 42 questions, recorder
 demo_agents/  Four more agents on the same runtime: fact-checker, compare-agent, timeline-agent, tutor-agent
+examples/     Adapters for agents Downshift did not build (text2sql-framework)
 docs/         Deployment notes (Nebius Serverless), video script
 ```
 
@@ -135,6 +166,14 @@ docs/         Deployment notes (Nebius Serverless), video script
   with a short rubric (correct, complete, supported, 0–5 each). Task success additionally requires the
   automatic checks: an answer was produced, sources are listed, every cited URL appeared in the tools'
   results, and no errors. A model that invents a source fails that run.
+- **An agent we did not build.** text2sql-framework (`examples/text2sql/`), 40 Spider questions graded
+  against the gold SQL, 16 held out (optimization `opt_10b7f3486f2d`). Downshift recommended its
+  Super harness: 68.8% task success, the same as the Ultra baseline on those tasks, at 72% lower cost per run.
+  Fresh runs of the real agent (no replay, two trials) gave Ultra 72%, that Super harness 78% and the
+  Nano option 44%, so the decisions held (Super kept, Nano rejected). The point estimates are single
+  replays of 16 tasks and moved by up to three tasks (Downshift said 62.5% for Nano). Rewrites that
+  turned Nano's thinking off broke text2sql's tool loop every time; the model-swap-only candidate is
+  what kept the Nano option sane.
 - **Open PR.** Needs `GITHUB_REPO` (owner/name) and a token (`GITHUB_TOKEN`, or a local `gh` login).
   Without them the button shows the exact PR it would open (title, branch, body, file) instead.
 - **Deployment.** Dockerfiles and a compose file are included; `docs/deploy-nebius.md` describes the

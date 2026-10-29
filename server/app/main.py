@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import threading
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
@@ -18,6 +19,7 @@ from . import agents as agentfs
 from .db import Database
 from .github_pr import open_pr, pr_payload
 from .optimizer.engine import TARGETS, Engine, default_config
+from .optimizer.external import ExternalAgent, ExternalAgentError
 from .settings import REPO_DIR, Settings
 
 settings = Settings.from_env()
@@ -260,8 +262,14 @@ def agent_folder(agent_id: str) -> dict[str, Any]:
 def draft_agent_harness(agent_id: str) -> dict[str, Any]:
     folder = _agent_folder(agent_id)
     info = agentfs.inspect_folder(settings.agents_root, str(folder))
+    if info.get("adapter") and not info["adapter"].get("error"):
+        try:  # the adapter knows the agent's real prompts and tools
+            text = agentfs.adapter_default_harness(folder)
+            return {"yaml": text, "validation": agentfs.validate_yaml(text), "tools_detected": agentfs.validate_yaml(text).get("tools") or [], "source": "adapter"}
+        except (agentfs.FolderError, OSError, subprocess.TimeoutExpired) as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
     text = agentfs.draft_harness(agent_id, info["description"], info["tools"])
-    return {"yaml": text, "validation": agentfs.validate_yaml(text), "tools_detected": list(info["tools"])}
+    return {"yaml": text, "validation": agentfs.validate_yaml(text), "tools_detected": list(info["tools"]), "source": "draft"}
 
 
 @app.put("/v1/agents/{agent_id}/harness")
@@ -329,9 +337,14 @@ def create_optimization(req: OptimizationRequest) -> dict[str, Any]:
     project = db.get_project(req.project_id)
     if not project or not project.get("harness_json"):
         raise HTTPException(status_code=400, detail=f"project '{req.project_id}' has no recorded baseline runs")
-    n_ok = len([r for r in db.latest_runs_per_task(req.project_id, tag=req.tag) if (r["record_json"].get("output") or {}).get("answer")])
+    n_ok = len([r for r in db.latest_runs_per_task(req.project_id, tag=req.tag) if r["record_json"].get("status") == "ok" and ((r["record_json"].get("output") or {}).get("answer") or isinstance(r["record_json"].get("score"), dict))])
     if n_ok < 4:
         raise HTTPException(status_code=400, detail=f"need at least 4 successful recorded runs, found {n_ok}")
+    if (project.get("harness_json") or {}).get("runtime") == "custom":
+        try:  # the agent's own code runs the replays: its folder must be registered and reachable
+            ExternalAgent.for_project(db, settings, req.project_id)
+        except ExternalAgentError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
     try:  # fail before queueing, so a missing key does not use up the demo's hourly allowance
         LLM(settings.provider)
     except LLMError as e:

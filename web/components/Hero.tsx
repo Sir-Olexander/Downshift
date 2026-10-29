@@ -41,7 +41,7 @@ export function Hero({ opt, summary }: { opt: Optimization; summary: Summary }) 
         </div>
       )}
       <div className="meta">
-        <span>Judge: {summary.judge.model}, blind pairwise</span>
+        <span>{summary.scoring === "ground_truth" ? "Scored against each task's correct answer, no LLM judge" : `Judge: ${summary.judge.model}, blind pairwise`}</span>
         <span>Optimized on {summary.split.optimization} runs, tested on {summary.split.test} it never saw</span>
         <span>Spent ${summary.spent_usd.toFixed(2)} on this optimization</span>
       </div>
