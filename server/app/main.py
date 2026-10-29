@@ -12,7 +12,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from downshift import Harness, HarnessError, default_table
+from downshift import LLM, Harness, HarnessError, LLMError, default_table
 
 from . import agents as agentfs
 from .db import Database
@@ -332,6 +332,10 @@ def create_optimization(req: OptimizationRequest) -> dict[str, Any]:
     n_ok = len([r for r in db.latest_runs_per_task(req.project_id, tag=req.tag) if (r["record_json"].get("output") or {}).get("answer")])
     if n_ok < 4:
         raise HTTPException(status_code=400, detail=f"need at least 4 successful recorded runs, found {n_ok}")
+    try:  # fail before queueing, so a missing key does not use up the demo's hourly allowance
+        LLM(settings.provider)
+    except LLMError as e:
+        raise HTTPException(status_code=400, detail=f"{e}. Add it to .env and restart the API.") from e
     cfg = default_config(settings)
     targets = list(dict.fromkeys(t for t in req.targets if t in TARGETS))
     if not targets:

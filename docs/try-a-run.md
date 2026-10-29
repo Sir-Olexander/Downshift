@@ -16,6 +16,11 @@ uv run uvicorn app.main:app --app-dir server --port 8000      # terminal 1: API
 cd web && npm run dev                                         # terminal 2: web, http://localhost:3000
 ```
 
+The API needs the key: `.env` reads it from `TOKEN_FACTORY_API_KEY` in the terminal you start it from.
+If your terminals don't export it, either add `export TOKEN_FACTORY_API_KEY=...` to `~/.zshrc` or put the
+key straight into `.env` as `NEBIUS_API_KEY=...`. Without it, **Start optimization** says
+"No API key for provider 'tokenfactory'".
+
 Check the API is on Token Factory: `curl -s localhost:8000/healthz` should show `"provider":"tokenfactory"`.
 
 ## 1. Add the agent
