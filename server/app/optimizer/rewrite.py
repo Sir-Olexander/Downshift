@@ -75,7 +75,7 @@ Rules:
 - Only use these model ids: {allowed_models}. {model_rule}
 - Smaller models need explicit output formats, short numbered rules and clear stop conditions. Look at how failed runs went wrong and target that.
 - Reasoning (thinking) tokens count against max_tokens: if you set max_tokens on a step with reasoning on, leave plenty of room, or the answer comes back empty.
-- Prefer fewer, cheaper model calls when it does not cost correctness.
+- Correctness first. Cut cost (thinking off, fewer calls, fewer tokens) only where the recorded runs show the step does not need it; a cheaper step that fails the task costs more than it saves.
 - Fill `changelog` with 3-6 short lines describing the changes.
 
 {schema}
@@ -106,7 +106,7 @@ Rules:
 - Only use these model ids: {allowed_models}. {model_rule}
 - Keep prompts concrete. Smaller models need explicit output formats, short numbered rules and clear stop conditions.
 - The final answer must keep inline [n] citations and the "Sources:" list of URLs taken from the evidence, because the scorer checks sources.
-- Prefer fewer, cheaper model calls: for example reasoning off for mechanical steps, a tight max_tool_calls, and no plan step if the search step can plan for itself.
+- Correctness first; then fewer, cheaper model calls where the recorded runs show a step does not need the strong setting (for example a tight max_tool_calls, or no plan step if the search step can plan for itself).
 - Add a verify step with retry_on_fail only if you think the target model needs the safety net; it costs an extra call.
 - Fill `changelog` with 3-6 short lines describing the changes.
 

@@ -110,16 +110,21 @@ def deltas(option: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
 
 
 def objective(metrics: dict[str, Any], baseline: dict[str, Any], *, tolerance_pp: float = 5.0) -> float:
-    """Higher is better. Quality first, with a penalty when success drops more than the tolerance,
-    and a small bonus for cost savings so equal-quality candidates prefer the cheaper harness."""
+    """Higher is better. Correctness first: quality, with a penalty when success drops more than the
+    tolerance. Cost is only a tie-breaker: the bonus for saving money is capped at half of what one task
+    is worth on this sample (50/n points), so a cheaper candidate can never outrank one that gets one more
+    task right. (The old cap of 10 points was almost a whole task on an 8-task sample, and the rewriter
+    chased it by switching thinking off.)"""
     q = float(metrics.get("quality") or 0.0)
     s = float(metrics.get("success_rate") or 0.0)
     bs = float(baseline.get("success_rate") or 0.0)
     penalty = max(0.0, (bs - tolerance_pp) - s) * 2.0
     cost_bonus = 0.0
     if baseline.get("cost_per_run") and metrics.get("cost_per_run") is not None:
+        n = int(metrics.get("n_judged") or metrics.get("n") or 0)
+        cap = min(10.0, 50.0 / n) if n else 2.0
         saving = 1.0 - float(metrics["cost_per_run"]) / float(baseline["cost_per_run"])
-        cost_bonus = max(-10.0, min(10.0, saving * 10.0))
+        cost_bonus = max(-cap, min(cap, saving * cap))
     return round(q - penalty + cost_bonus, 3)
 
 
