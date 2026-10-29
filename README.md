@@ -101,6 +101,7 @@ sdk/          Python package `downshift`: harness schema, model table + prices, 
 server/       FastAPI backend: storage (SQLite), optimizer (split, analyze, rewrite, replay, judge), GitHub PR, seed
 web/          Next.js UI: agents, onboarding (folder → harness.yaml → baseline runs), Run screen, results, harness diff, Open PR
 demo_agent/   The "user's agent": research agent (web_search + read_page), harness.yaml, 42 questions, recorder
+demo_agents/  Four more agents on the same runtime: fact-checker, compare-agent, timeline-agent, tutor-agent
 docs/         Deployment notes (Nebius Serverless), video script
 ```
 

@@ -1,0 +1,14 @@
+[
+  {"id": "cmp01", "category": "energy", "difficulty": "medium", "question": "Compare nuclear fission and nuclear fusion as ways to generate electricity."},
+  {"id": "cmp02", "category": "technology", "difficulty": "medium", "question": "Compare TCP and UDP: reliability, speed and typical uses."},
+  {"id": "cmp03", "category": "nature", "difficulty": "easy", "question": "Compare alligators and crocodiles: appearance, habitat and behaviour."},
+  {"id": "cmp04", "category": "history", "difficulty": "medium", "question": "Compare the Roman Republic and the Roman Empire in how political power was held."},
+  {"id": "cmp05", "category": "health", "difficulty": "medium", "question": "Compare mRNA vaccines and inactivated-virus vaccines: how they work, storage and examples."},
+  {"id": "cmp06", "category": "space", "difficulty": "medium", "question": "Compare NASA's Mars rovers Curiosity and Perseverance: mission goals, power source and instruments."},
+  {"id": "cmp07", "category": "technology", "difficulty": "hard", "question": "Compare lithium-ion and sodium-ion batteries: energy density, cost and raw materials."},
+  {"id": "cmp08", "category": "politics", "difficulty": "medium", "question": "Compare the Kyoto Protocol and the Paris Agreement: who had to cut emissions and how targets were set."},
+  {"id": "cmp09", "category": "technology", "difficulty": "medium", "question": "Compare the Python and Rust programming languages on memory management, speed and typical use cases."},
+  {"id": "cmp10", "category": "arts", "difficulty": "medium", "question": "Compare the Baroque and Classical periods of Western music: dates, style and representative composers."},
+  {"id": "cmp11", "category": "geography", "difficulty": "medium", "question": "Compare the Mercator and Robinson map projections: what each preserves or distorts and what each is used for."},
+  {"id": "cmp12", "category": "biology", "difficulty": "easy", "question": "Compare viruses and bacteria: structure, how they reproduce and how infections are treated."}
+]

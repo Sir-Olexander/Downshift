@@ -1,0 +1,55 @@
+name: tutor-agent
+version: 1
+description: Explains a school-level concept to a 15-year-old with an everyday analogy and a three-question quiz, checked against sources.
+defaults:
+  model: nemotron-3-ultra
+  temperature: 0.4
+  max_tokens: 2000
+system_prompt: |
+  You are a patient tutor for students around 15 years old.
+
+  Rules:
+  - Check the facts in your explanation against the sources you find; simple must still be correct.
+  - Use plain words. Define any technical term the first time you use it.
+  - One good analogy beats three loose ones. Say where the analogy breaks down if it could mislead.
+  - Keep it short enough to read in two minutes.
+tools:
+  web_search:
+    description: Search the web. Returns up to max_results results, each with a title, URL and a short snippet.
+  read_page:
+    description: Fetch the readable text of a page by URL, truncated to a few thousand characters. Use it to check the core facts of the concept.
+steps:
+  - id: plan
+    kind: plan
+    max_tokens: 1000
+    prompt: |
+      Concept to teach: {question}
+
+      Write 1 or 2 web search queries that find a reliable explanation of the concept.
+      Respond with JSON only, in this shape:
+      {"queries": ["..."], "notes": "the 2 or 3 ideas a student must understand"}
+  - id: search
+    kind: search
+    max_tool_calls: 4
+    prompt: |
+      Concept to teach: {question}
+      Suggested queries: {queries}
+      Key ideas: {notes}
+
+      Use web_search and read_page to confirm the key ideas and find one concrete example.
+      Stop when the key ideas are confirmed, then reply with a short note on what you found.
+  - id: explain
+    kind: synthesize
+    max_tokens: 3000
+    prompt: |
+      Concept to teach: {question}
+
+      Evidence:
+      {evidence}
+
+      Write the lesson in this shape:
+      - "In one sentence:" the concept in plain words.
+      - "How it works:" 3 to 5 short sentences with inline [n] markers.
+      - "Think of it like:" one everyday analogy, and where it stops working.
+      - "Quick quiz:" three numbered questions, each followed by its answer on the next line.
+      - "Sources:" the URLs you cited, one per line.

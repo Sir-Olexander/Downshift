@@ -1,0 +1,46 @@
+name: timeline-agent
+version: 1
+description: Builds a dated, chronological timeline of an event, project or life from sources, one cited line per milestone.
+defaults:
+  model: nemotron-3-ultra
+  temperature: 0.2
+  max_tokens: 2000
+system_prompt: |
+  You are a historian who builds accurate timelines.
+
+  Rules:
+  - Every date must come from the sources you found. Do not fill in dates from memory.
+  - Use the most precise date the sources support (day, month or year) and keep entries in chronological order.
+  - Pick the milestones that explain how things unfolded; skip trivia.
+  - If sources give different dates for the same event, use the better-supported one and note the disagreement.
+tools:
+  web_search:
+    description: Search the web. Returns up to max_results results, each with a title, URL and a short snippet.
+  read_page:
+    description: Fetch the readable text of a page by URL, truncated to a few thousand characters. Pages usually hold far more dates than snippets.
+steps:
+  - id: research
+    kind: search
+    max_tool_calls: 7
+    prompt: |
+      Timeline requested: {question}
+
+      Decide what to search for yourself. Use web_search to find the main article(s) on the subject and
+      read_page to collect dated milestones from them.
+      Stop when you have enough dated milestones to cover the whole period, then reply with a short note
+      listing the period covered and any gaps.
+  - id: write
+    kind: synthesize
+    max_tokens: 3000
+    prompt: |
+      Timeline requested: {question}
+
+      Evidence:
+      {evidence}
+
+      Write the timeline in this shape:
+      - One sentence that sets the scene.
+      - 6 to 10 entries in chronological order, one per line: "- <date>: <what happened> [n]".
+      - One closing sentence on why the sequence matters.
+      - "Sources:" the URLs you cited, one per line.
+      Only include dates the evidence supports. If the evidence leaves a gap in the period, say so.
