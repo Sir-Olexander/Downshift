@@ -148,6 +148,31 @@ def test_engine_optimizes_an_external_agent_against_ground_truth(tmp_path, monke
     assert out["redone"] == 1 and out["summary"]["scoring"] == "ground_truth"
     assert engine.resummarize(opt["id"])["options"][1]["metrics"]["success_rate"] == 100.0
 
+    # several replays per held-out task, the plain swap on the same held-out tasks, paired statistics and a
+    # verdict instead of the one-run rule; then fresh runs after the fact
+    opt2 = db.create_optimization("toy", {"targets": ["nano"], "rounds": 1, "sample_size": 3, "test_fraction": 0.5, "concurrency": 2, "max_cost_usd": 5.0, "seed": 3, "test_trials": 2, "race_size": 2, "race_trials": 1}, source="live")
+    engine.run(opt2["id"])
+    final2 = db.get_optimization(opt2["id"])
+    assert final2["status"] == "done", final2["error"]
+    n_test = len(final2["split_json"]["test"])
+    nano2 = db.get_option_by_key(opt2["id"], "nano")
+    assert len(db.list_replays(nano2["id"], split="test")) == 2 * n_test
+    assert len(db.list_replays(nano2["id"], split="test_swap")) == 2 * n_test  # the swap, paired on the held-out tasks
+    stats = nano2["metrics_json"]["stats"]
+    assert stats["n_tasks"] == n_test and stats["trials"] == 2 and stats["pass1"] == 100.0 and stats["passk"] == 100.0
+    assert stats["verdict"] == "non_inferior" and nano2["metrics_json"]["meets_bar"]
+    assert stats["delta_vs_swap"]["pp"] == 100.0 and stats["vs_swap"] == "better"  # the swap alone fails every task here
+    row = {r["key"]: r for r in final2["summary_json"]["options"]}["nano"]
+    assert row["verdict"] == "non_inferior" and "paired" in final2["summary_json"]["bar"]["note"]
+    assert any("statistics:" in n for n in final2["summary_json"]["notes"])
+    out = engine.verify(opt2["id"], trials=1)
+    labels = [a["key"] for a in out["arms"]]
+    assert labels == ["baseline", "nano", "nano-swap"]
+    assert out["arms"][1]["passes_per_trial"] == [n_test] and out["arms"][1]["claimed_success_rate"] == 100.0
+    assert out["arms"][2]["passes_per_trial"] == [0]
+    assert len(db.list_replays(nano2["id"], split="verify")) == n_test  # the chosen harness; baseline and swap arms sit under the baseline option
+    assert len(db.list_replays(db.get_option_by_key(opt2["id"], "baseline")["id"], split="verify")) == 2 * n_test
+
 
 def test_api_refuses_a_custom_project_without_an_agent_folder(client):
     rec = {"id": "r1", "project": "toy", "task_id": "t1", "input": "x", "harness": Harness.from_dict(CUSTOM).to_dict(), "harness_fingerprint": "f", "started_at": "2026-10-29T00:00:00Z", "status": "ok", "output": {"answer": ""}, "score": {"passed": False, "score": 0.0}, "events": [], "totals": {}, "meta": {"tag": "baseline", "mode": "record"}}

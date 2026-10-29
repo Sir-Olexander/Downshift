@@ -61,6 +61,10 @@ class Settings:
     allow_fs: bool = True
     agents_root: Path = field(default_factory=Path.home)
     targets: list[str] = field(default_factory=lambda: ["super", "nano", "mix"])
+    # held-out evaluation: replays per task; non-inferiority margin in points; racing pool for selection
+    test_trials: int = 1
+    noninferiority_pp: float = 10.0
+    race_size: int = 0
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -90,4 +94,7 @@ class Settings:
             public_web_url=os.environ.get("DOWNSHIFT_PUBLIC_WEB_URL") or "http://localhost:3000",
             allow_fs=_bool("DOWNSHIFT_ALLOW_FS", True),
             agents_root=Path(os.environ.get("DOWNSHIFT_AGENTS_ROOT") or Path.home()).expanduser().resolve(),
+            test_trials=max(1, _int("DOWNSHIFT_TEST_TRIALS", 1)),
+            noninferiority_pp=float(os.environ.get("DOWNSHIFT_NONINFERIORITY_PP") or 10.0),
+            race_size=_int("DOWNSHIFT_OPT_RACE", 0),
         )
