@@ -171,9 +171,13 @@ docs/         Deployment notes (Nebius Serverless), video script
   Super harness: 68.8% task success, the same as the Ultra baseline on those tasks, at 72% lower cost per run.
   Fresh runs of the real agent (no replay, two trials) gave Ultra 72%, that Super harness 78% and the
   Nano option 44%, so the decisions held (Super kept, Nano rejected). The point estimates are single
-  replays of 16 tasks and moved by up to three tasks (Downshift said 62.5% for Nano). Rewrites that
-  turned Nano's thinking off broke text2sql's tool loop every time; the model-swap-only candidate is
-  what kept the Nano option sane.
+  replays of 16 tasks and moved by up to three tasks (Downshift said 62.5% for Nano). Downshift's Nano
+  rewrites scored 12.5-50% on the optimization sample against 62.5% for the plain swap. A diagnostic
+  (`docs/research/nano-text2sql-diagnostic.md`) traced the worst of it to a few-shot example that wrote
+  tool calls as text, which Nano copied; thinking off alone halves Nano's pass rate but does not break
+  its tool calls. With thinking on and one final-reply format rule, the plain Nano swap reached 14/16 on
+  the held-out tasks (Ultra: 11-12/16) at about one eighth of Ultra's cost. The optimizer did not find
+  that rule by itself; `docs/prove-the-optimizer-plan.md` is the plan to make it.
 - **Open PR.** Needs `GITHUB_REPO` (owner/name) and a token (`GITHUB_TOKEN`, or a local `gh` login).
   Without them the button shows the exact PR it would open (title, branch, body, file) instead.
 - **Deployment.** Dockerfiles and a compose file are included; `docs/deploy-nebius.md` describes the
