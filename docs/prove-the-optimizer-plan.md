@@ -144,6 +144,12 @@ Still to do, in order:
    finding: prompt rewriting through this loop cannot reach what a two-sentence rule reaches, and Phase 3's
    repair turn moves up the list.
 
+**Outcome (2026-10-29, `research/phase0-results.md`):** all three runs found the final-reply rule and kept
+thinking on; one harness of three scored 14 and 12 of 16 fresh (Ultra 11-12, swap 7-8) at about a tenth of
+Ultra's cost; the other two scored 8-11 fresh, and one of them had been reported at 14/16 from a single
+replay. The bar (2 of 3 at 12 or more) was not met: the optimizer finds the idea, not reliably the
+minimal harness, and single replays of 16 tasks cannot tell its candidates apart. Phase 1 is next.
+
 Expected headline if it works: "Nano reaches Ultra's quality on this agent at about one eighth of the
 cost; the plain swap does not". Not "Nano is free": Super already matches Ultra with no changes, and the
 Nano harness's remaining failures are the semantic ones Ultra also makes.

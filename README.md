@@ -176,8 +176,11 @@ docs/         Deployment notes (Nebius Serverless), video script
   (`docs/research/nano-text2sql-diagnostic.md`) traced the worst of it to a few-shot example that wrote
   tool calls as text, which Nano copied; thinking off alone halves Nano's pass rate but does not break
   its tool calls. With thinking on and one final-reply format rule, the plain Nano swap reached 14/16 on
-  the held-out tasks (Ultra: 11-12/16) at about one eighth of Ultra's cost. The optimizer did not find
-  that rule by itself; `docs/prove-the-optimizer-plan.md` is the plan to make it.
+  the held-out tasks (Ultra: 11-12/16) at about one eighth of Ultra's cost. After the guidance and objective fixes
+  on this branch, three optimization runs all found an equivalent rule by themselves; one of the three
+  resulting harnesses scored 14 and 12 of 16 in fresh runs (Ultra 11-12) at about a tenth of the cost, the
+  other two 8-11, and one single-replay claim was off by four tasks (`docs/research/phase0-results.md`).
+  `docs/prove-the-optimizer-plan.md` is the plan from here.
 - **Open PR.** Needs `GITHUB_REPO` (owner/name) and a token (`GITHUB_TOKEN`, or a local `gh` login).
   Without them the button shows the exact PR it would open (title, branch, body, file) instead.
 - **Deployment.** Dockerfiles and a compose file are included; `docs/deploy-nebius.md` describes the

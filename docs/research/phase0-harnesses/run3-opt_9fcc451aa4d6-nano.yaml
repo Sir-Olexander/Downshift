@@ -1,0 +1,82 @@
+name: text2sql
+version: 1-nano-r2
+description: 'text2sql-framework: answers a question about a SQL database by exploring the schema with
+  execute_sql, testing its query, and returning the final SQL.'
+runtime: custom
+contract: 'text2sql''s code runs one tool loop: the model calls execute_sql until it replies without a
+  tool call.
+
+  The code then extracts the final SQL from that last reply: the SQL must be inside a ```sql code block
+
+  (text outside the block is treated as commentary); without a code block it falls back to the text from
+  the
+
+  first SELECT/WITH onwards. The SQL must be read-only (SELECT/WITH). The code runs it itself and its
+  rows
+
+  are graded against the task''s correct result, so the final reply must contain exactly one complete
+  query.
+
+  The system prompt may use these placeholders, which the code fills in: {dialect}, {dialect_guide},
+
+  {custom_metadata}, {example_tool_note}, {example_list_note}, {instructions}. The step prompt may use
+  {question}.'
+defaults:
+  model: nemotron-3-nano
+  temperature: 0.6
+  max_tokens: 10000
+  reasoning: 'on'
+system_prompt: "You are a SQL expert. Translate natural language questions into SQL queries.\n\nThis is\
+  \ a **{dialect}** database.\n\n{dialect_guide}\n{custom_metadata}\n## Tools\n\n- `execute_sql` — run\
+  \ any read-only SQL (SELECT, WITH, SHOW, DESCRIBE, PRAGMA). Use this to explore the schema metadata\
+  \ and test queries. Use LIMIT to keep result sets under 100 rows when possible.\n{example_tool_note}\n\
+  ## Workflow\n\n1. EXPLORE: Query the schema metadata to find relevant tables and columns\n   - Search\
+  \ by keyword: filter table/column names with LIKE or ILIKE\n   - Look at column descriptions/comments\
+  \ if available\n2. INSPECT: Query full column lists for candidate tables to see exact names and types\n\
+  3. RELATIONSHIPS: Query foreign keys to find how tables join\n4. EXAMPLES: If the question involves\
+  \ a business concept you're unsure about, use `lookup_example` to get guidance{example_list_note}\n\
+  5. WRITE & EXECUTE: Write your SQL and execute it to verify it works\n6. FIX: If it errors, read the\
+  \ error, fix the SQL, and execute again. Repeat until it works.\n\n## Rules\n1. ALWAYS explore the schema\
+  \ first — never guess table or column names\n2. Use exact names from the metadata catalog\n3. Write\
+  \ {dialect} SQL syntax\n4. You MUST execute your final SQL via `execute_sql` before responding. Never\
+  \ return SQL you haven't run.\n5. If execution fails, read the error, fix the SQL, and execute again.\n\
+  6. **OUTPUT FORMAT (MANDATORY):** Your final message MUST contain the complete, runnable SQL query inside\
+  \ exactly one ```sql code block. Do NOT answer with values, counts, or explanations in prose. The code\
+  \ block is required — without it the system cannot grade your answer.\n{instructions}"
+tools:
+  execute_sql:
+    description: 'Execute a read-only SQL query and return results.
+
+
+      Use this for everything: exploring schema metadata (information_schema,
+
+      PRAGMA, etc.), testing your queries, and running the final answer.
+
+      If the query errors, read the error message, fix, and retry.
+
+      Only SELECT, WITH, EXPLAIN, SHOW, DESCRIBE, and PRAGMA are allowed.'
+steps:
+- id: agent
+  kind: tool_loop
+  description: 'The whole agent: explore the schema with execute_sql, write and test the query, then reply
+    with the final SQL in a ```sql block (no tool call).'
+  prompt: '{question}'
+  max_tool_calls: 15
+  few_shot:
+  - input: How many museums were opened after 2013 or before 2008?
+    output: '```sql\nSELECT COUNT(*) AS museum_count\nFROM museum\nWHERE opening_year > 2013 OR opening_year
+      < 2008;\n```'
+  - input: Show the name of teachers aged either 32 or 33?
+    output: '```sql\nSELECT name\nFROM teacher\nWHERE age IN (32, 33);\n```'
+  - input: List all customers and their total orders.
+    output: '```sql\nSELECT c.customer_name, COUNT(o.order_id) AS total_orders\nFROM customers c\nLEFT
+      JOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.customer_name;\n```'
+  retry_on_fail: false
+  enabled: true
+changelog:
+- 'Strengthened output format rule #6: made it bold, explicit, and mandatory; added "Do NOT answer with
+  values, counts, or explanations in prose"'
+- Added two more few-shot examples (teacher ages, customer orders) showing correct ```sql block format
+  for different query types
+- 'Kept reasoning: on, max_tokens: 10000, temperature: 0.6, max_tool_calls: 15 per model requirements'
+- No change to tool descriptions or placeholders; contract fully preserved
