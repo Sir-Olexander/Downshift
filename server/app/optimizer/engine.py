@@ -107,8 +107,14 @@ class Engine:
         for x in ranked[:n]:
             checks = x["checks"]
             failed = [k for k in ("answer_produced", "has_sources", "sources_from_evidence", "no_errors", "ground_truth") if k in checks and not checks.get(k)]
+            events = x["record"].get("events") or []
+            last_call = next((e for e in reversed(events) if e.get("type") == "model_call"), None)
+            final_message = (((last_call or {}).get("response") or {}).get("content") or "").strip()
             out.append({
                 "task_id": x["task_id"], "question": x["question"], "reason": (x["judge"] or {}).get("reason", ""),
+                # what the model actually said last: a prose answer where the agent expected a code block is
+                # invisible in the extracted answer (empty) but obvious here
+                "final_message": final_message[:300],
                 "checks": ("failed: " + ", ".join(failed)) if failed else "all passed",
                 "answer_excerpt": ((x["record"].get("output") or {}).get("answer") or x["record"].get("error") or "")[:240],
             })

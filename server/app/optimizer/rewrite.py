@@ -141,7 +141,11 @@ def _history_text(previous: list[dict[str, Any]]) -> str:
             f"(baseline ${p.get('baseline_cost')}), checks passed {m.get('checks_pass_rate')}%"
         )
         for ex in p.get("worst_examples") or []:
-            parts.append(f"  worst example: Q: {ex.get('question','')[:140]} | verdict: {ex.get('reason','')[:220]} | checks: {ex.get('checks','')} | output: {ex.get('answer_excerpt','')[:200]!r}")
+            line = f"  worst example: Q: {ex.get('question','')[:140]} | verdict: {ex.get('reason','')[:220]} | checks: {ex.get('checks','')} | output: {ex.get('answer_excerpt','')[:200]!r}"
+            final = (ex.get('final_message') or '').strip()
+            if final and final[:120] != (ex.get('answer_excerpt') or '')[:120]:
+                line += f" | the model's final message: {final[:260]!r}"
+            parts.append(line)
         if p.get("changelog"):
             parts.append("  that round's changelog: " + " / ".join(p["changelog"][:6]))
     parts.append("Fix the failure patterns above. Keep what worked. If a change made things worse, revert it.")
