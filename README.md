@@ -190,7 +190,11 @@ docs/         Deployment notes (Nebius Serverless), video script
   on this branch, three optimization runs all found an equivalent rule by themselves; one of the three
   resulting harnesses scored 14 and 12 of 16 in fresh runs (Ultra 11-12) at about a tenth of the cost, the
   other two 8-11, and one single-replay claim was off by four tasks (`docs/research/phase0-results.md`).
-  `docs/prove-the-optimizer-plan.md` is the plan from here.
+  On 80 new held-out Spider tasks that no rewrite or selection touched, that Downshift-written Nano harness
+  is non-inferior to Ultra (paired difference −0.8 points, 90% interval −6.7 to +4.6) and beats the plain
+  Nano swap by 12 points (95% interval +5 to +20), on Ollama and on Token Factory, at about a tenth of
+  Ultra's cost. The optimizer does not find it reliably yet: a later run on a larger sample kept the plain
+  swap (`docs/research/phase1-results.md`). `docs/prove-the-optimizer-plan.md` is the plan from here.
 - **Open PR.** Needs `GITHUB_REPO` (owner/name) and a token (`GITHUB_TOKEN`, or a local `gh` login).
   Without them the button shows the exact PR it would open (title, branch, body, file) instead.
 - **Deployment.** Dockerfiles and a compose file are included; `docs/deploy-nebius.md` describes the

@@ -156,6 +156,13 @@ Nano harness's remaining failures are the semantic ones Ultra also makes.
 
 ### Phase 1 (days): numbers a reader can trust
 
+**Outcome (2026-10-30, `research/phase1-results.md`):** done: 240 tasks, trials, paired intervals, the
+non-inferiority verdict, racing and `verify` are in the engine. Super: non-inferior, rewrite = swap. Nano:
+the optimizer's own run kept the swap (inconclusive at −9.7 pp); the Phase 0 harness, on 80 untouched tasks,
+is non-inferior to Ultra and beats the swap by about 12 points on both providers (bar item 1 met for that
+harness, not yet for the optimizer as a procedure). Trials matter little here (intraclass correlation
+0.81-0.85); tasks do.
+
 1. **Grow the text2sql task set to 240.** `examples/text2sql/build_text2sql_set.py` already samples Spider
    dev; all 1034 dev questions have their database locally. Keep the 40 existing tasks as they are and add
    200 stratified by database (seed 42). Record the Ultra baseline on the new tasks on Ollama (about $2.60
