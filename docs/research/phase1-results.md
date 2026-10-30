@@ -72,14 +72,14 @@ and no harness was selected on them. (The Phase 0 harness was chosen among three
 
 | arm | tasks x trials | pass^1 | 95% CI | pass^k | paired delta vs Ultra baseline (90% CI) | verdict at 10 pp | delta vs Nano plain swap (95% CI) |
 |---|---|---|---|---|---|---|---|
-| Ultra baseline (recorded, Ollama) | 96 x 1 | 70.8% | 61.1-79.0% | - | +0.0 (+0.0 to +0.0) | reference | - |
-| Ultra fresh (Token Factory) | 96 x 1 | 71.9% | 62.2-79.9% | - | +1.0 (-3.1 to +5.2) | non_inferior | - |
-| Super, chosen rewrite (Ollama x3) | 96 x 3 | 72.9% | 67.5-77.7% | 66.7% | +2.1 (-2.4 to +6.6) | non_inferior | - |
-| Super, plain swap (Ollama x3) | 96 x 3 | 71.2% | 65.7-76.1% | 67.7% | +0.3 (-4.2 to +4.9) | non_inferior | - |
-| Super, chosen rewrite (Token Factory) | 96 x 1 | 72.9% | 63.3-80.8% | - | +2.1 (-3.1 to +8.3) | non_inferior | - |
-| Nano, plain swap (Ollama x3) | 96 x 3 | 61.1% | 55.4-66.6% | 39.6% | -9.7 (-15.6 to -3.8) | inconclusive | - |
-| Nano, plain swap (Token Factory) | 96 x 1 | 52.1% | 42.2-61.8% | - | -18.8 (-27.1 to -10.4) | inferior | - |
-| Nano, swap + SDK repair (Ollama x3) | 96 x 3 | 67.7% | 62.1-72.8% | 57.3% | -3.1 (-8.3 to +2.4) | non_inferior | +6.6 (+1.0 to +12.5): better |
+| Ultra baseline (recorded, Ollama) | 80 x 1 | 71.2% | 60.5-80.0% | - | +0.0 (+0.0 to +0.0) | reference | - |
+| Ultra fresh (Token Factory) | 80 x 1 | 70.0% | 59.2-78.9% | - | -1.2 (-6.2 to +3.8) | non_inferior | - |
+| Super, chosen rewrite (Ollama x3) | 80 x 3 | 72.1% | 66.1-77.4% | 66.2% | +0.8 (-3.8 to +5.4) | non_inferior | - |
+| Super, plain swap (Ollama x3) | 80 x 3 | 70.0% | 63.9-75.4% | 66.2% | -1.3 (-5.8 to +2.9) | non_inferior | - |
+| Super, chosen rewrite (Token Factory) | 80 x 1 | 72.5% | 61.9-81.1% | - | +1.2 (-5.0 to +7.5) | non_inferior | - |
+| Nano, plain swap (Ollama x3) | 80 x 3 | 58.3% | 52.0-64.4% | 36.2% | -12.9 (-19.2 to -6.3) | inferior | - |
+| Nano, plain swap (Token Factory) | 80 x 1 | 50.0% | 39.3-60.7% | - | -21.2 (-30.0 to -12.5) | inferior | - |
+| Nano, swap + SDK repair (Ollama x3) | 80 x 3 | 65.4% | 59.2-71.1% | 55.0% | -5.8 (-11.7 to -0.0) | inconclusive | +7.1 (+0.0 to +13.8): undecided |
 | Nano, Phase 0 harness (Ollama x3) | 80 x 3 | 70.4% | 64.4-75.8% | 56.2% | -0.8 (-6.7 to +4.6) | non_inferior | +12.1 (+5.0 to +19.6): better |
 | Nano, Phase 0 harness (Token Factory) | 80 x 1 | 71.2% | 60.5-80.0% | - | +0.0 (-7.5 to +7.5) | non_inferior | +12.9 (+4.2 to +21.3): better |
 
@@ -108,14 +108,16 @@ runs (12%).
    selection touched, the Downshift-written Nano harness is non-inferior to Ultra (paired Δ −0.8 pp, 90% CI −6.7
    to +4.6 on Ollama; +0.0, −7.5 to +7.5 on Token Factory) and beats the plain Nano swap by about 12 points with
    the interval excluding zero (+12.1, 95% CI +5.0 to +19.6; +12.9, +4.2 to +21.3), at about a tenth of Ultra's
-   cost. The plain swap alone is clearly worse than Ultra on Token Factory (−18.8 pp) and inconclusive on Ollama.
+   cost. On the same 80 tasks the plain swap is inferior to Ultra on both providers (−12.9 pp on Ollama, −21.2 pp
+   on Token Factory).
 2. **The optimizer does not find it reliably.** That harness came from one of three Phase 0 runs and was
    picked by fresh runs on 16 other tasks; the Phase 1 run on the larger sample kept the plain swap. The
    ingredients are right every time (thinking on, a final-reply rule); which extras get bundled decides the result.
-3. **The SDK repair is a second, simpler route.** With no prompt change, the repair turn makes the plain swap
-   non-inferior to Ultra on the 96 tasks (−3.1 pp, 90% CI −8.3 to +2.4) and better than the swap (+6.6, 95% CI
-   +1.0 to +12.5), at a cost of one extra short call on 12% of runs. It recovers less than the Phase 0 harness,
-   whose rule also lowers the number of prose answers before they need repairing.
+3. **The SDK repair alone helps, but less.** With no prompt change, the repair turn lifts the plain swap by
+   about 7 points (+6.6 pp, 95% CI +1.0 to +12.5 on all 96 tasks; +7.1, 0.0 to +13.8 on the clean 80), at the
+   cost of one extra short call on 12% of runs. Against Ultra that is non-inferior on the 96 tasks (−3.1 pp, 90%
+   CI −8.3 to +2.4) but only inconclusive on the clean 80 (−5.8, −11.7 to 0.0). It recovers less than the
+   Phase 0 harness, whose final-reply rule prevents most prose answers before a repair is needed.
 4. **Super is a safe swap and the rewrite adds nothing.** Non-inferior on every check; rewrite minus swap
    +1.7 pp, interval straddling zero.
 5. **Providers differ.** Nano's plain swap scored 61.1% on Ollama (3 trials) and 52.1% on Token Factory
