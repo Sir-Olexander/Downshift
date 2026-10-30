@@ -194,7 +194,11 @@ docs/         Deployment notes (Nebius Serverless), video script
   is non-inferior to Ultra (paired difference −0.8 points, 90% interval −6.7 to +4.6) and beats the plain
   Nano swap by 12 points (95% interval +5 to +20), on Ollama and on Token Factory, at about a tenth of
   Ultra's cost. The optimizer does not find it reliably yet: a later run on a larger sample kept the plain
-  swap (`docs/research/phase1-results.md`). `docs/prove-the-optimizer-plan.md` is the plan from here.
+  swap (`docs/research/phase1-results.md`). After two more optimizer fixes, three repeat runs each chose,
+  on their own, a Nano harness that is non-inferior to Ultra on 96 held-out tasks × 3 trials and beats the
+  plain swap with the interval excluding zero, at 76-89% lower cost (`docs/research/reliability-results.md`).
+  The same procedure gave no clear gain for gpt-oss 120B → 20B, and on tau2-bench telecom the plain Nano
+  swap already matched Super. Status of every claim: `docs/prove-the-optimizer-plan.md`.
 - **Open PR.** Needs `GITHUB_REPO` (owner/name) and a token (`GITHUB_TOKEN`, or a local `gh` login).
   Without them the button shows the exact PR it would open (title, branch, body, file) instead.
 - **Deployment.** Dockerfiles and a compose file are included; `docs/deploy-nebius.md` describes the

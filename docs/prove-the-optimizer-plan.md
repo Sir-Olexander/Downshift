@@ -4,6 +4,20 @@ Written 2026-10-29 on branch `prove-the-optimizer-plan`. Everything here rests o
 `docs/research/` (six research notes, two evidence notes, one diagnostic) and on the state of the code after
 this branch's commits. Numbers are quoted with their sample sizes on purpose: most of them are small.
 
+## Status after the autonomous run (2026-10-30, 12:30)
+
+| # | Claim | Status | Evidence |
+|---|---|---|---|
+| P1 | A Downshift rewrite beats the plain swap and keeps the expensive model's quality | **Shown on text2sql, Ultra → Nano, 3 of 3 optimizer runs** (non-inferior at 10 pp, beats the swap with the interval excluding zero, 76-89% cheaper); not shown on gpt-oss 120B → 20B (+2, noise) or tau2 telecom (no gap to recover) | `research/reliability-results.md`, `research/phase1-results.md`, `research/gpt-oss-text2sql-results.md`, `research/tau2-telecom-results.md` |
+| P2 | Reported numbers are trustworthy | **Improved**: 96 held-out tasks × 3 trials, paired intervals, a non-inferiority verdict with "inconclusive"; Token Factory fresh runs reproduce the Ollama numbers for Ultra, Super and the Phase 0 harness within 1-2 points; the plain Nano swap differs by provider and drifted by 10 points within a morning | `research/phase1-results.md`, `research/reliability-results.md` |
+| P3 | Repeats on more outside agents through Downshift | **Partly**: tau2 telecom ran end to end through Downshift (inconclusive, 16 held-out tasks); BFCL and BIRD not started | `research/tau2-telecom-results.md` |
+| P4 | Connecting an agent is cheap | **Improved**: the OpenAI-compatible proxy connected tau2 with no change to its code; the adapter is about 100 lines, mostly task and result handling | `examples/tau2/` |
+| P5 | The original demo results hold against correct answers | **Not settled**: the judge shows no self-preference against a judge from another family, but its position consistency varies (72-88%); the 108-item human labelling pack is ready | `research/judge-audit.md`, `judge-validation/` |
+| P6 | The optimizer's model knowledge is right | **Done** for the thinking switch, sampling, budgets and final-format rule, from the technical reports; no rewrite switched Nano's thinking off after the fix | `research/nemotron-3-model-guides.md` |
+
+Open: a fresh task set for the text2sql claim (the 96 held-out tasks also informed the last optimizer fixes), BFCL
+v4 multi-turn and BIRD mini-dev, human labels for the judge, and few-shot from recorded trajectories.
+
 ## 0. What "proven" has to mean
 
 The open items from the last review, turned into claims a reader could check:
