@@ -175,7 +175,11 @@ docs/         Deployment notes (Nebius Serverless), video script
 - **Judge.** Nemotron 3 Ultra compares the baseline and candidate answers blind, in random order,
   with a short rubric (correct, complete, supported, 0–5 each). Task success additionally requires the
   automatic checks: an answer was produced, sources are listed, every cited URL appeared in the tools'
-  results, and no errors. A model that invents a source fails that run.
+  results, and no errors. A model that invents a source fails that run. A source-checked labelling of 108 of
+  the judge's answers (model-assisted, `docs/research/judge-validation-results.md`) agrees with 87% of its
+  correctness verdicts and confirms the baseline lean, so the judge-based numbers above are upper bounds;
+  it also shows the judge's "supported" score tracks citation formatting, not whether sources back the
+  claims, because the judge never reads the sources.
 - **An agent we did not build.** text2sql-framework (`examples/text2sql/`), 40 Spider questions graded
   against the gold SQL, 16 held out (optimization `opt_10b7f3486f2d`). Downshift recommended its
   Super harness: 68.8% task success, the same as the Ultra baseline on those tasks, at 72% lower cost per run.
