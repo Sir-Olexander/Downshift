@@ -60,7 +60,7 @@ export function ResultsTable({ baseline, rows, recommended, optimizationId }: { 
                     {!r.meets_bar && (
                       <>
                         {" "}
-                        <span className="tag soft">Below the bar</span>
+                        <span className="tag soft">{r.verdict === "inconclusive" ? "Inconclusive" : "Below the bar"}</span>
                       </>
                     )}
                   </div>
@@ -72,6 +72,15 @@ export function ResultsTable({ baseline, rows, recommended, optimizationId }: { 
               <div>
                 <Delta v={r.deltas.success_rate_pp} upGood suffix=" pp" />
               </div>
+              {r.stats && (
+                <div className="delta flat" title="Held-out tasks × trials; 95% Wilson interval on pooled trials; paired difference against the baseline on the same tasks with a 90% bootstrap interval">
+                  {r.stats.n_tasks}×{r.stats.trials}
+                  {r.stats.success_ci95[0] != null ? ` · CI ${r.stats.success_ci95[0]}–${r.stats.success_ci95[1]}%` : ""}
+                  {r.stats.trials > 1 && r.stats.passk != null ? ` · pass^k ${r.stats.passk}%` : ""}
+                  {r.stats.delta_vs_baseline ? ` · Δ ${signed(r.stats.delta_vs_baseline.pp, 1, " pp")} [${signed(r.stats.delta_vs_baseline.ci90[0], 1)}, ${signed(r.stats.delta_vs_baseline.ci90[1], 1)}]` : ""}
+                  {r.stats.delta_vs_swap ? ` · vs swap ${signed(r.stats.delta_vs_swap.pp, 1, " pp")} (${r.stats.vs_swap})` : ""}
+                </div>
+              )}
             </td>
             <td className="num">
               {r.metrics.quality ?? "–"}

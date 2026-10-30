@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 import openai
 
-from .pricing import ModelTable, ProviderInfo, default_table
+from .pricing import ModelTable, ProviderInfo, UnsupportedReasoningError, default_table
 
 PROVIDER_PREFERENCE = ("tokenfactory", "ollama", "ollama-local", "openai")
 
@@ -187,7 +187,10 @@ class LLM:
         if response_format is not None:
             kwargs["response_format"] = response_format
         extra_body: dict[str, Any] = {}
-        extra_body.update(self.provider.reasoning_params(reasoning))
+        try:
+            extra_body.update(self.table.reasoning_params(model, self.provider_name, reasoning))
+        except UnsupportedReasoningError as e:
+            raise LLMError(str(e)) from e
         if extra:
             extra_body.update(extra)
         if extra_body:

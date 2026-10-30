@@ -22,6 +22,7 @@ from .metrics import aggregate, bar_tolerance_pp, baseline_run_metrics, deltas, 
 from .replay import replay_many
 from .rewrite import propose_harness
 from .split import split_runs
+from .stats import describe, holdout_stats
 
 TARGETS: dict[str, dict[str, Any]] = {
     "super": {"label": "Nemotron 3 Super", "allowed": ["nemotron-3-super"], "lookup": "NVIDIA Nemotron 3 Super"},
@@ -29,6 +30,21 @@ TARGETS: dict[str, dict[str, Any]] = {
     "mix": {"label": "Per-step mix", "allowed": ["nemotron-3-nano", "nemotron-3-super", "nemotron-3-ultra"], "lookup": "NVIDIA Nemotron 3 Nano"},
 }
 BASELINE_LABEL = "Baseline · Nemotron 3 Ultra"
+
+
+def target_spec(target: str, table: Any = None) -> dict[str, Any] | None:
+    """The fixed Nemotron targets (super, nano, mix), or `model:<id>` for any single model in the model
+    table, so the optimizer can move a baseline from another family to that family's cheaper model
+    (for example gpt-oss-120b -> model:gpt-oss-20b)."""
+    if target in TARGETS:
+        return TARGETS[target]
+    if target.startswith("model:"):
+        table = table or default_table()
+        mid = target.split(":", 1)[1]
+        if table.has(mid):
+            info = table.get(mid)
+            return {"label": info.display, "allowed": [mid], "lookup": f"{info.vendor} {info.display}"}
+    return None
 
 
 def default_config(settings: Settings) -> dict[str, Any]:
@@ -44,6 +60,14 @@ def default_config(settings: Settings) -> dict[str, Any]:
         # Try the original harness with only the model changed before any rewrite, so a rewrite has to
         # beat the plain swap to be kept (and the report shows what the swap alone does).
         "model_swap_candidate": True,
+        # held-out evaluation: replays per task (trials), the non-inferiority margin, and racing: after the
+        # rounds, the top candidates and the plain swap are re-scored on race_size fresh optimization tasks
+        # x race_trials before one is chosen, so a lucky 20-task score does not pick the harness
+        "test_trials": settings.test_trials,
+        "noninferiority_pp": settings.noninferiority_pp,
+        "race_size": settings.race_size,
+        "race_trials": 2,
+        "race_candidates": 4,
         "judge_model": settings.judge_model,
         "analysis_model": settings.analysis_model,
         "rewrite_model": settings.rewrite_model,
@@ -107,12 +131,41 @@ class Engine:
         for x in ranked[:n]:
             checks = x["checks"]
             failed = [k for k in ("answer_produced", "has_sources", "sources_from_evidence", "no_errors", "ground_truth") if k in checks and not checks.get(k)]
+            events = x["record"].get("events") or []
+            last_call = next((e for e in reversed(events) if e.get("type") == "model_call"), None)
+            final_message = (((last_call or {}).get("response") or {}).get("content") or "").strip()
             out.append({
                 "task_id": x["task_id"], "question": x["question"], "reason": (x["judge"] or {}).get("reason", ""),
+                # what the model actually said last: a prose answer where the agent expected a code block is
+                # invisible in the extracted answer (empty) but obvious here
+                "final_message": final_message[:300],
                 "checks": ("failed: " + ", ".join(failed)) if failed else "all passed",
                 "answer_excerpt": ((x["record"].get("output") or {}).get("answer") or x["record"].get("error") or "")[:240],
             })
         return out
+
+    @staticmethod
+    def _failure_summary(items: list[dict[str, Any]], n: int = 6) -> list[str]:
+        """Failed runs grouped by what went wrong (the grader's or judge's reason with numbers blanked), most
+        common first, so the rewriter targets the commonest failure class instead of single tasks."""
+        import re as _re
+        from collections import Counter
+
+        def cls(x: dict[str, Any]) -> str:
+            j = x.get("judge") or {}
+            if j.get("method") == "ground_truth":
+                why = str((j.get("candidate") or {}).get("details") or "")
+            else:
+                why = str(j.get("reason") or "")
+            if x["record"].get("status") != "ok":
+                why = "run error: " + str(x["record"].get("error") or "")
+            why = _re.sub(r"\d+(\.\d+)?", "N", why)
+            why = _re.sub(r"(Response:|near|such (table|column):).*", r"\1 ...", why)
+            return why.strip()[:90] or "failed"
+
+        fails = [x for x in items if not x["metrics"].get("success")]
+        counts = Counter(cls(x) for x in fails)
+        return [f"{c} of {len(items)} runs: {k}" for k, c in counts.most_common(n)]
 
     def _replayer(self, project_id: str, harness: Harness, sdk: Downshift, tools: SearchTools) -> tuple[Any, str]:
         """How replays run: the built-in research agent in-process, or the project's own agent code
@@ -199,18 +252,20 @@ class Engine:
         self._event(oid, f"Nemotron 3 Nano labelled {analysis.get('runs_labelled')} runs (${analysis.get('cost_usd', 0):.4f}). " + " ".join(analysis.get("recommendations") or []), phase="analyze", data={"per_step": analysis.get("per_step"), "question_types": analysis.get("question_types")})
 
         # baseline option row ------------------------------------------------------------------------
-        baseline_option = self.db.create_option(oid, "baseline", BASELINE_LABEL, "nemotron-3-ultra", 0, baseline_harness.to_dict(), baseline_harness.to_yaml())
+        base_models = baseline_harness.models_used()
+        base_label = BASELINE_LABEL if base_models == ["nemotron-3-ultra"] else "Baseline · " + " + ".join(self.table.get(m).display if self.table.has(m) else m for m in base_models)
+        baseline_option = self.db.create_option(oid, "baseline", base_label, ",".join(base_models), 0, baseline_harness.to_dict(), baseline_harness.to_yaml())
         self.db.update_option(baseline_option["id"], status="done", rationale="The recorded harness, as it runs today.")
 
         # 3. per target ----------------------------------------------------------------------------
-        targets = [t for t in cfg["targets"] if t in TARGETS] or ["super", "nano", "mix"]
+        targets = [t for t in cfg["targets"] if target_spec(t, self.table)] or ["super", "nano", "mix"]
         rounds = max(1, int(cfg["rounds"]))
         per_target = 80.0 / len(targets)
         baseline_test_items: list[dict[str, Any]] = []
         option_results: list[dict[str, Any]] = []
 
         for ti, target in enumerate(targets):
-            spec = TARGETS[target]
+            spec = target_spec(target, self.table)
             base_pct = 12 + ti * per_target
             option = self.db.create_option(oid, target, spec["label"], ",".join(spec["allowed"]), ti + 1, None, None)
             self.db.update_option(option["id"], status="optimizing")
@@ -234,7 +289,7 @@ class Engine:
                 rounds_log.append(entry)
                 self.db.update_option(option["id"], rounds_json=rounds_log)
                 self._event(oid, f"{spec['label']} model swap alone (no prompt changes): success {agg.get('success_rate')}% vs baseline {base_agg.get('success_rate')}%, cost ${agg.get('cost_per_run')} vs ${base_agg.get('cost_per_run')} per run (optimization sample, n={len(items)}). Rewrites must beat this.", phase=f"optimize:{target}", data={"metrics": agg, "baseline": base_agg, "objective": score})
-                previous.append({"round": "0 (model swap only, prompts unchanged)", "metrics": agg, "baseline_success_rate": base_agg.get("success_rate"), "baseline_quality": base_agg.get("quality"), "baseline_cost": base_agg.get("cost_per_run"), "worst_examples": entry["worst_examples"], "changelog": swap.changelog})
+                previous.append({"round": "0 (model swap only, prompts unchanged)", "metrics": agg, "baseline_success_rate": base_agg.get("success_rate"), "baseline_quality": base_agg.get("quality"), "baseline_cost": base_agg.get("cost_per_run"), "worst_examples": entry["worst_examples"], "failure_summary": self._failure_summary(items), "changelog": swap.changelog})
                 best = {"harness": swap, "score": score, "round": 0, "rationale": "The model swap alone did at least as well as any rewrite on the optimization sample, so the prompts are kept as they are."}
             for round_no in range(1, rounds + 1):
                 if spent["usd"] > float(cfg["max_cost_usd"]):
@@ -262,7 +317,7 @@ class Engine:
                 rounds_log.append(entry)
                 self.db.update_option(option["id"], rounds_json=rounds_log)
                 self._event(oid, f"{spec['label']} round {round_no}: success {agg.get('success_rate')}% vs baseline {base_agg.get('success_rate')}%, quality {agg.get('quality')} vs {base_agg.get('quality')}, cost ${agg.get('cost_per_run')} vs ${base_agg.get('cost_per_run')} per run (optimization sample, n={len(items)}).", phase=f"optimize:{target}", data={"metrics": agg, "baseline": base_agg, "objective": score})
-                previous.append({"round": round_no, "metrics": agg, "baseline_success_rate": base_agg.get("success_rate"), "baseline_quality": base_agg.get("quality"), "baseline_cost": base_agg.get("cost_per_run"), "worst_examples": entry["worst_examples"], "changelog": cand.changelog})
+                previous.append({"round": round_no, "metrics": agg, "baseline_success_rate": base_agg.get("success_rate"), "baseline_quality": base_agg.get("quality"), "baseline_cost": base_agg.get("cost_per_run"), "worst_examples": entry["worst_examples"], "failure_summary": self._failure_summary(items), "changelog": cand.changelog})
                 if best is None or score > best["score"]:
                     best = {"harness": cand, "score": score, "round": round_no, "rationale": proposal["rationale"]}
                 current = best["harness"] if best else current
@@ -272,6 +327,10 @@ class Engine:
                 self._event(oid, f"{spec['label']}: no candidate produced.", phase=f"optimize:{target}", level="warn")
                 continue
 
+            # racing: the top candidates and the plain swap on fresh optimization tasks before choosing ------
+            best = self._race(oid, option["id"], spec["label"], target, rounds_log, best, sample, opt_set, replayer, llm, cfg, add_cost, base_pct + per_target * 0.62)
+            swap_entry = next((r for r in rounds_log if r.get("kind") == "model_swap" and r.get("harness")), None)
+
             # held-out evaluation ------------------------------------------------------------------
             # persist the chosen harness first, so an interrupted run can be resumed with `app.cli redo`
             self.db.update_option(option["id"], status="testing", harness_json=best["harness"].to_dict(), harness_yaml=best["harness"].to_yaml(), rationale=best["rationale"], metrics_json={"best_round": best["round"], "objective": best["score"]})
@@ -280,11 +339,27 @@ class Engine:
             def on_test_progress(d: int, t: int, *, target: str = target, t_pct: float = t_pct, label: str = spec["label"]) -> None:
                 self._progress(oid, f"test:{target}", t_pct + per_target * 0.26 * d / max(1, t), f"{label}: held-out evaluation {d}/{t}")
 
-            items = self._replay_and_score(oid, option["id"], best["harness"], test_set, "test", 0, replayer, llm, cfg, add_cost, on_test_progress)
+            trials = max(1, int(cfg.get("test_trials") or 1))
+            items: list[dict[str, Any]] = []
+            for trial in range(trials):
+                def on_trial_progress(d: int, t: int, *, trial: int = trial) -> None:
+                    on_test_progress(trial * len(test_set) + d, trials * len(test_set))
+                items.extend(self._replay_and_score(oid, option["id"], best["harness"], test_set, "test", trial, replayer, llm, cfg, add_cost, on_trial_progress))
             agg = aggregate([x["metrics"] for x in items])
             base_agg = aggregate([x["baseline_metrics"] for x in items])
-            baseline_test_items.extend(x["baseline_metrics"] for x in items)
-            metrics = {"test": agg, "baseline_on_test": base_agg, "deltas": deltas(agg, base_agg), "meets_bar": meets_bar(agg, base_agg), "best_round": best["round"], "objective": best["score"], "n_test": len(items)}
+            baseline_test_items.extend(x["baseline_metrics"] for x in items if x.get("trial", 0) == 0)
+            # the plain swap on the same held-out tasks, so "the rewrite beats the swap" is a paired test too
+            swap_items: list[dict[str, Any]] | None = None
+            if swap_entry is not None and best["round"] != 0:
+                swap_h = Harness.from_dict(swap_entry["harness"])
+                swap_items = []
+                for trial in range(trials):
+                    swap_items.extend(self._replay_and_score(oid, option["id"], swap_h, test_set, "test_swap", trial, replayer, llm, cfg, add_cost, lambda d, t: None))
+            stats = holdout_stats(items, swap_items=swap_items, margin_pp=float(cfg.get("noninferiority_pp") or 10.0), seed=int(cfg["seed"]))
+            if swap_items is not None:
+                stats["swap_metrics"] = aggregate([x["metrics"] for x in swap_items])
+            self._event(oid, f"{spec['label']} held-out statistics: {describe(stats)}", phase=f"test:{target}", data={"stats": stats})
+            metrics = {"test": agg, "baseline_on_test": base_agg, "deltas": deltas(agg, base_agg), "meets_bar": stats["verdict"] == "non_inferior", "verdict": stats["verdict"], "stats": stats, "best_round": best["round"], "objective": best["score"], "n_test": len(test_set), "trials": trials}
             self.db.update_option(option["id"], status="done", harness_json=best["harness"].to_dict(), harness_yaml=best["harness"].to_yaml(), metrics_json=metrics, rationale=best["rationale"])
             option_results.append({"key": target, "label": spec["label"], "metrics": metrics, "models_used": best["harness"].models_used(), "option_id": option["id"]})
             self._event(oid, f"{spec['label']} on the held-out set (n={len(items)}): success {agg.get('success_rate')}% (baseline {base_agg.get('success_rate')}%), quality {agg.get('quality')} ({base_agg.get('quality')}), cost ${agg.get('cost_per_run')} ({base_agg.get('cost_per_run')}) per run, latency {agg.get('latency_ms')} ms ({base_agg.get('latency_ms')}).", phase=f"test:{target}", data={"metrics": metrics})
@@ -302,12 +377,113 @@ class Engine:
             o["metrics"]["baseline_in_comparisons"] = o["metrics"]["baseline_on_test"]
             o["metrics"]["baseline_on_test"] = baseline_agg
             o["metrics"]["deltas"] = deltas(t_agg, baseline_agg)
-            o["metrics"]["meets_bar"] = meets_bar(t_agg, baseline_agg)
+            o["metrics"]["meets_bar"] = o["metrics"].get("verdict") == "non_inferior" if o["metrics"].get("stats") else meets_bar(t_agg, baseline_agg)
             self.db.update_option(o["option_id"], metrics_json=o["metrics"])
         summary = self._summary(baseline_agg, option_results, len(opt_set), len(test_set), spent["usd"], cfg, tools.provider, llm.provider_name, analysis, scoring=scoring, runtime=baseline_harness.runtime)
         self.db.update_optimization(oid, status="done", finished_at=now_iso(), summary_json=summary)
         self._progress(oid, "done", 100, summary.get("headline", {}).get("text", "done"))
         self._event(oid, "Done. " + summary.get("headline", {}).get("text", ""), phase="done", data={"spent_usd": round(spent["usd"], 4)})
+
+    def _race(self, oid: str, option_id: str, label: str, target: str, rounds_log: list[dict[str, Any]], best: dict[str, Any], sample: list[dict[str, Any]], opt_set: list[dict[str, Any]], replayer: Any, llm: LLM, cfg: dict[str, Any], add_cost: Any, pct: float) -> dict[str, Any]:
+        """Re-score the two best candidates and the plain swap on optimization tasks none of them has seen
+        (race_size of them, race_trials each) and pick by success, then cost. A rewrite is chosen over the
+        swap only if it passes more task-trials there; ties go to the swap (simpler, and the rewrite has
+        not shown anything). Nothing here touches the held-out set."""
+        race_size = int(cfg.get("race_size") or 0)
+        trials = max(1, int(cfg.get("race_trials") or 1))
+        with_harness = [r for r in rounds_log if r.get("harness")]
+        if race_size <= 0 or len(with_harness) < 2:
+            return best
+        seen = {r["task_id"] for r in sample}
+        pool = [r for r in opt_set if r["task_id"] not in seen]
+        if len(pool) < 4:
+            return best
+        rng = random.Random(int(cfg["seed"]) + 7)
+        pool = sorted(rng.sample(pool, min(race_size, len(pool))), key=lambda r: r["task_id"])
+        # every candidate races (three rounds give at most four): ranking by the small-sample objective first
+        # dropped the minimal rewrite on a cost tie-break in the Phase 1 run
+        ranked = sorted(with_harness, key=lambda r: r.get("objective", 0), reverse=True)
+        contenders = ranked[: max(2, int(cfg.get("race_candidates") or 4))]
+        swap = next((r for r in with_harness if r.get("kind") == "model_swap"), None)
+        if swap is not None and swap not in contenders:
+            contenders.append(swap)
+        self._event(oid, f"{label}: racing {len(contenders)} candidates (rounds {[c['round'] for c in contenders]}) on {len(pool)} unseen optimization tasks x {trials} trials.", phase=f"optimize:{target}")
+        results = []
+        for i, c in enumerate(contenders):
+            h = Harness.from_dict(c["harness"])
+            items: list[dict[str, Any]] = []
+            for trial in range(trials):
+                items.extend(self._replay_and_score(oid, option_id, h, pool, "race", 100 * (c["round"] + 1) + trial, replayer, llm, cfg, add_cost, lambda d, t, i=i: self._progress(oid, f"optimize:{target}", pct, f"{label}: racing candidate {i + 1}/{len(contenders)}, {d}/{t} replays")))
+            agg = aggregate([x["metrics"] for x in items])
+            wins = sum(1 for x in items if x["metrics"].get("success"))
+            results.append({"round": c["round"], "kind": c.get("kind", "rewrite"), "wins": wins, "n": len(items), "metrics": agg, "harness": h, "entry": c})
+            c["race"] = {"wins": wins, "n": len(items), "success_rate": agg.get("success_rate"), "cost_per_run": agg.get("cost_per_run")}
+            self._event(oid, f"{label} race: round-{c['round']} harness passed {wins}/{len(items)} task-trials at ${agg.get('cost_per_run')} per run.", phase=f"optimize:{target}", data={"race": c["race"]})
+        self.db.update_option(option_id, rounds_json=rounds_log)
+        swap_res = next((r for r in results if r["kind"] == "model_swap"), None)
+        rewrites = [r for r in results if r["kind"] != "model_swap"]
+        chosen = max(results, key=lambda r: (r["wins"], -(r["metrics"].get("cost_per_run") or 0.0)))
+        if swap_res is not None and (not rewrites or max(r["wins"] for r in rewrites) <= swap_res["wins"]):
+            chosen = swap_res
+        reason = f"chosen by the race on {len(pool)} unseen optimization tasks x {trials} trials: {chosen['wins']}/{chosen['n']} task-trials" + (f" (plain swap {swap_res['wins']}/{swap_res['n']})" if swap_res is not None and chosen is not swap_res else "")
+        self._event(oid, f"{label}: {reason}; keeping the round-{chosen['round']} harness.", phase=f"optimize:{target}")
+        entry = chosen["entry"]
+        return {"harness": chosen["harness"], "score": entry.get("objective", best["score"]), "round": chosen["round"], "rationale": (entry.get("rationale") or best["rationale"] or "") + f" [{reason}]"}
+
+    def verify(self, optimization_id: str, *, trials: int = 2) -> dict[str, Any]:
+        """Fresh runs, after the fact: every finished option's chosen harness, the plain swap and the
+        baseline harness again on the held-out tasks, `trials` times each with new model calls, scored
+        the same way and stored under split 'verify'. Returns Downshift's replay numbers next to them."""
+        opt = self.db.get_optimization(optimization_id)
+        if not opt:
+            raise RuntimeError("optimization not found")
+        cfg = {**default_config(self.settings), **(opt.get("config_json") or {})}
+        project = self.db.get_project(opt["project_id"])
+        baseline_harness = Harness.from_dict(project["harness_json"])
+        split = opt.get("split_json") or {}
+        test_ids = set(split.get("test") or [])
+        runs = [r["record_json"] for r in self.db.latest_runs_per_task(opt["project_id"], tag=cfg.get("tag"))]
+        test_set = sorted([r for r in runs if r["task_id"] in test_ids], key=lambda r: r["task_id"])
+        if not test_set:
+            raise RuntimeError("no held-out runs found for this optimization")
+        llm = LLM(self.settings.provider, table=self.table)
+        sdk = Downshift(transport=NullTransport(), llm=llm, table=self.table, project=opt["project_id"])
+        replayer, _ = self._replayer(opt["project_id"], baseline_harness, sdk, SearchTools())
+        spent = {"usd": 0.0}
+
+        def add_cost(x: float | None) -> None:
+            spent["usd"] += float(x or 0.0)
+
+        arms: list[tuple[str, str, Harness, dict[str, Any] | None]] = [("baseline", "baseline harness (fresh)", baseline_harness, None)]
+        for o in self.db.list_options(optimization_id):
+            if o["key"] == "baseline" or not o.get("harness_json"):
+                continue
+            arms.append((o["key"], f"{o['label']} (chosen harness)", Harness.from_dict(o["harness_json"]), o))
+            swap = next((r for r in (o.get("rounds_json") or []) if r.get("kind") == "model_swap" and r.get("harness")), None)
+            if swap is not None and (o.get("metrics_json") or {}).get("best_round") != 0:
+                arms.append((f"{o['key']}-swap", f"{o['label']} (plain swap)", Harness.from_dict(swap["harness"]), None))
+        out: dict[str, Any] = {"optimization_id": optimization_id, "n_tasks": len(test_set), "trials": trials, "arms": []}
+        baseline_option = self.db.get_option_by_key(optimization_id, "baseline")
+        for key, label, h, option in arms:
+            # arms without their own option row (the baseline, the plain swaps) are stored under the baseline
+            # option; the round number tells them apart: 1000+ baseline and chosen harnesses, 2000+ swaps
+            option_id = (option or baseline_option or {}).get("id")
+            base_round = 2000 if key.endswith("-swap") else 1000
+            items: list[dict[str, Any]] = []
+            for trial in range(trials):
+                items.extend(self._replay_and_score(optimization_id, option_id, h, test_set, "verify", base_round + trial, replayer, llm, cfg, add_cost, lambda d, t: None))
+            stats = holdout_stats(items, margin_pp=float(cfg.get("noninferiority_pp") or 10.0), seed=int(cfg["seed"]))
+            per_trial = [sum(1 for x in items if x["trial"] == base_round + t and x["metrics"].get("success")) for t in range(trials)]
+            claimed = (((option or {}).get("metrics_json") or {}).get("test") or {}).get("success_rate") if option else None
+            row = {"key": key, "label": label, "passes_per_trial": per_trial, "fresh": stats, "claimed_success_rate": claimed, "cost_per_run": aggregate([x["metrics"] for x in items]).get("cost_per_run")}
+            out["arms"].append(row)
+            self._event(optimization_id, f"verify: {label}: {per_trial} of {len(test_set)} per trial; {describe(stats)}" + (f"; Downshift's replay said {claimed}%" if claimed is not None else ""), phase="verify", data=row)
+            if option:
+                m = dict(option.get("metrics_json") or {})
+                m["verify"] = row
+                self.db.update_option(option["id"], metrics_json=m)
+        out["spent_usd"] = round(spent["usd"], 4)
+        return out
 
     def redo_test_replays(self, optimization_id: str, option_key: str, *, only_failed: bool = True) -> dict[str, Any]:
         """Replay (again) the held-out tasks of one option whose replay is missing, errored or unjudged,
@@ -415,7 +591,7 @@ class Engine:
             t_agg = o["metrics"]["test"]
             o["metrics"]["baseline_on_test"] = baseline_agg
             o["metrics"]["deltas"] = deltas(t_agg, baseline_agg)
-            o["metrics"]["meets_bar"] = meets_bar(t_agg, baseline_agg)
+            o["metrics"]["meets_bar"] = o["metrics"].get("verdict") == "non_inferior" if o["metrics"].get("stats") else meets_bar(t_agg, baseline_agg)
             self.db.update_option(o["option_id"], metrics_json=o["metrics"])
         old = opt.get("summary_json") or {}
         analysis = {"recommendations": (old.get("analysis") or {}).get("recommendations"), "per_step": (old.get("analysis") or {}).get("per_step")}
@@ -453,7 +629,7 @@ class Engine:
             add_cost(m.get("cost_usd"))
             self.db.insert_replay({"optimization_id": oid, "option_id": option_id, "task_id": base_rec["task_id"], "baseline_run_id": base_rec["id"], "split": split, "round": round_no, "status": rec.get("status"), "record_json": rec, "judge_json": judge, "checks_json": {"candidate": checks, "baseline": base_checks}, "metrics_json": {"candidate": m, "baseline": bm}})
             with lock:
-                out.append({"task_id": base_rec["task_id"], "question": base_rec.get("input", ""), "record": rec, "judge": judge, "checks": checks, "metrics": m, "baseline_metrics": bm})
+                out.append({"task_id": base_rec["task_id"], "question": base_rec.get("input", ""), "record": rec, "judge": judge, "checks": checks, "metrics": m, "baseline_metrics": bm, "trial": round_no})
                 done["n"] += 1
                 n = done["n"]
             on_progress(n, len(records))
@@ -473,7 +649,7 @@ class Engine:
         rows = []
         for o in options:
             t = o["metrics"]["test"]
-            rows.append({"key": o["key"], "label": o["label"], "models_used": o["models_used"], "metrics": t, "deltas": o["metrics"]["deltas"], "meets_bar": o["metrics"]["meets_bar"], "option_id": o["option_id"]})
+            rows.append({"key": o["key"], "label": o["label"], "models_used": o["models_used"], "metrics": t, "deltas": o["metrics"]["deltas"], "meets_bar": o["metrics"]["meets_bar"], "verdict": o["metrics"].get("verdict"), "stats": o["metrics"].get("stats"), "option_id": o["option_id"]})
         qualifying = [r for r in rows if r["meets_bar"] and r["metrics"].get("cost_per_run") is not None]
         recommended = min(qualifying, key=lambda r: r["metrics"]["cost_per_run"]) if qualifying else None
         if recommended:
@@ -492,13 +668,16 @@ class Engine:
                 notes.append(f"{r['label']}: within the bar ({n(d.get('success_rate_pp'), True)} pp success, {n(d.get('quality_pts'), True)} quality, {n(d.get('cost_pct'), True)}% cost).")
             else:
                 notes.append(f"{r['label']}: falls short ({n(d.get('success_rate_pp'), True)} pp success, {n(d.get('quality_pts'), True)} quality at {n(d.get('cost_pct'), True)}% cost).")
+            if r.get("stats"):
+                notes.append(f"{r['label']} statistics: {describe(r['stats'])}.")
         return {
             "headline": {"text": text, "verdict": verdict, "recommended": recommended["key"] if recommended else None},
             "baseline": baseline,
             "options": rows,
             "notes": notes,
             "split": {"optimization": n_opt, "test": n_test, "test_fraction": cfg.get("test_fraction"), "note": "All numbers above come from the held-out test set, which the optimizer never saw."},
-            "bar": {"success_tol_pp": bar_tolerance_pp(n_test or baseline.get("n")), "quality_tol_pts": 5.0, "note": "Within the bar: task success no more than one held-out run (or 5 pp) below the baseline and quality within 5 points."},
+            "bar": {"success_tol_pp": bar_tolerance_pp(n_test or baseline.get("n")), "quality_tol_pts": 5.0, "margin_pp": cfg.get("noninferiority_pp", 10.0), "trials": cfg.get("test_trials", 1),
+                    "note": f"Within the bar: non-inferior to the baseline on the held-out tasks, paired per task: the lower 90% bound of the success difference stays above -{cfg.get('noninferiority_pp', 10.0)} pp. 'Inconclusive' means the point estimate is above the margin but the interval is not."},
             "spent_usd": round(spent, 4),
             "budget": {"rounds": cfg.get("rounds"), "sample_size": cfg.get("sample_size"), "max_cost_usd": cfg.get("max_cost_usd")},
             "judge": {

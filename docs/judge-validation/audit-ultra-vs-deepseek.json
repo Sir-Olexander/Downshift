@@ -1,0 +1,848 @@
+{
+ "optimization_id": "opt_c5bcd27101b5",
+ "n_pairs": 51,
+ "judges": {
+  "nemotron-3-ultra": {
+   "n_pairs_parsed": 51,
+   "position_consistency_pct": 72.5,
+   "prefers_baseline_pct": 52.0,
+   "prefers_candidate_pct": 10.8,
+   "tie_pct": 37.3,
+   "cost_usd": 0.093
+  },
+  "deepseek-v4-pro": {
+   "n_pairs_parsed": 51,
+   "position_consistency_pct": 82.4,
+   "prefers_baseline_pct": 57.8,
+   "prefers_candidate_pct": 12.7,
+   "tie_pct": 29.4,
+   "cost_usd": 0.1219
+  }
+ },
+ "agreement_on_consistent_pairs": {
+  "judges": [
+   "nemotron-3-ultra",
+   "deepseek-v4-pro"
+  ],
+  "n": 32,
+  "agree_pct": 90.6
+ },
+ "rows": [
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q004",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.001704
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q005",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.001644
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q010",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.001763
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q011",
+   "cand_first": "tie",
+   "base_first": "candidate",
+   "cost": 0.001714
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q012",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00196
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q013",
+   "cand_first": "baseline",
+   "base_first": "tie",
+   "cost": 0.0016480000000000002
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q019",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0018800000000000002
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q022",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.001642
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q023",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.002039
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q025",
+   "cand_first": "tie",
+   "base_first": "baseline",
+   "cost": 0.001907
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q026",
+   "cand_first": "candidate",
+   "base_first": "tie",
+   "cost": 0.001738
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q027",
+   "cand_first": "candidate",
+   "base_first": "candidate",
+   "cost": 0.001689
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q030",
+   "cand_first": "candidate",
+   "base_first": "tie",
+   "cost": 0.002118
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q034",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.002043
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q036",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.001788
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q038",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00178
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "super",
+   "task_id": "q040",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.001872
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q004",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.001862
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q005",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0018830000000000001
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q010",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0018059999999999999
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q011",
+   "cand_first": "tie",
+   "base_first": "baseline",
+   "cost": 0.001608
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q012",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.001979
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q013",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.001596
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q019",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0019529999999999999
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q022",
+   "cand_first": "baseline",
+   "base_first": "tie",
+   "cost": 0.001619
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q023",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0017850000000000001
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q025",
+   "cand_first": "tie",
+   "base_first": "baseline",
+   "cost": 0.001758
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q026",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.001673
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q027",
+   "cand_first": "candidate",
+   "base_first": "candidate",
+   "cost": 0.001938
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q030",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.002002
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q034",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0019820000000000003
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q036",
+   "cand_first": "candidate",
+   "base_first": "candidate",
+   "cost": 0.001863
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q038",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.001605
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "nano",
+   "task_id": "q040",
+   "cand_first": "tie",
+   "base_first": "baseline",
+   "cost": 0.001966
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q004",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.002002
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q005",
+   "cand_first": "candidate",
+   "base_first": "baseline",
+   "cost": 0.0019089999999999999
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q010",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00184
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q011",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.001706
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q012",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.001872
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q013",
+   "cand_first": "baseline",
+   "base_first": "tie",
+   "cost": 0.001558
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q019",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00198
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q022",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.001729
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q023",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.001729
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q025",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.00174
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q026",
+   "cand_first": "baseline",
+   "base_first": "tie",
+   "cost": 0.001644
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q027",
+   "cand_first": "baseline",
+   "base_first": "candidate",
+   "cost": 0.001876
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q030",
+   "cand_first": "baseline",
+   "base_first": "tie",
+   "cost": 0.00211
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q034",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.002176
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q036",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.001619
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q038",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0017490000000000001
+  },
+  {
+   "judge": "nemotron-3-ultra",
+   "option": "mix",
+   "task_id": "q040",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.001929
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q004",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.0022743600000000004
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q005",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0023047199999999997
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q010",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00218988
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q011",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.00231
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q012",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0025951200000000002
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q013",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0021397200000000003
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q019",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0025898400000000004
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q022",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.0022836
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q023",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0027601200000000005
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q025",
+   "cand_first": "tie",
+   "base_first": "baseline",
+   "cost": 0.00238128
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q026",
+   "cand_first": "candidate",
+   "base_first": "tie",
+   "cost": 0.00227172
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q027",
+   "cand_first": "candidate",
+   "base_first": "candidate",
+   "cost": 0.0023641200000000004
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q030",
+   "cand_first": "tie",
+   "base_first": "candidate",
+   "cost": 0.0026598000000000004
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q034",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0026545199999999996
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q036",
+   "cand_first": "candidate",
+   "base_first": "candidate",
+   "cost": 0.00229812
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q038",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0022479600000000002
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "super",
+   "task_id": "q040",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.00245124
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q004",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.002277
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q005",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0025093199999999998
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q010",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0022294800000000003
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q011",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00232188
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q012",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00249876
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q013",
+   "cand_first": "baseline",
+   "base_first": "tie",
+   "cost": 0.0022176
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q019",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0026505599999999997
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q022",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00220044
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q023",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0023958
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q025",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00222024
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q026",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0021621599999999998
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q027",
+   "cand_first": "candidate",
+   "base_first": "candidate",
+   "cost": 0.0025594800000000003
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q030",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0026426400000000004
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q034",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00268884
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q036",
+   "cand_first": "candidate",
+   "base_first": "candidate",
+   "cost": 0.00232452
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q038",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00221628
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "nano",
+   "task_id": "q040",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.00273768
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q004",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.00249216
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q005",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00243672
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q010",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.0024499200000000004
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q011",
+   "cand_first": "baseline",
+   "base_first": "tie",
+   "cost": 0.00225588
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q012",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00240108
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q013",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.00206448
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q019",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00251856
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q022",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.0023892
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q023",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0023126400000000004
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q025",
+   "cand_first": "tie",
+   "base_first": "baseline",
+   "cost": 0.00225456
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q026",
+   "cand_first": "tie",
+   "base_first": "baseline",
+   "cost": 0.00216744
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q027",
+   "cand_first": "candidate",
+   "base_first": "candidate",
+   "cost": 0.00245916
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q030",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.00262416
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q034",
+   "cand_first": "baseline",
+   "base_first": "candidate",
+   "cost": 0.00281688
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q036",
+   "cand_first": "tie",
+   "base_first": "baseline",
+   "cost": 0.00208164
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q038",
+   "cand_first": "baseline",
+   "base_first": "baseline",
+   "cost": 0.0021687600000000005
+  },
+  {
+   "judge": "deepseek-v4-pro",
+   "option": "mix",
+   "task_id": "q040",
+   "cand_first": "tie",
+   "base_first": "tie",
+   "cost": 0.00239712
+  }
+ ]
+}

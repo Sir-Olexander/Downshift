@@ -95,6 +95,16 @@ replay are stored as they happen. `uv run python -m app.cli redo <optimization i
 held-out tasks that failed or are missing for that option and rebuilds the summary;
 `uv run python -m app.cli resummarize <optimization id>` recomputes checks, metrics and the summary from
 the stored replays without spending tokens (for example after a fix to the automatic checks).
+`uv run python -m app.cli verify <optimization id> --trials 2` runs every chosen harness, the plain model
+swap and the baseline harness again on the held-out tasks with new model calls, and prints the fresh
+numbers next to the replay-based ones.
+
+Held-out numbers can use several replays per task (`--trials`, reported as pass^1 and pass^k), the plain
+swap is replayed on the same held-out tasks so "the rewrite beats the swap" is a paired comparison, and the
+bar is a non-inferiority test (the lower 90% bound of the paired success difference must stay above
+`--margin`, 10 points by default) with an explicit "inconclusive" verdict. With `--race N`, the two best
+candidates and the swap are re-scored on N unseen optimization tasks before one is chosen, so a lucky
+small-sample score does not pick the harness.
 
 To try the whole flow on one of the extra demo agents from the UI, follow [docs/try-a-run.md](docs/try-a-run.md).
 
@@ -165,15 +175,36 @@ docs/         Deployment notes (Nebius Serverless), video script
 - **Judge.** Nemotron 3 Ultra compares the baseline and candidate answers blind, in random order,
   with a short rubric (correct, complete, supported, 0–5 each). Task success additionally requires the
   automatic checks: an answer was produced, sources are listed, every cited URL appeared in the tools'
-  results, and no errors. A model that invents a source fails that run.
+  results, and no errors. A model that invents a source fails that run. A source-checked labelling of 108 of
+  the judge's answers (model-assisted, `docs/research/judge-validation-results.md`) agrees with 87% of its
+  correctness verdicts and confirms the baseline lean, so the judge-based numbers above are upper bounds;
+  it also shows the judge's "supported" score tracks citation formatting, not whether sources back the
+  claims, because the judge never reads the sources.
 - **An agent we did not build.** text2sql-framework (`examples/text2sql/`), 40 Spider questions graded
   against the gold SQL, 16 held out (optimization `opt_10b7f3486f2d`). Downshift recommended its
   Super harness: 68.8% task success, the same as the Ultra baseline on those tasks, at 72% lower cost per run.
   Fresh runs of the real agent (no replay, two trials) gave Ultra 72%, that Super harness 78% and the
   Nano option 44%, so the decisions held (Super kept, Nano rejected). The point estimates are single
-  replays of 16 tasks and moved by up to three tasks (Downshift said 62.5% for Nano). Rewrites that
-  turned Nano's thinking off broke text2sql's tool loop every time; the model-swap-only candidate is
-  what kept the Nano option sane.
+  replays of 16 tasks and moved by up to three tasks (Downshift said 62.5% for Nano). Downshift's Nano
+  rewrites scored 12.5-50% on the optimization sample against 62.5% for the plain swap. A diagnostic
+  (`docs/research/nano-text2sql-diagnostic.md`) traced the worst of it to a few-shot example that wrote
+  tool calls as text, which Nano copied; thinking off alone halves Nano's pass rate but does not break
+  its tool calls. With thinking on and one final-reply format rule, the plain Nano swap reached 14/16 on
+  the held-out tasks (Ultra: 11-12/16) at about one eighth of Ultra's cost. After the guidance and objective fixes
+  on this branch, three optimization runs all found an equivalent rule by themselves; one of the three
+  resulting harnesses scored 14 and 12 of 16 in fresh runs (Ultra 11-12) at about a tenth of the cost, the
+  other two 8-11, and one single-replay claim was off by four tasks (`docs/research/phase0-results.md`).
+  On 80 new held-out Spider tasks that no rewrite or selection touched, that Downshift-written Nano harness
+  is non-inferior to Ultra (paired difference −0.8 points, 90% interval −6.7 to +4.6) and beats the plain
+  Nano swap by 12 points (95% interval +5 to +20), on Ollama and on Token Factory, at about a tenth of
+  Ultra's cost. The optimizer does not find it reliably yet: a later run on a larger sample kept the plain
+  swap (`docs/research/phase1-results.md`). After two more optimizer fixes, three repeat runs each chose,
+  on their own, a Nano harness that is non-inferior to Ultra on 96 held-out tasks × 3 trials and beats the
+  plain swap with the interval excluding zero, at 76-89% lower cost (`docs/research/reliability-results.md`).
+  On 136 Spider questions no run had ever seen, the best of those harnesses again matched Ultra (+2.9 pp,
+  90% CI −1.5 to +7.4) and beat the plain swap (+7.4 pp, 95% CI +0.7 to +14.7) at 87% lower cost.
+  The same procedure gave no clear gain for gpt-oss 120B → 20B, and on tau2-bench telecom the plain Nano
+  swap already matched Super. Status of every claim: `docs/prove-the-optimizer-plan.md`.
 - **Open PR.** Needs `GITHUB_REPO` (owner/name) and a token (`GITHUB_TOKEN`, or a local `gh` login).
   Without them the button shows the exact PR it would open (title, branch, body, file) instead.
 - **Deployment.** Dockerfiles and a compose file are included; `docs/deploy-nebius.md` describes the
@@ -196,6 +227,7 @@ docs/         Deployment notes (Nebius Serverless), video script
 | `DOWNSHIFT_DEMO_MODE`, `DOWNSHIFT_MAX_LIVE_PER_HOUR` | keep live optimizations small and rate limited |
 | `DOWNSHIFT_ALLOW_FS`, `DOWNSHIFT_AGENTS_ROOT` | let the UI browse agent folders and write their harness.yaml (default on, inside your home folder); turn off on a public deployment |
 | `DOWNSHIFT_OPT_ROUNDS`, `DOWNSHIFT_OPT_SAMPLE`, `DOWNSHIFT_OPT_CONCURRENCY`, `DOWNSHIFT_TEST_FRACTION` | optimizer budget |
+| `DOWNSHIFT_TEST_TRIALS`, `DOWNSHIFT_OPT_RACE`, `DOWNSHIFT_NONINFERIORITY_PP` | replays per held-out task (default 1), racing pool size (default 0 = off), non-inferiority margin in points (default 10) |
 | `GITHUB_REPO`, `GITHUB_TOKEN`, `GITHUB_BASE_BRANCH`, `GITHUB_HARNESS_PATH` | Open PR |
 | `DOWNSHIFT_PUBLIC_WEB_URL` | web URL linked from PR descriptions |
 | `API_URL` (web) | where the Next.js server reaches the API |

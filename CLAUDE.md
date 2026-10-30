@@ -1,12 +1,14 @@
 # Downshift: notes for Claude
 
-## Spending limit: $15
+## Spending limit: $40 on Token Factory (raised 2026-10-30), $60/month on Ollama
 
 The Nebius Token Factory key (`TOKEN_FACTORY_API_KEY`, referenced from `.env` as `NEBIUS_API_KEY`)
-has a hard limit of **$15 in total**. Every model call costs real money against it.
+has a hard limit of **$40 in total** (raised from $15 on 2026-10-30; about $10.60 had been spent by then).
+Every model call costs real money against it. Bulk experiments run on Ollama Cloud (`DOWNSHIFT_PROVIDER=ollama`,
+Pro plan: $60 of usage per month, 3 concurrent requests); Token Factory is for final checks of chosen harnesses.
 
 - Before anything that calls models in bulk (recording baselines, optimizations, `redo`, test runs
-  against the live provider), estimate the cost and keep the total well under $15.
+  against the live provider), estimate the cost and keep the total well under the limit.
 - Prefer the smallest run that answers the question: a few runs, Nano or Super instead of Ultra,
   `reasoning: off` where it is enough, demo mode on for optimizations.
 - Never start a full optimization (`app.cli optimize` without demo limits) or re-record all baselines

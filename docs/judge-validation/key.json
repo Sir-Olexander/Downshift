@@ -1,0 +1,434 @@
+{
+ "i001": {
+  "task_id": "q027",
+  "source": "mix"
+ },
+ "i002": {
+  "task_id": "q040",
+  "source": "baseline"
+ },
+ "i003": {
+  "task_id": "q011",
+  "source": "nano"
+ },
+ "i004": {
+  "task_id": "q027",
+  "source": "baseline"
+ },
+ "i005": {
+  "task_id": "q004",
+  "source": "baseline"
+ },
+ "i006": {
+  "task_id": "q003",
+  "source": "mix"
+ },
+ "i007": {
+  "task_id": "q034",
+  "source": "nano"
+ },
+ "i008": {
+  "task_id": "q025",
+  "source": "mix"
+ },
+ "i009": {
+  "task_id": "q014",
+  "source": "baseline"
+ },
+ "i010": {
+  "task_id": "q022",
+  "source": "baseline"
+ },
+ "i011": {
+  "task_id": "q013",
+  "source": "nano"
+ },
+ "i012": {
+  "task_id": "q035",
+  "source": "nano"
+ },
+ "i013": {
+  "task_id": "q023",
+  "source": "mix"
+ },
+ "i014": {
+  "task_id": "q030",
+  "source": "baseline"
+ },
+ "i015": {
+  "task_id": "q006",
+  "source": "baseline"
+ },
+ "i016": {
+  "task_id": "q034",
+  "source": "baseline"
+ },
+ "i017": {
+  "task_id": "q042",
+  "source": "mix"
+ },
+ "i018": {
+  "task_id": "q019",
+  "source": "mix"
+ },
+ "i019": {
+  "task_id": "q021",
+  "source": "super"
+ },
+ "i020": {
+  "task_id": "q004",
+  "source": "super"
+ },
+ "i021": {
+  "task_id": "q030",
+  "source": "super"
+ },
+ "i022": {
+  "task_id": "q035",
+  "source": "baseline"
+ },
+ "i023": {
+  "task_id": "q013",
+  "source": "mix"
+ },
+ "i024": {
+  "task_id": "q013",
+  "source": "baseline"
+ },
+ "i025": {
+  "task_id": "q007",
+  "source": "mix"
+ },
+ "i026": {
+  "task_id": "q014",
+  "source": "nano"
+ },
+ "i027": {
+  "task_id": "q023",
+  "source": "baseline"
+ },
+ "i028": {
+  "task_id": "q042",
+  "source": "baseline"
+ },
+ "i029": {
+  "task_id": "q005",
+  "source": "baseline"
+ },
+ "i030": {
+  "task_id": "q010",
+  "source": "nano"
+ },
+ "i031": {
+  "task_id": "q014",
+  "source": "mix"
+ },
+ "i032": {
+  "task_id": "q021",
+  "source": "nano"
+ },
+ "i033": {
+  "task_id": "q026",
+  "source": "super"
+ },
+ "i034": {
+  "task_id": "q035",
+  "source": "super"
+ },
+ "i035": {
+  "task_id": "q040",
+  "source": "super"
+ },
+ "i036": {
+  "task_id": "q019",
+  "source": "nano"
+ },
+ "i037": {
+  "task_id": "q011",
+  "source": "mix"
+ },
+ "i038": {
+  "task_id": "q041",
+  "source": "super"
+ },
+ "i039": {
+  "task_id": "q022",
+  "source": "mix"
+ },
+ "i040": {
+  "task_id": "q030",
+  "source": "nano"
+ },
+ "i041": {
+  "task_id": "q041",
+  "source": "mix"
+ },
+ "i042": {
+  "task_id": "q012",
+  "source": "nano"
+ },
+ "i043": {
+  "task_id": "q015",
+  "source": "baseline"
+ },
+ "i044": {
+  "task_id": "q023",
+  "source": "nano"
+ },
+ "i045": {
+  "task_id": "q036",
+  "source": "super"
+ },
+ "i046": {
+  "task_id": "q026",
+  "source": "baseline"
+ },
+ "i047": {
+  "task_id": "q036",
+  "source": "mix"
+ },
+ "i048": {
+  "task_id": "q001",
+  "source": "baseline"
+ },
+ "i049": {
+  "task_id": "q014",
+  "source": "super"
+ },
+ "i050": {
+  "task_id": "q038",
+  "source": "super"
+ },
+ "i051": {
+  "task_id": "q025",
+  "source": "nano"
+ },
+ "i052": {
+  "task_id": "q027",
+  "source": "nano"
+ },
+ "i053": {
+  "task_id": "q005",
+  "source": "super"
+ },
+ "i054": {
+  "task_id": "q022",
+  "source": "nano"
+ },
+ "i055": {
+  "task_id": "q034",
+  "source": "mix"
+ },
+ "i056": {
+  "task_id": "q015",
+  "source": "super"
+ },
+ "i057": {
+  "task_id": "q001",
+  "source": "super"
+ },
+ "i058": {
+  "task_id": "q015",
+  "source": "nano"
+ },
+ "i059": {
+  "task_id": "q038",
+  "source": "mix"
+ },
+ "i060": {
+  "task_id": "q006",
+  "source": "mix"
+ },
+ "i061": {
+  "task_id": "q007",
+  "source": "baseline"
+ },
+ "i062": {
+  "task_id": "q003",
+  "source": "baseline"
+ },
+ "i063": {
+  "task_id": "q038",
+  "source": "nano"
+ },
+ "i064": {
+  "task_id": "q019",
+  "source": "super"
+ },
+ "i065": {
+  "task_id": "q027",
+  "source": "super"
+ },
+ "i066": {
+  "task_id": "q006",
+  "source": "super"
+ },
+ "i067": {
+  "task_id": "q021",
+  "source": "mix"
+ },
+ "i068": {
+  "task_id": "q025",
+  "source": "baseline"
+ },
+ "i069": {
+  "task_id": "q026",
+  "source": "mix"
+ },
+ "i070": {
+  "task_id": "q003",
+  "source": "super"
+ },
+ "i071": {
+  "task_id": "q023",
+  "source": "super"
+ },
+ "i072": {
+  "task_id": "q001",
+  "source": "nano"
+ },
+ "i073": {
+  "task_id": "q010",
+  "source": "super"
+ },
+ "i074": {
+  "task_id": "q005",
+  "source": "mix"
+ },
+ "i075": {
+  "task_id": "q015",
+  "source": "mix"
+ },
+ "i076": {
+  "task_id": "q035",
+  "source": "mix"
+ },
+ "i077": {
+  "task_id": "q041",
+  "source": "nano"
+ },
+ "i078": {
+  "task_id": "q006",
+  "source": "nano"
+ },
+ "i079": {
+  "task_id": "q012",
+  "source": "mix"
+ },
+ "i080": {
+  "task_id": "q001",
+  "source": "mix"
+ },
+ "i081": {
+  "task_id": "q004",
+  "source": "mix"
+ },
+ "i082": {
+  "task_id": "q042",
+  "source": "nano"
+ },
+ "i083": {
+  "task_id": "q036",
+  "source": "baseline"
+ },
+ "i084": {
+  "task_id": "q022",
+  "source": "super"
+ },
+ "i085": {
+  "task_id": "q003",
+  "source": "nano"
+ },
+ "i086": {
+  "task_id": "q040",
+  "source": "mix"
+ },
+ "i087": {
+  "task_id": "q004",
+  "source": "nano"
+ },
+ "i088": {
+  "task_id": "q040",
+  "source": "nano"
+ },
+ "i089": {
+  "task_id": "q030",
+  "source": "mix"
+ },
+ "i090": {
+  "task_id": "q038",
+  "source": "baseline"
+ },
+ "i091": {
+  "task_id": "q012",
+  "source": "baseline"
+ },
+ "i092": {
+  "task_id": "q042",
+  "source": "super"
+ },
+ "i093": {
+  "task_id": "q005",
+  "source": "nano"
+ },
+ "i094": {
+  "task_id": "q013",
+  "source": "super"
+ },
+ "i095": {
+  "task_id": "q010",
+  "source": "baseline"
+ },
+ "i096": {
+  "task_id": "q034",
+  "source": "super"
+ },
+ "i097": {
+  "task_id": "q026",
+  "source": "nano"
+ },
+ "i098": {
+  "task_id": "q011",
+  "source": "super"
+ },
+ "i099": {
+  "task_id": "q007",
+  "source": "nano"
+ },
+ "i100": {
+  "task_id": "q021",
+  "source": "baseline"
+ },
+ "i101": {
+  "task_id": "q019",
+  "source": "baseline"
+ },
+ "i102": {
+  "task_id": "q036",
+  "source": "nano"
+ },
+ "i103": {
+  "task_id": "q012",
+  "source": "super"
+ },
+ "i104": {
+  "task_id": "q011",
+  "source": "baseline"
+ },
+ "i105": {
+  "task_id": "q010",
+  "source": "mix"
+ },
+ "i106": {
+  "task_id": "q041",
+  "source": "baseline"
+ },
+ "i107": {
+  "task_id": "q025",
+  "source": "super"
+ },
+ "i108": {
+  "task_id": "q007",
+  "source": "super"
+ }
+}

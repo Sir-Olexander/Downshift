@@ -91,8 +91,29 @@ class Step(BaseModel):
     # verify steps: when the check fails, run the synthesize step once more with the findings
     retry_on_fail: bool = False
     enabled: bool = True
+    # Runtime repairs in run.chat, for any agent (declared here so the optimizer can switch them on):
+    # final_format: a regex the step's final reply (a reply without tool calls) must contain. When it is
+    #   missing, the model is asked once more with repair_prompt, without tools, and that reply is used.
+    # recover_tool_calls: a reply with no real tool call whose text is a tool call (Nemotron's
+    #   <tool_call><function=...> XML, or {"name"/"tool": ..., "arguments"/"args": ...} JSON) for one of
+    #   the offered tools is turned into that tool call.
+    final_format: str | None = None
+    repair_prompt: str | None = None
+    recover_tool_calls: bool = False
 
     _norm_reasoning = field_validator("reasoning", mode="before")(_reasoning)
+
+    @field_validator("final_format")
+    @classmethod
+    def _regex(cls, v: str | None) -> str | None:
+        if v is not None:
+            import re
+
+            try:
+                re.compile(v)
+            except re.error as e:
+                raise ValueError(f"final_format is not a valid regex: {e}") from e
+        return v
 
 
 class StepParams(BaseModel):
@@ -118,6 +139,14 @@ class Harness(BaseModel):
     steps: list[Step]
     # Free-form notes the optimizer leaves about what it changed and why.
     changelog: list[str] = Field(default_factory=list)
+
+    @field_validator("changelog", mode="before")
+    @classmethod
+    def _changelog_as_text(cls, v: Any) -> Any:
+        """Rewriters sometimes return a changelog entry as a mapping; keep it as text instead of failing."""
+        if isinstance(v, list):
+            return [x if isinstance(x, str) else (json.dumps(x, ensure_ascii=False) if isinstance(x, (dict, list)) else str(x)) for x in v]
+        return v
 
     @model_validator(mode="after")
     def _check_steps(self) -> "Harness":
@@ -184,6 +213,15 @@ class Harness(BaseModel):
                 )
             if provider:
                 table.resolve(m, provider)
+        if provider and hasattr(table, "supports_reasoning"):
+            for s in self.steps:
+                if not s.enabled:
+                    continue
+                p = self.params(s)
+                if p.reasoning is not None and not table.supports_reasoning(p.model, provider, p.reasoning):
+                    raise HarnessError(
+                        f"step '{s.id}': model '{p.model}' does not support reasoning: {p.reasoning} on provider '{provider}'"
+                    )
 
     # ---- serialisation --------------------------------------------------------------------
     def to_dict(self) -> dict[str, Any]:

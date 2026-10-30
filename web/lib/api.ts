@@ -27,7 +27,13 @@ export type OptionSummary = {
   id: string; key: string; label: string; target: string; status: string; position: number;
   metrics: OptionMetrics | null; rounds: Round[]; rationale: string | null; models_used: string[]; changelog: string[]; created_at: string;
 };
-export type SummaryRow = { key: string; label: string; models_used: string[]; metrics: Metrics; deltas: Deltas; meets_bar: boolean; option_id: string };
+export type PairedDelta = { n_tasks: number; pp: number; ci95: [number, number]; ci90: [number, number]; se_pp: number; mde_pp: number };
+export type HoldoutStats = {
+  n_tasks: number; trials: number; pass1: number | null; passk: number | null; success_ci95: [number | null, number | null]; margin_pp: number;
+  delta_vs_baseline: PairedDelta | null; verdict: "non_inferior" | "inconclusive" | "inferior" | "unknown";
+  swap_pass1?: number | null; delta_vs_swap?: PairedDelta | null; vs_swap?: "better" | "undecided" | "worse" | "unknown";
+};
+export type SummaryRow = { key: string; label: string; models_used: string[]; metrics: Metrics; deltas: Deltas; meets_bar: boolean; verdict?: string | null; stats?: HoldoutStats | null; option_id: string };
 export type StepAnalysis = { n: number; kind: string; difficulty: Record<string, number>; needs_strong_model_pct: number; sample_reasons: string[] };
 export type Summary = {
   headline: { text: string; verdict: string; recommended: string | null };

@@ -31,7 +31,7 @@ name, version, description, runtime (keep "custom"), contract (keep exactly as g
 defaults: {model, temperature, max_tokens, reasoning?}   # reasoning: on|off|low|medium|high; temperature/max_tokens may be null (= provider default)
 system_prompt (string),
 tools: {<tool name>: {description, parameters?}}   # keep every tool name; you may only rewrite descriptions
-steps: list of {id, kind, description?, prompt?, model?, temperature?, max_tokens?, reasoning?, max_tool_calls?, few_shot?, enabled?}
+steps: list of {id, kind, description?, prompt?, model?, temperature?, max_tokens?, reasoning?, max_tool_calls?, few_shot?, enabled?, final_format?, repair_prompt?, recover_tool_calls?}
 changelog: list of short strings describing what you changed and why.
 
 The agent's own code runs the steps: you cannot add, remove, rename or reorder steps, change a step's
@@ -44,7 +44,15 @@ few_shot examples are plain text turns: the model never sees real tool calls in 
 tool call as text in a few_shot output (no {"tool": ...} or execute_sql(...) lines): the model copies
 the format, writes its tool calls as text instead of calling the tool, and the agent stops. Use
 few_shot only to show the final reply format. Use only syntax and names that the recorded runs show
-work in this agent's environment."""
+work in this agent's environment.
+
+Two runtime repairs are available per step, applied by Downshift's SDK around every model call:
+- final_format: a regular expression the step's final reply (a reply without a tool call) must contain, for
+  example "```sql" when the contract requires the SQL in a code block. When the reply misses it, the model is
+  asked once more, without tools, with repair_prompt (write one that names the exact format). Use it when the
+  recorded failures include final replies in the wrong format; it costs one extra call only on those replies.
+- recover_tool_calls: true turns a tool call the model wrote as text into a real call. Use it when failed runs
+  show tool calls written as text."""
 
 USER_CUSTOM = """Goal: make this agent work as well as possible on the target model(s) below, at the lowest cost.
 {target_instructions}
@@ -74,8 +82,9 @@ Rules:
 - Output the complete new harness (every field), not a diff. Keep name, runtime, contract, every step id and kind, and every tool name.
 - Only use these model ids: {allowed_models}. {model_rule}
 - Smaller models need explicit output formats, short numbered rules and clear stop conditions. Look at how failed runs went wrong and target that.
+- Make the smallest change that fixes the most common kind of failure ("failures by kind" above). Do not add rules for single tasks, specific values or SQL patterns seen in one example: they rarely transfer to other tasks, and every extra rule makes small models follow the others less well. If a round made things worse, go back to the previous best harness and change less.
 - Reasoning (thinking) tokens count against max_tokens: if you set max_tokens on a step with reasoning on, leave plenty of room, or the answer comes back empty.
-- Prefer fewer, cheaper model calls when it does not cost correctness.
+- Correctness first. Cut cost (thinking off, fewer calls, fewer tokens) only where the recorded runs show the step does not need it; a cheaper step that fails the task costs more than it saves.
 - Fill `changelog` with 3-6 short lines describing the changes.
 
 {schema}
@@ -106,7 +115,7 @@ Rules:
 - Only use these model ids: {allowed_models}. {model_rule}
 - Keep prompts concrete. Smaller models need explicit output formats, short numbered rules and clear stop conditions.
 - The final answer must keep inline [n] citations and the "Sources:" list of URLs taken from the evidence, because the scorer checks sources.
-- Prefer fewer, cheaper model calls: for example reasoning off for mechanical steps, a tight max_tool_calls, and no plan step if the search step can plan for itself.
+- Correctness first; then fewer, cheaper model calls where the recorded runs show a step does not need the strong setting (for example a tight max_tool_calls, or no plan step if the search step can plan for itself).
 - Add a verify step with retry_on_fail only if you think the target model needs the safety net; it costs an extra call.
 - Fill `changelog` with 3-6 short lines describing the changes.
 
@@ -140,8 +149,14 @@ def _history_text(previous: list[dict[str, Any]]) -> str:
             f"quality {m.get('quality')}/100 (baseline {p.get('baseline_quality')}), cost ${m.get('cost_per_run')}/run "
             f"(baseline ${p.get('baseline_cost')}), checks passed {m.get('checks_pass_rate')}%"
         )
+        if p.get("failure_summary"):
+            parts.append("  failures by kind: " + " | ".join(p["failure_summary"]))
         for ex in p.get("worst_examples") or []:
-            parts.append(f"  worst example: Q: {ex.get('question','')[:140]} | verdict: {ex.get('reason','')[:220]} | checks: {ex.get('checks','')} | output: {ex.get('answer_excerpt','')[:200]!r}")
+            line = f"  worst example: Q: {ex.get('question','')[:140]} | verdict: {ex.get('reason','')[:220]} | checks: {ex.get('checks','')} | output: {ex.get('answer_excerpt','')[:200]!r}"
+            final = (ex.get('final_message') or '').strip()
+            if final and final[:120] != (ex.get('answer_excerpt') or '')[:120]:
+                line += f" | the model's final message: {final[:260]!r}"
+            parts.append(line)
         if p.get("changelog"):
             parts.append("  that round's changelog: " + " / ".join(p["changelog"][:6]))
     parts.append("Fix the failure patterns above. Keep what worked. If a change made things worse, revert it.")

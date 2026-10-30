@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import functools
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +25,10 @@ class UnknownProviderError(KeyError):
     pass
 
 
+class UnsupportedReasoningError(ValueError):
+    """The model cannot express this harness `reasoning` level on this provider."""
+
+
 @dataclass(frozen=True)
 class ModelInfo:
     id: str
@@ -37,6 +41,11 @@ class ModelInfo:
     output_per_1m: float | None
     cached_input_per_1m: float | None
     ids: dict[str, str]
+    # Per-provider overrides of how a harness `reasoning` level is sent for this model, when the
+    # provider-wide mapping does not fit it: {provider: {level: request fields}}. A level mapped to
+    # null is unsupported for the model (the harness validator rejects it; the optimizer never sees
+    # a switch that silently does nothing).
+    reasoning: dict[str, dict[str, dict[str, Any] | None]] = field(default_factory=dict)
 
     def cost(self, tokens_in: int, tokens_out: int) -> float | None:
         """Cost in USD for a call, or None when the model has no price."""
@@ -58,6 +67,7 @@ class ModelInfo:
                 "cached_input": self.cached_input_per_1m,
             },
             "ids": dict(self.ids),
+            "reasoning": {p: dict(levels) for p, levels in self.reasoning.items()},
         }
 
 
@@ -114,6 +124,10 @@ class ModelTable:
                 output_per_1m=price.get("output"),
                 cached_input_per_1m=price.get("cached_input"),
                 ids={str(k): str(v) for k, v in (m.get("ids") or {}).items()},
+                reasoning={
+                    str(prov): {str(level): (dict(fields) if isinstance(fields, dict) else None) for level, fields in (levels or {}).items()}
+                    for prov, levels in (m.get("reasoning") or {}).items()
+                },
             )
 
     @classmethod
@@ -159,6 +173,33 @@ class ModelTable:
                 f"Model '{model_id}' has no ID for provider '{provider}' "
                 f"(available: {', '.join(sorted(info.ids)) or 'none'})"
             ) from None
+
+    def reasoning_params(self, model_id: str, provider: str, setting: str | None) -> dict[str, Any]:
+        """Request fields that express a harness `reasoning` level for `model_id` on `provider`.
+
+        The model's own override wins over the provider-wide mapping (models.yaml `reasoning:` on a
+        model entry); a level the model maps to null raises UnsupportedReasoningError."""
+        if setting is None:
+            return {}
+        level = str(setting)
+        info = self._models.get(model_id)
+        if info is not None:
+            levels = info.reasoning.get(provider)
+            if levels is not None and level in levels:
+                fields = levels[level]
+                if fields is None:
+                    raise UnsupportedReasoningError(
+                        f"model '{model_id}' does not support reasoning: {level} on provider '{provider}'"
+                    )
+                return dict(fields)
+        return self.provider(provider).reasoning_params(level)
+
+    def supports_reasoning(self, model_id: str, provider: str, setting: str | None) -> bool:
+        try:
+            self.reasoning_params(model_id, provider, setting)
+        except UnsupportedReasoningError:
+            return False
+        return True
 
     def cost(self, model_id: str, tokens_in: int, tokens_out: int) -> float | None:
         if model_id not in self._models:

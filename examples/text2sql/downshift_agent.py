@@ -71,16 +71,31 @@ def _to_openai(system_prompt: str, few_shot: list[Any], messages: list[Any]) -> 
 class _DownshiftBackend:
     """Stands in for text2sql's model backend: same generate() contract, calls go through run.chat."""
 
-    def __init__(self, run: Run, harness: Harness):
+    def __init__(self, run: Run, harness: Harness, used: list[int] | None = None):
         self.run = run
         self.harness = harness
         self.step = harness.step(STEP)
+        # the tool-call counter shared with the recorded tools: once the step's max_tool_calls is spent the
+        # model is called without tools, so it has to answer (text2sql's own loop only stops on a reply
+        # without tool calls; a message saying "budget exhausted" did not stop runs reaching 50 calls)
+        self.used = used if used is not None else [0]
 
     def generate(self, system_prompt: str, tool_schemas: list, messages: list):
         tools = [{"type": "function", "function": {"name": s["name"], "description": (self.harness.tools.get(s["name"]).description if s["name"] in self.harness.tools else s["description"]), "parameters": s["parameters"]}} for s in tool_schemas]
+        budget = self.step.max_tool_calls
+        if budget is not None and self.used[0] >= budget:
+            tools = []
+            messages = list(messages) + [_FinalTurn()]
         res = self.run.chat(self.step, _to_openai(system_prompt, self.step.few_shot, messages), tools=tools or None)
         tool_calls = [{"id": tc.id, "name": tc.name, "args": {} if "_unparsed" in tc.arguments else tc.arguments} for tc in res.tool_calls]
         return res.content or "", tool_calls, {"input_tokens": res.tokens_in, "output_tokens": res.tokens_out}
+
+
+class _FinalTurn:
+    """A user turn appended when the tool budget is spent: no tools are offered on this call."""
+
+    type = "human"
+    content = "Tool budget exhausted: reply now with your final SQL in a ```sql code block."
 
 
 def _recorded(fn: Any, run: Run, budget: int | None, used: list[int]) -> Any:
@@ -151,7 +166,7 @@ class Text2SQLAgent(AgentAdapter):
         gen.tools = tools
         gen.agent.tools = tools
         gen.agent._tool_map = {t.__name__: t for t in tools}
-        gen.agent.backend = _DownshiftBackend(run, harness)
+        gen.agent.backend = _DownshiftBackend(run, harness, used)
         if harness.system_prompt != SYSTEM_PROMPT:  # the default is exactly text2sql's own prompt
             dialect = gen.db.dialect
             gen.agent.system_prompt = render(harness.system_prompt, dialect=dialect, dialect_guide=get_dialect_guide(dialect), custom_metadata="", instructions="", example_tool_note="", example_list_note="")

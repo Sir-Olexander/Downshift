@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import re
 import time
 import traceback
 import uuid
@@ -12,7 +14,7 @@ from pydantic import BaseModel, Field
 
 from .harness import Harness, Step
 from .pricing import ModelTable, default_table
-from .providers import LLM, ChatResult
+from .providers import LLM, ChatResult, ToolCallRequest
 
 SDK_VERSION = "0.1.0"
 
@@ -38,6 +40,51 @@ class ModelCallEvent(BaseModel):
     cost_usd: float | None = None
     latency_ms: int = 0
     error: str | None = None
+    # set when run.chat changed what the agent sees: "repair" (a re-ask because the final reply missed the
+    # step's final_format) or "recovered_tool_call" (a tool call written as text was turned into a real one)
+    note: str | None = None
+
+
+DEFAULT_REPAIR_PROMPT = "Your last reply is missing the required final format. Reply again with only your final answer, in that format."
+
+_XML_CALL = re.compile(r"<tool_call>\s*<function=([\w.-]+)>(.*?)</function>", re.S)
+_XML_PARAM = re.compile(r"<parameter=([\w.-]+)>\s*(.*?)\s*</parameter>", re.S)
+
+
+def recover_tool_calls(content: str, tool_names: list[str]) -> list[ToolCallRequest]:
+    """Tool calls the model wrote as text, for tools that were actually offered. Empty when none."""
+    if not content or not tool_names:
+        return []
+    out: list[ToolCallRequest] = []
+    for name, body in _XML_CALL.findall(content):
+        if name in tool_names:
+            args = {k: v for k, v in _XML_PARAM.findall(body)}
+            out.append(ToolCallRequest(id=f"recovered_{len(out)}", name=name, arguments=args, raw_arguments=json.dumps(args)))
+    if out:
+        return out
+    dec = json.JSONDecoder()
+    i = 0
+    while True:
+        j = content.find("{", i)
+        if j < 0:
+            break
+        try:
+            obj, end = dec.raw_decode(content, j)
+        except json.JSONDecodeError:
+            i = j + 1
+            continue
+        i = end
+        if isinstance(obj, dict):
+            name = obj.get("name") or obj.get("tool")
+            args = obj.get("arguments", obj.get("args", obj.get("parameters")))
+            if isinstance(args, str):
+                try:
+                    args = json.loads(args)
+                except json.JSONDecodeError:
+                    args = None
+            if name in tool_names and isinstance(args, dict):
+                out.append(ToolCallRequest(id=f"recovered_{len(out)}", name=name, arguments=args, raw_arguments=json.dumps(args)))
+    return out
 
 
 class ToolCallEvent(BaseModel):
@@ -160,8 +207,42 @@ class Run:
         max_tokens: int | None = None,
         reasoning: str | None = None,
     ) -> ChatResult:
-        """Call the model configured for `step` in the harness and record the call."""
+        """Call the model configured for `step` in the harness and record the call.
+
+        Two optional repairs, declared on the step: recover_tool_calls turns a tool call written as text into
+        a real one; final_format re-asks once (without tools) when a final reply misses the required format."""
         step_obj = self.harness.step(step) if isinstance(step, str) else step
+        res = self._chat_once(step_obj, messages, tools=tools, tool_choice=tool_choice, response_format=response_format, model=model, temperature=temperature, max_tokens=max_tokens, reasoning=reasoning)
+        if step_obj.recover_tool_calls and tools and not res.tool_calls:
+            names = [t.get("function", {}).get("name", "") for t in tools]
+            recovered = recover_tool_calls(res.content, names)
+            if recovered:
+                res.tool_calls = recovered
+                res.content = ""
+                ev = self.rec.events[-1]
+                ev.note = "recovered_tool_call"
+                ev.response = res.response_dict()
+        if step_obj.final_format and not res.tool_calls and not re.search(step_obj.final_format, res.content or ""):
+            repair_msgs = list(messages) + [{"role": "assistant", "content": res.content or ""}, {"role": "user", "content": step_obj.repair_prompt or DEFAULT_REPAIR_PROMPT}]
+            fixed = self._chat_once(step_obj, repair_msgs, tools=None, response_format=response_format, model=model, temperature=temperature, max_tokens=max_tokens, reasoning=reasoning, note="repair")
+            if (fixed.content or "").strip():
+                res = fixed
+        return res
+
+    def _chat_once(
+        self,
+        step_obj: Step,
+        messages: list[dict[str, Any]],
+        *,
+        tools: list[dict[str, Any]] | None = None,
+        tool_choice: Any = None,
+        response_format: dict[str, Any] | None = None,
+        model: str | None = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        reasoning: str | None = None,
+        note: str | None = None,
+    ) -> ChatResult:
         p = self.harness.params(step_obj)
         model = model or p.model
         temperature = p.temperature if temperature is None else temperature
@@ -178,6 +259,7 @@ class Run:
             params=params,
             messages=messages,
             tools=[t.get("function", {}).get("name", "?") for t in (tools or [])],
+            note=note,
         )
         try:
             ev.provider_model = self.llm.resolve(model)

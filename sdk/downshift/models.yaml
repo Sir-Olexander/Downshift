@@ -62,6 +62,10 @@ providers:
       medium: { reasoning_effort: medium }
       high: { reasoning_effort: high }
 
+# A model entry may carry its own `reasoning:` mapping per provider when the provider-wide one does
+# not fit it (checked with `python -m downshift.probe`): {provider: {level: request fields}}. A level
+# mapped to null is unsupported for that model, and a harness that asks for it is rejected, so the
+# optimizer never relies on a switch that does nothing.
 models:
   nemotron-3-nano:
     display: Nemotron 3 Nano
@@ -74,6 +78,12 @@ models:
       tokenfactory: nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B
       ollama: nemotron-3-nano:30b
       ollama-local: nemotron-3-nano:30b
+    # Nano has only on/off (enable_thinking). vLLM ignores reasoning_effort for Nemotron 3 (vllm#39581) and
+    # the probe saw no effect on Ollama, so the levels are unsupported rather than silent no-ops.
+    reasoning:
+      tokenfactory: { low: null, medium: null, high: null }
+      ollama: { low: null, medium: null, high: null }
+      ollama-local: { low: null, medium: null, high: null }
   nemotron-3-super:
     display: Nemotron 3 Super
     vendor: NVIDIA
@@ -85,6 +95,15 @@ models:
       tokenfactory: nvidia/nemotron-3-super-120b-a12b
       ollama: nemotron-3-super
       ollama-local: nemotron-3-super
+    # The model card's low-effort mode is a chat-template flag (not reasoning_effort, which vLLM ignores for
+    # Nemotron 3). Unverified on Token Factory itself; medium/high do not exist for Super.
+    reasoning:
+      tokenfactory:
+        low: { chat_template_kwargs: { low_effort: true } }
+        medium: null
+        high: null
+      ollama: { low: null, medium: null, high: null }
+      ollama-local: { low: null, medium: null, high: null }
   nemotron-3-ultra:
     display: Nemotron 3 Ultra
     vendor: NVIDIA
@@ -96,6 +115,14 @@ models:
       tokenfactory: nvidia/Nemotron-3-Ultra-550b-a55b
       ollama: nemotron-3-ultra
       ollama-local: nemotron-3-ultra
+    # Ultra's medium-effort mode (about 2.5x fewer reasoning tokens) is a chat-template flag; no low mode.
+    reasoning:
+      tokenfactory:
+        low: null
+        medium: { chat_template_kwargs: { medium_effort: true } }
+        high: null
+      ollama: { low: null, medium: null, high: null }
+      ollama-local: { low: null, medium: null, high: null }
   # Optional closed-model baseline, used only if you set OPENAI_API_KEY and point the baseline
   # harness at it. Prices are OpenAI list prices as of 2025; verify before quoting them.
   gpt-4.1:
@@ -106,3 +133,107 @@ models:
     price_per_1m: { input: 2.00, output: 8.00 }
     ids:
       openai: gpt-4.1
+
+  # ---- Other families, for testing the optimizer beyond Nemotron (Nemotron stays the core) ----------
+  # Picked on 2026-10-29 from the models Ollama Cloud serves: three cheap/expensive pairs and one small
+  # dense model, each with a published technical report and verified tool calling and thinking controls
+  # (docs/research/ollama-cloud-models.md, docs/research/ollama-cloud-probe.md). Prices are Nebius Token
+  # Factory list prices where Token Factory serves the model (https://tokenfactory.nebius.com/model-catalog,
+  # checked 2026-10-29), otherwise the OpenRouter median endpoint price on the same day.
+  gpt-oss-20b:
+    display: gpt-oss 20B
+    vendor: OpenAI
+    tier: small
+    size: 21B total / 3.6B active, MoE
+    context: 131072
+    # OpenRouter median of 10 endpoints (not served on Token Factory)
+    price_per_1m: { input: 0.03, output: 0.145 }
+    ids:
+      ollama: gpt-oss:20b
+      ollama-local: gpt-oss:20b
+    # gpt-oss cannot stop reasoning; "none" is ignored and low is the floor (probe 2026-10-29)
+    reasoning:
+      ollama: { "off": { reasoning_effort: low } }
+      ollama-local: { "off": { reasoning_effort: low } }
+  gpt-oss-120b:
+    display: gpt-oss 120B
+    vendor: OpenAI
+    tier: mid
+    size: 117B total / 5.1B active, MoE
+    context: 131072
+    price_per_1m: { input: 0.15, output: 0.60, cached_input: 0.10 }
+    ids:
+      tokenfactory: openai/gpt-oss-120b
+      ollama: gpt-oss:120b
+      ollama-local: gpt-oss:120b
+    # gpt-oss takes reasoning_effort natively (low/medium/high); off = low. Token Factory mapping unverified.
+    reasoning:
+      ollama: { "off": { reasoning_effort: low } }
+      ollama-local: { "off": { reasoning_effort: low } }
+      tokenfactory: { "off": { reasoning_effort: low }, "on": {}, low: { reasoning_effort: low }, medium: { reasoning_effort: medium }, high: { reasoning_effort: high } }
+  gemma-4-31b:
+    display: Gemma 4 31B
+    vendor: Google
+    tier: small
+    size: 31B dense
+    context: 262144
+    # OpenRouter median of 16 endpoints (Token Factory offers Gemma 4 for fine-tuning only)
+    price_per_1m: { input: 0.145, output: 0.40 }
+    ids:
+      ollama: gemma4:31b
+      ollama-local: gemma4:31b
+    # Gemma 4 does not think unless asked; any effort level switches thinking on (probe 2026-10-29)
+    reasoning:
+      ollama: { "off": {}, "on": { reasoning_effort: high } }
+      ollama-local: { "off": {}, "on": { reasoning_effort: high } }
+  glm-5.3-flash:
+    display: GLM-5.3 Flash
+    vendor: Z.ai
+    tier: small
+    size: 320B total / 18B active, MoE
+    context: 1024000
+    price_per_1m: { input: 0.15, output: 0.50, cached_input: 0.03 }
+    ids:
+      tokenfactory: zai-org/GLM-5.3-Flash
+      ollama: glm-5.3-flash
+    # Effort levels low/high/max, default max: "on" and "medium" pin high so a request never falls back to
+    # max by accident; "none" switches thinking off (probe 2026-10-29). Token Factory mapping unverified.
+    reasoning:
+      ollama: { "on": { reasoning_effort: high }, medium: { reasoning_effort: high } }
+  glm-5.3:
+    display: GLM-5.3
+    vendor: Z.ai
+    tier: frontier
+    size: 753B total / ~40B active, MoE
+    context: 1024000
+    price_per_1m: { input: 1.40, output: 4.40, cached_input: 0.26 }
+    ids:
+      tokenfactory: zai-org/GLM-5.3
+      ollama: glm-5.3
+    reasoning:
+      ollama: { "on": { reasoning_effort: high }, medium: { reasoning_effort: high } }
+  deepseek-v4.1-flash:
+    display: DeepSeek V4.1 Flash (1017)
+    vendor: DeepSeek
+    tier: mid
+    size: 552B backbone / ~8B prefill and ~16B decode active, MoE
+    context: 1048576
+    price_per_1m: { input: 0.30, output: 1.20, cached_input: 0.006 }
+    ids:
+      tokenfactory: deepseek-ai/DeepSeek-V4.1-Flash-1017
+      ollama: deepseek-v4.1-flash:1017
+    # Effort levels low/high/max; medium maps to high. Pinned to the 1017 snapshot on both providers.
+    reasoning:
+      ollama: { medium: { reasoning_effort: high } }
+  deepseek-v4-pro:
+    display: DeepSeek V4 Pro (0813)
+    vendor: DeepSeek
+    tier: frontier
+    size: 1.6T total / 49B active, MoE
+    context: 1000000
+    price_per_1m: { input: 1.32, output: 3.96, cached_input: 0.04 }
+    ids:
+      tokenfactory: deepseek-ai/DeepSeek-V4-Pro-0813
+      ollama: deepseek-v4-pro:0813
+    reasoning:
+      ollama: { medium: { reasoning_effort: high } }

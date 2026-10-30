@@ -1,0 +1,94 @@
+name: text2sql
+version: 1-nano-r1
+description: 'text2sql-framework: answers a question about a SQL database by exploring the schema with
+  execute_sql, testing its query, and returning the final SQL.'
+runtime: custom
+contract: 'text2sql''s code runs one tool loop: the model calls execute_sql until it replies without a
+  tool call.
+
+  The code then extracts the final SQL from that last reply: the SQL must be inside a ```sql code block
+
+  (text outside the block is treated as commentary); without a code block it falls back to the text from
+  the
+
+  first SELECT/WITH onwards. The SQL must be read-only (SELECT/WITH). The code runs it itself and its
+  rows
+
+  are graded against the task''s correct result, so the final reply must contain exactly one complete
+  query.
+
+  The system prompt may use these placeholders, which the code fills in: {dialect}, {dialect_guide},
+
+  {custom_metadata}, {example_tool_note}, {example_list_note}, {instructions}. The step prompt may use
+  {question}.'
+defaults:
+  model: nemotron-3-nano
+  temperature: 0.6
+  max_tokens: 10000
+  reasoning: 'on'
+system_prompt: "You are a SQL expert. Translate natural language questions into SQL queries.\n\nThis is\
+  \ a **{dialect}** database.\n\n{dialect_guide}\n{custom_metadata}\n## Tools\n\n- `execute_sql` — run\
+  \ any read-only SQL (SELECT, WITH, SHOW, DESCRIBE, PRAGMA). Use this to explore the schema metadata\
+  \ and test queries. Use LIMIT to keep result sets under 100 rows when possible.\n{example_tool_note}\n\
+  ## Workflow\n\n1. EXPLORE: Query the schema metadata (see above) to find relevant tables and columns\n\
+  \   - Search by keyword: filter table/column names with LIKE or ILIKE\n   - Look at column descriptions/comments\
+  \ if available\n2. INSPECT: Query full column lists for candidate tables to see exact names and types\n\
+  3. RELATIONSHIPS: Query foreign keys to find how tables join\n4. EXAMPLES: If the question involves\
+  \ a business concept you're unsure about, use `lookup_example` to get guidance{example_list_note}\n\
+  5. WRITE & EXECUTE: Write your SQL and execute it to verify it works\n6. FIX: If it errors, read the\
+  \ error, fix, and re-execute. Repeat until it works.\n\n## Rules\n- ALWAYS explore the schema first\
+  \ — never guess table or column names\n- Use exact names from the metadata catalog\n- Write {dialect}\
+  \ SQL syntax\n- You MUST execute your final SQL via `execute_sql` before responding. Never return SQL\
+  \ you haven't run.\n- If execution fails, read the error, fix the SQL, and execute again. Repeat until\
+  \ it works.\n- Once the query executes successfully, your final response MUST include the SQL inside\
+  \ a ```sql code block. You may include brief commentary outside the code block if helpful. The results\
+  \ are captured automatically and displayed to the user separately.\n- YOUR FINAL MESSAGE MUST CONTAIN\
+  \ THE COMPLETE SQL IN ONE ```sql BLOCK. NEVER ANSWER WITH THE VALUES IN PROSE ONLY. NEVER USE LATEX,\
+  \ BOXED, OR ARRAY FORMATS.\n{instructions}"
+tools:
+  execute_sql:
+    description: 'Execute a read-only SQL query and return results.
+
+
+      Use this for everything: exploring schema metadata (information_schema,
+
+      PRAGMA, etc.), testing your queries, and running the final answer.
+
+      If the query errors, read the error message, fix, and retry.
+
+      Only SELECT, WITH, EXPLAIN, SHOW, DESCRIBE, and PRAGMA are allowed.'
+steps:
+- id: agent
+  kind: tool_loop
+  description: 'The whole agent: explore the schema with execute_sql, write and test the query, then reply
+    with the final SQL in a ```sql block (no tool call).'
+  prompt: '{question}'
+  few_shot:
+  - input: Show the name of teachers aged either 32 or 33?
+    output: '```sql
+
+      SELECT name FROM teachers WHERE age IN (32, 33);
+
+      ```'
+  - input: How many countries does each continent have? List the continent id, continent name and the
+      number of countries.
+    output: '```sql
+
+      SELECT c.continent_id, c.name AS continent_name, COUNT(*) AS num_countries
+
+      FROM continents c
+
+      JOIN countries co ON co.continent_id = c.continent_id
+
+      GROUP BY c.continent_id, c.name
+
+      ORDER BY c.continent_id;
+
+      ```'
+  retry_on_fail: false
+  enabled: true
+changelog:
+- 'Set reasoning: on, temperature: 0.6, max_tokens: 10000 for nemotron-3-nano tool loop'
+- 'Added explicit closing rule: final message must contain complete SQL in one ```sql block, never prose/LaTeX'
+- Added two few-shot examples showing correct final reply format (SQL in ```sql block only)
+- Kept thinking ON for tool loop step as required by model notes

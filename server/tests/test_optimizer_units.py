@@ -64,6 +64,11 @@ def test_aggregate_deltas_and_objective():
     assert not meets_bar(agg, base)
     assert objective({"success_rate": 90, "quality": 85, "cost_per_run": 0.003}, base) > objective({"success_rate": 90, "quality": 85, "cost_per_run": 0.015}, base)
     assert objective(agg, base) < objective({"success_rate": 88, "quality": 60, "cost_per_run": 0.003}, base)
+    # cost is a tie-breaker only: on an 8-task sample one task is 12.5 points, and a free candidate that gets
+    # one task fewer right must still lose to a candidate that costs as much as the baseline
+    worse_but_free = {"success_rate": 62.5, "quality": 62.5, "cost_per_run": 0.0, "n_judged": 8}
+    better_but_costly = {"success_rate": 75.0, "quality": 75.0, "cost_per_run": 0.015, "n_judged": 8}
+    assert objective(better_but_costly, base) > objective(worse_but_free, base)
 
 
 def test_rewrite_helpers_extract_yaml_and_enforce_target():
