@@ -52,6 +52,7 @@ def default_config(settings: Settings) -> dict[str, Any]:
         "noninferiority_pp": settings.noninferiority_pp,
         "race_size": settings.race_size,
         "race_trials": 2,
+        "race_candidates": 4,
         "judge_model": settings.judge_model,
         "analysis_model": settings.analysis_model,
         "rewrite_model": settings.rewrite_model,
@@ -359,8 +360,10 @@ class Engine:
             return best
         rng = random.Random(int(cfg["seed"]) + 7)
         pool = sorted(rng.sample(pool, min(race_size, len(pool))), key=lambda r: r["task_id"])
+        # every candidate races (three rounds give at most four): ranking by the small-sample objective first
+        # dropped the minimal rewrite on a cost tie-break in the Phase 1 run
         ranked = sorted(with_harness, key=lambda r: r.get("objective", 0), reverse=True)
-        contenders = ranked[:2]
+        contenders = ranked[: max(2, int(cfg.get("race_candidates") or 4))]
         swap = next((r for r in with_harness if r.get("kind") == "model_swap"), None)
         if swap is not None and swap not in contenders:
             contenders.append(swap)

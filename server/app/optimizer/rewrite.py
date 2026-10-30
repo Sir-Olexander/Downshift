@@ -31,7 +31,7 @@ name, version, description, runtime (keep "custom"), contract (keep exactly as g
 defaults: {model, temperature, max_tokens, reasoning?}   # reasoning: on|off|low|medium|high; temperature/max_tokens may be null (= provider default)
 system_prompt (string),
 tools: {<tool name>: {description, parameters?}}   # keep every tool name; you may only rewrite descriptions
-steps: list of {id, kind, description?, prompt?, model?, temperature?, max_tokens?, reasoning?, max_tool_calls?, few_shot?, enabled?}
+steps: list of {id, kind, description?, prompt?, model?, temperature?, max_tokens?, reasoning?, max_tool_calls?, few_shot?, enabled?, final_format?, repair_prompt?, recover_tool_calls?}
 changelog: list of short strings describing what you changed and why.
 
 The agent's own code runs the steps: you cannot add, remove, rename or reorder steps, change a step's
@@ -44,7 +44,15 @@ few_shot examples are plain text turns: the model never sees real tool calls in 
 tool call as text in a few_shot output (no {"tool": ...} or execute_sql(...) lines): the model copies
 the format, writes its tool calls as text instead of calling the tool, and the agent stops. Use
 few_shot only to show the final reply format. Use only syntax and names that the recorded runs show
-work in this agent's environment."""
+work in this agent's environment.
+
+Two runtime repairs are available per step, applied by Downshift's SDK around every model call:
+- final_format: a regular expression the step's final reply (a reply without a tool call) must contain, for
+  example "```sql" when the contract requires the SQL in a code block. When the reply misses it, the model is
+  asked once more, without tools, with repair_prompt (write one that names the exact format). Use it when the
+  recorded failures include final replies in the wrong format; it costs one extra call only on those replies.
+- recover_tool_calls: true turns a tool call the model wrote as text into a real call. Use it when failed runs
+  show tool calls written as text."""
 
 USER_CUSTOM = """Goal: make this agent work as well as possible on the target model(s) below, at the lowest cost.
 {target_instructions}
