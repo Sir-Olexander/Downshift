@@ -2,7 +2,7 @@
 
 The research agent's demo numbers (README, `opt_c5bcd27101b5`) rest on a Nemotron 3 Ultra judge. Its 51 held-out
 pair verdicts and 108 answers (27 baseline + 27 per option, across the optimization and test splits) were
-labelled in `docs/judge-validation/labels.csv` — a **model-assisted first pass** (commit `d0c251f`), each claim
+labelled in `docs/judge-validation/labels.csv` — a **model-assisted first pass** (the labels commit of 2026-10-30), each claim
 checked against the full text of the cited Wikipedia pages; not human labels. This note compares the judge's
 stored scores with those labels
 (`python -m app.judge_audit compare opt_c5bcd27101b5`; raw items in that command's `--json` output).
