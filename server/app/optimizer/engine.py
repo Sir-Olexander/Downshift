@@ -32,6 +32,21 @@ TARGETS: dict[str, dict[str, Any]] = {
 BASELINE_LABEL = "Baseline · Nemotron 3 Ultra"
 
 
+def target_spec(target: str, table: Any = None) -> dict[str, Any] | None:
+    """The fixed Nemotron targets (super, nano, mix), or `model:<id>` for any single model in the model
+    table, so the optimizer can move a baseline from another family to that family's cheaper model
+    (for example gpt-oss-120b -> model:gpt-oss-20b)."""
+    if target in TARGETS:
+        return TARGETS[target]
+    if target.startswith("model:"):
+        table = table or default_table()
+        mid = target.split(":", 1)[1]
+        if table.has(mid):
+            info = table.get(mid)
+            return {"label": info.display, "allowed": [mid], "lookup": f"{info.vendor} {info.display}"}
+    return None
+
+
 def default_config(settings: Settings) -> dict[str, Any]:
     return {
         "targets": list(settings.targets),
@@ -214,18 +229,20 @@ class Engine:
         self._event(oid, f"Nemotron 3 Nano labelled {analysis.get('runs_labelled')} runs (${analysis.get('cost_usd', 0):.4f}). " + " ".join(analysis.get("recommendations") or []), phase="analyze", data={"per_step": analysis.get("per_step"), "question_types": analysis.get("question_types")})
 
         # baseline option row ------------------------------------------------------------------------
-        baseline_option = self.db.create_option(oid, "baseline", BASELINE_LABEL, "nemotron-3-ultra", 0, baseline_harness.to_dict(), baseline_harness.to_yaml())
+        base_models = baseline_harness.models_used()
+        base_label = BASELINE_LABEL if base_models == ["nemotron-3-ultra"] else "Baseline · " + " + ".join(self.table.get(m).display if self.table.has(m) else m for m in base_models)
+        baseline_option = self.db.create_option(oid, "baseline", base_label, ",".join(base_models), 0, baseline_harness.to_dict(), baseline_harness.to_yaml())
         self.db.update_option(baseline_option["id"], status="done", rationale="The recorded harness, as it runs today.")
 
         # 3. per target ----------------------------------------------------------------------------
-        targets = [t for t in cfg["targets"] if t in TARGETS] or ["super", "nano", "mix"]
+        targets = [t for t in cfg["targets"] if target_spec(t, self.table)] or ["super", "nano", "mix"]
         rounds = max(1, int(cfg["rounds"]))
         per_target = 80.0 / len(targets)
         baseline_test_items: list[dict[str, Any]] = []
         option_results: list[dict[str, Any]] = []
 
         for ti, target in enumerate(targets):
-            spec = TARGETS[target]
+            spec = target_spec(target, self.table)
             base_pct = 12 + ti * per_target
             option = self.db.create_option(oid, target, spec["label"], ",".join(spec["allowed"]), ti + 1, None, None)
             self.db.update_option(option["id"], status="optimizing")

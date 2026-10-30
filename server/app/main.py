@@ -18,7 +18,7 @@ from downshift import LLM, Harness, HarnessError, LLMError, default_table
 from . import agents as agentfs
 from .db import Database
 from .github_pr import open_pr, pr_payload
-from .optimizer.engine import TARGETS, Engine, default_config
+from .optimizer.engine import TARGETS, Engine, default_config, target_spec
 from .optimizer.external import ExternalAgent, ExternalAgentError
 from .settings import REPO_DIR, Settings
 
@@ -350,7 +350,7 @@ def create_optimization(req: OptimizationRequest) -> dict[str, Any]:
     except LLMError as e:
         raise HTTPException(status_code=400, detail=f"{e}. Add it to .env and restart the API.") from e
     cfg = default_config(settings)
-    targets = list(dict.fromkeys(t for t in req.targets if t in TARGETS))
+    targets = list(dict.fromkeys(t for t in req.targets if target_spec(t)))
     if not targets:
         raise HTTPException(status_code=400, detail=f"targets must be among {list(TARGETS)}")
     cfg["targets"] = targets

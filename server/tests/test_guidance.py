@@ -64,3 +64,10 @@ def test_worst_examples_carry_the_models_final_message_into_the_rewrite_history(
     assert worst[0]["final_message"].startswith("The country with the most")
     text = _history_text([{"round": 1, "metrics": {}, "worst_examples": worst, "changelog": []}])
     assert "the model's final message: 'The country with the most car makers" in text
+
+
+def test_model_targets_cover_any_model_in_the_table():
+    from app.optimizer.engine import target_spec
+
+    assert target_spec("model:gpt-oss-20b")["allowed"] == ["gpt-oss-20b"]
+    assert target_spec("model:not-a-model") is None and target_spec("nano")["allowed"] == ["nemotron-3-nano"]
