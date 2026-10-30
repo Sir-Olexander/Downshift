@@ -39,3 +39,26 @@ Runs 1 and 2 also added verification rules (inspect columns before use); run 3 i
    swap, within noise, and on tau2 telecom (Super to Nano) the swap already matched the baseline on 16 held-out
    tasks. The result is specific to a small model whose main failure is the format of its final message, which is
    exactly what prompt rules and a repair turn can fix; it does not show that rewrites close capability gaps.
+
+## Fresh tasks: the re-check on untouched questions (2026-10-30, 15:55)
+
+The 96 held-out tasks also informed the last optimizer fixes, so the claim was re-checked on 200 Spider dev
+questions **no optimizer run ever saw** (seed 44 sample of the 794 unused; ids fr001-fr200). One trial per task,
+Ollama Cloud, paired per task; the plain Nano swap and the best chosen harness (`opt_b8a49e660f6e`) against the
+recorded Ultra baseline. The 16:00 cutoff left the Ultra baseline at 136 of 200 tasks, so all comparisons use
+those 136 (an unbiased subset; the swap completed all 200). The other two chosen harnesses were not re-run in
+time and remain open.
+
+| arm | tasks | pass | 95% CI | paired Δ vs Ultra (90% CI) | verdict at 10 pp | Δ vs plain swap (95% CI) | $/task |
+|---|---|---|---|---|---|---|---|
+| Ultra baseline | 136 | 74.3% | 66.3-80.9% | reference | reference | - | $0.0154 |
+| plain Nano swap | 136 | 69.9% | 61.7-76.9% | −4.4 (−10.3 to +1.5) | inconclusive | - | $0.0018 |
+| chosen Nano harness (repro 1) | 136 | **77.2%** | 69.5-83.5% | **+2.9 (−1.5 to +7.4)** | **non-inferior** | **+7.4 (+0.7 to +14.7): better** | $0.0020 |
+
+Reading: on questions untouched by every optimization, fix and selection, the optimizer-chosen harness again
+matches Ultra (non-inferior at 10 pp) and beats the plain swap with the interval excluding zero — by +7.4 points,
+a smaller margin than the +12-24 seen on the older tasks, and the lower bound is +0.7. One trial per task and
+136 tasks carry roughly ±5 points of paired precision, so treat the gap as "clearly positive, size uncertain".
+The swap here is only −4.4 from Ultra (inconclusive), not the −13 to −19 of the earlier measurements: more
+evidence that the plain swap's measured quality drifts by provider and hour, which the paired-same-hour design
+guards against. Cost: 87% below Ultra. Spend for the whole re-check: $2.72 at list prices.
