@@ -84,7 +84,7 @@ def audit(db: Database, settings: Settings, oid: str, judges: list[str], workers
         agree = total = 0
         for p in pairs:
             ra, rb = by.get((p["option"], p["task_id"], a)), by.get((p["option"], p["task_id"], b))
-            if ra and rb and ra["cand_first"] == ra["base_first"] and rb["cand_first"] == rb["base_first"] and ra["cand_first"]:
+            if ra and rb and ra["cand_first"] and rb["cand_first"] and ra["cand_first"] == ra["base_first"] and rb["cand_first"] == rb["base_first"]:
                 total += 1
                 agree += ra["cand_first"] == rb["cand_first"]
         report["agreement_on_consistent_pairs"] = {"judges": [a, b], "n": total, "agree_pct": round(100 * agree / total, 1) if total else None}
