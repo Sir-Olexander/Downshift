@@ -201,6 +201,8 @@ docs/         Deployment notes (Nebius Serverless), video script
   swap (`docs/research/phase1-results.md`). After two more optimizer fixes, three repeat runs each chose,
   on their own, a Nano harness that is non-inferior to Ultra on 96 held-out tasks × 3 trials and beats the
   plain swap with the interval excluding zero, at 76-89% lower cost (`docs/research/reliability-results.md`).
+  On 136 Spider questions no run had ever seen, the best of those harnesses again matched Ultra (+2.9 pp,
+  90% CI −1.5 to +7.4) and beat the plain swap (+7.4 pp, 95% CI +0.7 to +14.7) at 87% lower cost.
   The same procedure gave no clear gain for gpt-oss 120B → 20B, and on tau2-bench telecom the plain Nano
   swap already matched Super. Status of every claim: `docs/prove-the-optimizer-plan.md`.
 - **Open PR.** Needs `GITHUB_REPO` (owner/name) and a token (`GITHUB_TOKEN`, or a local `gh` login).
