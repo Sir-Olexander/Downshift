@@ -4,84 +4,84 @@ i001,"What is known about the causes of Alzheimer's disease, and why have amyloi
 Sources:
 https://en.wikipedia.org/wiki/Alzheimer%27s_disease
 https://en.wikipedia.org/wiki/Biochemistry_of_Alzheimer%27s_disease
-https://en.wikipedia.org/wiki/Aducanumab",,,,
+https://en.wikipedia.org/wiki/Aducanumab",yes,no,no,Missing: gives no reason why amyloid drugs had mixed results; it only says aducanumab's approval was controversial for lack of evidence of benefit.
 i002,"What do we know about the atmosphere of Venus, and why is its surface so hot?","Venus’s atmosphere is composed of 96.5 % carbon dioxide and 3.5 % nitrogen, with a surface pressure of about 93 bar (92 times Earth’s) and a global cloud deck of sulfuric acid [1][3]. The surface temperature reaches roughly 740 K (467 °C), making it the hottest planetary surface in the Solar System [1][3]. This extreme heat is caused by a runaway greenhouse effect: the dense CO₂‑rich atmosphere traps outgoing long‑wave radiation so efficiently that the planet cannot cool, a process that likely began when early water vapor amplified warming until all water was lost to space [6][3].
 
 Sources:
 https://en.wikipedia.org/wiki/Atmosphere_of_Venus
 https://en.wikipedia.org/wiki/Venus
-https://en.wikipedia.org/wiki/Runaway_greenhouse_effect",,,,
+https://en.wikipedia.org/wiki/Runaway_greenhouse_effect",yes,yes,no,Minor: says all water was lost to space; traces remain (about 20 ppm water vapour).
 i003,What do modern historians consider the main causes of the fall of the Western Roman Empire?,"Answer: Modern historians view the fall of the Western Roman Empire as a complex process driven by both internal decay—such as economic troubles, political instability, military overstretch, and the erosion of civic virtue—and external pressures like barbarian invasions [1]. They generally interpret the collapse as a gradual transformation into medieval societies rather than a sudden collapse, emphasizing the interplay of these multiple factors [2].
 
 Sources:
 https://en.wikipedia.org/wiki/Historiography_of_the_fall_of_the_Western_Roman_Empire
-https://en.wikipedia.org/wiki/Fall_of_the_Western_Roman_Empire",,,,
+https://en.wikipedia.org/wiki/Fall_of_the_Western_Roman_Empire",yes,yes,no,"Minor: 'erosion of civic virtue' is mainly Gibbon's thesis, which modern historians like Heather reject; and the 'gradual transformation' view is one contested school, so 'generally' overstates."
 i004,"What is known about the causes of Alzheimer's disease, and why have amyloid-targeting drugs had mixed results?","The causes of Alzheimer’s disease are not fully understood, but the strongest genetic risk factor is the APOE ε4 allele, and other risks include head injury, depression, and hypertension; the disease is marked by accumulation of amyloid plaques and neurofibrillary tangles [1]. Amyloid‑targeting drugs such as aducanumab have yielded mixed outcomes – its FDA approval was highly controversial and prompted the resignation of three advisory panel members because of insufficient evidence that the drug provides meaningful clinical benefit [5].
 
 Sources:
 https://en.wikipedia.org/wiki/Alzheimer%27s_disease
-https://en.wikipedia.org/wiki/Aducanumab",,,,
+https://en.wikipedia.org/wiki/Aducanumab",yes,no,no,Missing: gives no reason why amyloid drugs had mixed results; it only describes the controversy and resignations over aducanumab's approval.
 i005,"What is the deepest point in the ocean, how deep is it, and who first reached it?","The deepest point in the ocean is **Challenger Deep**, located at the southern end of the Mariana Trench in the western Pacific Ocean [2]. The most recent authoritative measurement (2021) gives a depth of **10,935 ± 6 m** (35,876 ± 20 ft) below sea level [2]. The first humans to reach it were **Don Walsh** (U.S. Navy lieutenant) and **Jacques Piccard** (Swiss oceanographer), who descended together in the bathyscaphe *Trieste* on 23 January 1960 [2][4].
 
 Sources:
 https://en.wikipedia.org/wiki/Challenger_Deep
-https://en.wikipedia.org/wiki/List_of_people_who_descended_to_Challenger_Deep",,,,
+https://en.wikipedia.org/wiki/List_of_people_who_descended_to_Challenger_Deep",yes,yes,yes,"Unsupported: calling Piccard a ""Swiss oceanographer"" (true) goes beyond the cited pages, which give no profession or nationality for him."
 i006,How does public-key cryptography let two parties communicate securely without sharing a secret in advance?,"Answer: Public-key cryptography enables secure communication without a pre-shared secret by using asymmetric key pairs: each party generates a public key that can be openly shared and a private key kept secret. A sender encrypts a message with the recipient's public key, and only the recipient's private key can decrypt it, eliminating the need for prior secret exchange [9]. Key agreement protocols like Diffie–Hellman allow two parties to establish a shared symmetric key over a public channel without any pre-shared secret [2]. This principle underlies systems such as RSA, where the public key encrypts and the private key decrypts [4].
 
 Sources:
 https://en.wikipedia.org/wiki/Public-key_cryptography
 https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange
-https://en.wikipedia.org/wiki/RSA_cryptosystem",,,,
+https://en.wikipedia.org/wiki/RSA_cryptosystem",yes,yes,no,
 i007,"What was the Bauhaus, and how did it influence modern design?","Answer: The Bauhaus was a German art school founded in 1919 by architect Walter Gropius that combined crafts and fine arts, aiming to create a “comprehensive artwork” merging artistic vision with mass production and functional design [1]. Its emphasis on simple geometric forms, lack of ornament, and the unity of art and industry directly shaped the International Style of architecture and design [3]. The school’s principles also inspired later graphic design movements such as Swiss Style, which adopted its clean, rational aesthetic [6]. Moreover, Bauhaus ideas influenced modern furniture design, promoting minimalism, functionality, and the use of new materials like metal and glass [7].
 
 Sources:
 https://en.wikipedia.org/wiki/Bauhaus
 https://en.wikipedia.org/wiki/International_Style
 https://en.wikipedia.org/wiki/Swiss_Style_(design)
-https://en.wikipedia.org/wiki/Modern_furniture",,,,
+https://en.wikipedia.org/wiki/Modern_furniture",yes,yes,no,
 i008,"Which river is the longest in the world, and why is the ranking disputed?","Answer: The Nile is traditionally considered the longest river at 7,088 km, but the Amazon River's length is disputed and estimated between 6,575–7,062 km, with some studies suggesting it could be longer [1][6]. The ranking is disputed because determining a river's exact length depends on identifying its most distant source and measuring to its mouth, which can vary based on methodology, seasonal changes, and whether tributaries like the Mantaro or Apurímac are considered the Amazon's true headwaters [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Amazon_River
-https://en.wikipedia.org/wiki/Nile",,,,
+https://en.wikipedia.org/wiki/Nile",yes,yes,yes,Unsupported: 'seasonal changes' as a cause of differing length figures is not in the cited pages (it is true per Wikipedia's List of river systems by length).
 i009,"How was the Panama Canal built, and how do its locks work?","The Panama Canal was built in two main phases: a French attempt (1881–1889) that failed due to engineering difficulties and high worker mortality, followed by a U.S. effort (1904–1914) that completed the waterway [2]. The canal uses locks at each end to lift ships 26 m (85 ft) to Gatun Lake, an artificial freshwater lake created by damming the Chagres River, and then lower them to sea level on the opposite side [2]. Each lock chamber is filled and emptied by gravity-fed water from Gatun Lake, with an average transit consuming about 200 million litres (52 million US gallons) of fresh water [2]. The original locks are 33.5 m (110 ft) wide, allowing Panamax ships, and a third, wider set of locks was added in 2016 to accommodate larger Neopanamax vessels [2].
 
 Sources:
-https://en.wikipedia.org/wiki/Panama_Canal",,,,
+https://en.wikipedia.org/wiki/Panama_Canal",yes,yes,no,
 i010,"What is the origin of the Olympic Games, and when were the modern Games revived?","The ancient Olympic Games originated in Greece at the sanctuary of Olympia in honor of Zeus, with the first recorded Games traditionally dated to 776 BC [1]. The modern Olympic Games were revived by French educator Pierre de Coubertin, who founded the International Olympic Committee in 1894, leading to the first modern Olympics held in Athens from 6 to 15 April 1896 [9][6].
 
 Sources:
 https://en.wikipedia.org/wiki/Ancient_Olympic_Games
 https://en.wikipedia.org/wiki/Pierre_de_Coubertin
-https://en.wikipedia.org/wiki/Olympic_Games",,,,
+https://en.wikipedia.org/wiki/Olympic_Games",yes,yes,yes,"Unsupported: the 6-15 April 1896 dates are not in the cited pages (they are correct per the 1896 Summer Olympics page, which this answer does not cite)."
 i011,Why does the Moon always show the same face to Earth?,"Answer: The Moon always shows the same face to Earth because it is tidally locked, meaning its rotation period equals its orbital period [1]. This synchronization results from gravitational torques that slowed the Moon’s rotation over billions of years [6]. The torque arises from differential gravitational pull on the near and far sides, creating tidal bulges that exchange angular momentum with Earth [9]. Energy dissipated as heat (tidal heating) removes rotational energy and stabilizes the locked state [8].
 
 Sources:
 https://en.wikipedia.org/wiki/Moon
 https://en.wikipedia.org/wiki/Tidal_locking
 https://en.wikipedia.org/wiki/Tide
-https://en.wikipedia.org/wiki/Tidal_heating",,,,
+https://en.wikipedia.org/wiki/Tidal_heating",no,yes,yes,"Error: says tidal torques slowed the Moon's spin over billions of years; it locked early in its history, far faster (Moon page; NASA: within hundreds of thousands of orbits) (side detail). / Unsupported: 'billions of years' is not in the cited pages."
 i012,What is the difference between type 1 and type 2 diabetes?,"Answer: Type 1 diabetes is an autoimmune disease that destroys pancreatic β‑cells, causing absolute insulin deficiency and requiring lifelong insulin therapy [1]. It typically presents abruptly in childhood or adolescence and accounts for about 5–10 % of diabetes cases [1]. Type 2 diabetes results from insulin resistance with relative insulin deficiency and usually has a slower onset, often linked to obesity and metabolic syndrome [3]. Management of type 2 can begin with lifestyle changes and oral medications such as metformin, with insulin added only if needed [3]. Diagnosis distinguishes the two by autoantibodies and low C‑peptide in type 1 versus high C‑peptide in type 2 [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Type_1_diabetes
-https://en.wikipedia.org/wiki/Type_2_diabetes",,,,
+https://en.wikipedia.org/wiki/Type_2_diabetes",yes,yes,yes,Unsupported: the link to metabolic syndrome is not in the cited pages (the link itself is true).
 i013,What evidence supports the theory of plate tectonics?,"Answer: The theory of plate tectonics is supported by the jigsaw-like fit of continents such as Africa and South America [13], the validation of seafloor spreading in the 1960s [1], the concentration of earthquakes, volcanoes, and mountain-building along plate boundaries [1], and the mechanism of mantle convection driving plate motion [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Plate_tectonics
-https://en.wikipedia.org/wiki/Continental_drift",,,,
+https://en.wikipedia.org/wiki/Continental_drift",yes,yes,no,"Minor: lists mantle convection as support, but it is a driving mechanism (details still debated), not observational evidence."
 i014,"How do carbon pricing schemes like the EU Emissions Trading System work, and what effect have they had on emissions?","The EU Emissions Trading System (EU ETS) operates as a cap‑and‑trade scheme: a declining cap on total greenhouse gas emissions is set for covered sectors, and companies must surrender one EU Allowance for each tonne of CO₂ they emit, creating a market price for carbon that incentivizes reductions [1][3][6]. Since its launch in 2005, emissions in sectors covered by the EU ETS have fallen by roughly 50 %, compared to only 20 % in non‑covered sectors, and multiple studies attribute a direct causal reduction of 7–11.5 % to the scheme itself [1]. The system has also delivered co‑benefits such as lower air pollutants (SO₂, particulate matter, NOₓ) without harming profits or employment in regulated firms [1].
 
 Sources:
 https://en.wikipedia.org/wiki/European_Union_Emissions_Trading_System
 https://en.wikipedia.org/wiki/EU_Allowance
-https://en.wikipedia.org/wiki/Emissions_trading",,,,
+https://en.wikipedia.org/wiki/Emissions_trading",yes,yes,no,
 i015,Compare CRISPR-Cas9 with earlier gene-editing methods such as zinc-finger nucleases and TALENs. What made CRISPR take over?,"CRISPR-Cas9 uses a synthetic guide RNA to direct the Cas9 nuclease to a target DNA sequence, while zinc-finger nucleases (ZFNs) and TALENs require laborious protein engineering for each new target. This RNA-based targeting makes CRISPR-Cas9 far easier to design, more efficient, and more practical for large-scale genome editing. The development of CRISPR-Cas9 in 2015 markedly improved efficiency, specificity, and scalability, leading to its rapid adoption over earlier methods. [1][4]
 
 Sources:
 https://en.wikipedia.org/wiki/CRISPR_gene_editing
-https://en.wikipedia.org/wiki/Genome_editing",,,,
+https://en.wikipedia.org/wiki/Genome_editing",no,yes,no,"Error: says CRISPR-Cas9 was developed in 2015 (it was 2012; 2015 was Science's Breakthrough of the Year) and markedly improved specificity, though the cited pages rate TALENs and ZFNs as more precise (side details)."
 i016,"What was the Bauhaus, and how did it influence modern design?","The Bauhaus was a German art school (1919–1933) founded by Walter Gropius that sought to merge crafts and fine arts into a *Gesamtkunstwerk* and to reconcile artistic vision with mass production and functional design [1]. Its curriculum emphasized simple geometric forms, absence of ornament, and the use of industrial materials such as glass, steel, and concrete [1]. The school’s ideas spread internationally through its directors and faculty—notably Gropius and Ludwig Mies van der Rohe—becoming cornerstones of the International Style in architecture with rectilinear forms, open plans, and curtain‑wall glazing [3][17][18]. In graphic design and typography, Bauhaus figures like Herbert Bayer pioneered rational sans‑serif typefaces and asymmetric layouts, influencing later movements such as the Swiss Style [14][7].
 
 Sources:
@@ -90,17 +90,17 @@ https://en.wikipedia.org/wiki/International_Style
 https://en.wikipedia.org/wiki/Ludwig_Mies_van_der_Rohe
 https://en.wikipedia.org/wiki/Walter_Gropius
 https://en.wikipedia.org/wiki/Herbert_Bayer
-https://en.wikipedia.org/wiki/Swiss_Style_(design)",,,,
+https://en.wikipedia.org/wiki/Swiss_Style_(design)",yes,yes,yes,"Unsupported: no cited page says Bayer or the Bauhaus pioneered asymmetric layouts (the Swiss Style page credits the International Typographic Style). / Minor: pages tie glass, steel and concrete to Bauhaus buildings, not its curriculum."
 i017,"How did the Impressionist movement begin, and what were its defining techniques?","Answer: The Impressionist movement began when a group of Paris-based artists, rejected by the official Salon, held their first independent exhibition in April 1874 at Nadar's studio; the term ""Impressionism"" was coined by critic Louis Leroy in a satirical review of Monet's painting *Impression, Sunrise* [1][7][2]. Its defining techniques included painting en plein air to capture fleeting light, using visible broken brushstrokes of pure or mixed colour, emphasizing the changing qualities of light, and depicting ordinary subjects from unconventional angles [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Impressionism
 https://en.wikipedia.org/wiki/First_Impressionist_Exhibition
-https://en.wikipedia.org/wiki/Impression,_Sunrise",,,,
+https://en.wikipedia.org/wiki/Impression,_Sunrise",yes,yes,no,"Minor: Leroy's satirical review was of the whole 1874 exhibition, punning on Monet's title, not of the painting alone."
 i018,"What was the Magna Carta, and why is it still considered important?","Answer: The Magna Carta was a royal charter of rights sealed by King John of England at Runnymede on 15 June 1215, drafted by Archbishop Stephen Langton to appease rebel barons; it guaranteed protection of church rights, freedom from illegal imprisonment, access to swift and impartial justice, and limits on feudal payments to the Crown [1]. Although most of its specific clauses have been repealed, it endures as a powerful symbol of liberty and the rule of law, influencing concepts such as habeas corpus, due process, and constitutional government, including the United States Constitution [1].
 
 Sources:
-https://en.wikipedia.org/wiki/Magna_Carta",,,,
+https://en.wikipedia.org/wiki/Magna_Carta",yes,yes,no,
 i019,"What is the Montreal Protocol, and how successful has it been at repairing the ozone layer?","The Montreal Protocol, formally the Montreal Protocol on Substances That Deplete the Ozone Layer, is an international treaty adopted on 16 September 1987 to phase out production of ozone‑depleting substances such as CFCs.[5]  
 It has been ratified by 198 parties, making it the first universally ratified UN treaty and praised by former UN Secretary‑General Kofi Annan as perhaps the single most successful international agreement.[5]  
 As a result, the Antarctic ozone hole is slowly recovering and models project the global ozone layer to return to 1980 levels by around 2040, with the Antarctic region recovering by about 2066.[5]  
@@ -108,44 +108,44 @@ As a result, the Antarctic ozone hole is slowly recovering and models project th
 Sources:
 https://en.wikipedia.org/wiki/Montreal_Protocol
 https://en.wikipedia.org/wiki/Montreal_Protocol
-https://en.wikipedia.org/wiki/Montreal_Protocol",,,,
+https://en.wikipedia.org/wiki/Montreal_Protocol",yes,yes,no,
 i020,"What is the deepest point in the ocean, how deep is it, and who first reached it?","The deepest known point in the ocean is the Challenger Deep in the Mariana Trench.[2] Its depth is approximately 10,935 ± 6 metres (35,876 ± 20 ft) below sea level.[2] The first humans to reach it were Jacques Piccard and Don Walsh, who descended in the bathyscaphe Trieste on 23 January 1960.[6][7]
 
 Sources:
 https://en.wikipedia.org/wiki/Challenger_Deep
 https://en.wikipedia.org/wiki/Jacques_Piccard
-https://en.wikipedia.org/wiki/Trieste_(bathyscaphe)",,,,
+https://en.wikipedia.org/wiki/Trieste_(bathyscaphe)",yes,yes,no,
 i021,"How do carbon pricing schemes like the EU Emissions Trading System work, and what effect have they had on emissions?","The EU Emissions Trading System operates as a cap‑and‑trade scheme that sets a declining limit on total emissions and distributes tradable allowances, each permitting the holder to emit one tonne of CO₂‑equivalent.[1] Regulated installations must surrender enough allowances to cover their verified emissions, creating a financial incentive to reduce pollution.[1] Between 2005 and 2025, greenhouse‑gas emissions in the sectors covered by the EU ETS fell by about 50%, while emissions in sectors not covered declined only around 20%.[1] Various studies estimate that the system has cut CO₂ emissions in covered sectors by roughly 7‑11.5% over different periods (e.g., 11.5% 2008‑2016, 7% in a 2024 estimate, 10% 2005‑2012).[1]
 
 Sources:
-https://en.wikipedia.org/wiki/European_Union_Emissions_Trading_System",,,,
+https://en.wikipedia.org/wiki/European_Union_Emissions_Trading_System",yes,yes,no,
 i022,What is the difference between type 1 and type 2 diabetes?,"Type 1 diabetes is an autoimmune disease that destroys pancreatic beta cells, causing an absolute insulin deficiency, while type 2 diabetes is a metabolic disorder marked by insulin resistance and a relative insulin deficiency [1][2]. Symptoms of type 1 typically appear rapidly over weeks to months, whereas type 2 symptoms develop slowly and may go unnoticed for years [1][2]. Type 1 requires lifelong insulin therapy for survival and has no known prevention, while type 2 is often managed initially with lifestyle changes and oral medications such as metformin, and can frequently be prevented through weight control and exercise [1][2]. Type 1 accounts for roughly 5–10% of diabetes cases, while type 2 makes up about 90% [1][2].
 
 Sources:
 https://en.wikipedia.org/wiki/Type_1_diabetes
-https://en.wikipedia.org/wiki/Type_2_diabetes",,,,
+https://en.wikipedia.org/wiki/Type_2_diabetes",yes,yes,no,
 i023,Why does the Moon always show the same face to Earth?,"Answer: The Moon always shows the same face to Earth because it is tidally locked, meaning its rotation period matches its orbital period due to gravitational tidal forces from Earth [2]. Tidal forces create bulges on the Moon that experience a torque, gradually slowing its rotation until it becomes synchronized with its orbit [9][14]. This synchronous rotation results in the same hemisphere continually facing Earth [14].
 
 Sources:
 https://en.wikipedia.org/wiki/Moon
 https://en.wikipedia.org/wiki/Tidal_force
-https://en.wikipedia.org/wiki/Tidal_locking",,,,
+https://en.wikipedia.org/wiki/Tidal_locking",yes,yes,no,
 i024,Why does the Moon always show the same face to Earth?,"The Moon always shows the same face to Earth because it is tidally locked, meaning its rotation period matches its orbital period (about 27.3 days) [2]. Earth’s gravity creates tidal bulges on the Moon; early on, the Moon rotated faster than it orbited, so these bulges were dragged ahead of the Earth–Moon line, and Earth’s gravitational torque gradually slowed the Moon’s rotation until it became synchronized with its orbit [9]. This tidal despinning dissipated rotational energy as heat, leaving the Moon in a stable synchronous rotation [9].
 
 Sources:
 https://en.wikipedia.org/wiki/Moon
-https://en.wikipedia.org/wiki/Tidal_locking",,,,
+https://en.wikipedia.org/wiki/Tidal_locking",yes,yes,no,
 i025,"What are the main scientific goals of the James Webb Space Telescope, and where in space does it operate?","Answer: The James Webb Space Telescope's main scientific goals are to conduct infrared astronomy to observe the first stars and formation of the first galaxies, characterize atmospheres of potentially habitable exoplanets, and study the universe's origins including the ""Dark Ages"" (150–800 million years after the Big Bang) [1][6]. It operates in a solar orbit near the Sun–Earth L2 Lagrange point, about 1.5 million kilometers (930,000 miles) from Earth [1].
 
 Sources:
 https://en.wikipedia.org/wiki/James_Webb_Space_Telescope
-https://en.wikipedia.org/wiki/NIRSpec",,,,
+https://en.wikipedia.org/wiki/NIRSpec",no,yes,no,"Error: gives the 'Dark Ages' as 150–800 million years after the Big Bang; they ran from ~380,000 years to the first stars (~150–200 Myr), and 150–800 Myr is mostly reionization (ESA). Wording copied from the cited NIRSpec page (side detail)."
 i026,"How was the Panama Canal built, and how do its locks work?","Answer: The Panama Canal was started by the French in 1881 and completed by the United States between 1904 and 1914, opening on August 15 1914 [1]. The United States chose a lock‑based design over a sea‑level canal because the terrain made locks the only feasible solution [1]. The lock system raises ships from sea level to Gatun Lake, which lies 26 meters (85 feet) above sea level, using gravity‑fed water from the lake [2]. Each passage uses three upward and three downward lock chambers, moving a ship roughly 85 feet vertically [3]. The original lock design comprised six steps—three to lift and three to lower—making it one of the largest engineering works of its time [3].
 
 Sources:
 https://en.wikipedia.org/wiki/History_of_the_Panama_Canal
 https://en.wikipedia.org/wiki/Panama_Canal
-https://en.wikipedia.org/wiki/Panama_Canal_locks",,,,
+https://en.wikipedia.org/wiki/Panama_Canal_locks",yes,yes,no,"Minor: 'the terrain made locks the only feasible solution' overstates; a 1906 engineering board voted 8-5 for a sea-level canal before Stevens, who had seen the Chagres in flood, won Roosevelt over to locks."
 i027,What evidence supports the theory of plate tectonics?,"The theory of plate tectonics is supported by the jigsaw fit of continents and matching fossil and rock sequences across now-separated landmasses (e.g., Pangaea) [3][6]. Seafloor spreading, evidenced by magnetic striping and geomagnetic reversal patterns in oceanic crust, confirms that new crust forms at mid-ocean ridges and plates move apart [1][4]. The concentration of earthquakes and volcanoes along plate boundaries (such as the Ring of Fire) and the correlation of plate motions with mantle convection provide further confirmation [1][5][11].
 
 Sources:
@@ -154,38 +154,38 @@ https://en.wikipedia.org/wiki/Supercontinent
 https://en.wikipedia.org/wiki/Geomagnetic_reversal
 https://en.wikipedia.org/wiki/Earth%27s_mantle
 https://en.wikipedia.org/wiki/Pangaea
-https://en.wikipedia.org/wiki/Ring_of_Fire",,,,
+https://en.wikipedia.org/wiki/Ring_of_Fire",yes,yes,yes,Unsupported: no cited page presents a correlation of plate motions with mantle convection as confirming the theory; they call the convection-plate link unsettled.
 i028,"How did the Impressionist movement begin, and what were its defining techniques?","The Impressionist movement began in 1870s Paris when a group of artists, rejected by the official Salon, organized independent exhibitions; the term “Impressionism” was coined in 1874 after a satirical review of Monet’s *Impression, Sunrise* [1]. Its defining techniques include painting outdoors (en plein air) to capture fleeting light, using short broken brushstrokes of pure colour for vibrant colour vibration, emphasizing light and atmosphere over detail, employing open compositions with unusual angles, and depicting ordinary contemporary subjects rather than historical themes [1].
 
 Sources:
-https://en.wikipedia.org/wiki/Impressionism",,,,
+https://en.wikipedia.org/wiki/Impressionism",yes,yes,no,"Minor: the term came from Leroy's satirical review of the 1874 exhibition, which punned on Monet's title, rather than from a review of the painting alone."
 i029,"What is quantitative easing, and how did central banks use it after the 2008 financial crisis?","Quantitative easing (QE) is a monetary policy where a central bank purchases predetermined amounts of government bonds, company shares, or other financial assets to stimulate the economy when interest rates are near zero [17]. After the 2008 financial crisis, central banks such as the U.S. Federal Reserve implemented large-scale QE programs—including multiple rounds known as QE1, QE2, and QE3—to lower long-term interest rates, support asset prices, and encourage lending [17][13][14]. The Bank of England’s Monetary Policy Committee also directed quantitative easing as part of its monetary policy framework [15].
 
 Sources:
 https://en.wikipedia.org/wiki/Quantitative_easing
 https://en.wikipedia.org/wiki/QE1
 https://en.wikipedia.org/wiki/QE3
-https://en.wikipedia.org/wiki/Monetary_Policy_Committee_(United_Kingdom)",,,,
+https://en.wikipedia.org/wiki/Monetary_Policy_Committee_(United_Kingdom)",yes,yes,no,
 i030,"Why does the Great Barrier Reef bleach, and what role does ocean temperature play?","Answer: Coral bleaching is the loss of symbiotic algae that makes corals appear white and increases their vulnerability [1]. The primary cause of bleaching on the Great Barrier Reef is rising ocean temperatures that stress this symbiosis [3]. Repeated heat stress can lead to widespread coral death and reef degradation [7].
 
 Sources:
 https://en.wikipedia.org/wiki/Coral_bleaching
 https://en.wikipedia.org/wiki/Great_Barrier_Reef
-https://en.wikipedia.org/wiki/Environmental_threats_to_the_Great_Barrier_Reef",,,,
+https://en.wikipedia.org/wiki/Environmental_threats_to_the_Great_Barrier_Reef",yes,yes,no,
 i031,"How was the Panama Canal built, and how do its locks work?","Answer: France began constructing a sea-level canal in 1881 but halted in 1889 due to engineering problems and high worker mortality [2]. The United States took over in 1904 after supporting Panama's independence and purchasing French assets, completing the canal in 1914 [1][2]. The canal operates using locks at each end that lift ships 26 meters to Gatun Lake—an artificial lake formed by damming the Chagres River and Lake Alajuela—and then lower them to the opposite ocean [2]. The original 33.5-meter-wide locks accommodate Panamax vessels, while a third wider lane built between 2007 and 2016 allows larger Neopanamax ships to transit, with each passage consuming approximately 200 million litres of fresh water [2].
 
 Sources:
 https://en.wikipedia.org/wiki/History_of_the_Panama_Canal
-https://en.wikipedia.org/wiki/Panama_Canal",,,,
+https://en.wikipedia.org/wiki/Panama_Canal",no,yes,no,"Error: says Gatun Lake was formed by damming the Chagres River and Lake Alajuela; Gatun Dam on the Chagres formed it in 1913, and Lake Alajuela is a separate upstream reservoir from 1935 (side detail; echoes the cited page's lead) / Minor: does not say how the chambers are filled and emptied."
 i032,"What is the Montreal Protocol, and how successful has it been at repairing the ozone layer?","Answer: The Montreal Protocol is an international treaty adopted in 1987 that phases out ozone‑depleting substances such as CFCs and includes phased‑out schedules, reporting requirements, and financial assistance for developing countries [1]. It has been ratified by 198 parties, making it the first universally ratified UN agreement and widely regarded as the most successful international environmental treaty [1]. Scientific assessments project that the ozone layer will return to 1980 levels around 2040 globally and by 2066 over Antarctica, and the Antarctic ozone hole has been steadily shrinking as a result of the Protocol [1].
 
 Sources:
-https://en.wikipedia.org/wiki/Montreal_Protocol",,,,
+https://en.wikipedia.org/wiki/Montreal_Protocol",yes,yes,no,Minor: 'steadily shrinking' overstates the page's 'slowly recovering'; hole size swings year to year (2003 second-largest per the page; 2023 one of the largest).
 i033,How does the Transformer architecture differ from recurrent neural networks for sequence modelling?,"Transformers use multi‑head self‑attention to relate each token to all others in a layer, while RNNs update a hidden state recurrently for each time step [6][7]. Because attention works on the entire sequence at once, Transformer computations can be parallelized across positions during training, whereas RNNs process tokens sequentially, limiting parallelism [6][7]. Transformers add explicit positional encodings to compensate for the permutation‑invariant nature of attention, while RNNs naturally encode token order through their recurrent connections [6][7]. This design alleviates the vanishing‑gradient problem that hinders learning long‑range dependencies in vanilla RNNs, allowing Transformers to capture distant relationships more effectively [7].
 
 Sources:
 https://en.wikipedia.org/wiki/Recurrent_neural_network
-https://en.wikipedia.org/wiki/Transformer_(deep_learning)",,,,
+https://en.wikipedia.org/wiki/Transformer_(deep_learning)",yes,yes,no,Minor: self-attention is strictly permutation-equivariant; 'permutation-invariant' follows the cited page's loose wording.
 i034,What is the difference between type 1 and type 2 diabetes?,"Type 1 diabetes is an autoimmune disease in which the immune system destroys insulin‑producing beta cells, causing an absolute lack of insulin. [1]  
 Type 2 diabetes is characterized by insulin resistance and a relative deficiency of insulin, strongly associated with obesity and physical inactivity. [2]  
 Symptoms of type 1 typically emerge abruptly over weeks to months, whereas type 2 symptoms develop gradually and may go unnoticed for years. [1][2]  
@@ -194,65 +194,65 @@ Epidemiologically, type 1 accounts for about 5–10% of all diabetes cases, wher
 
 Sources:
 https://en.wikipedia.org/wiki/Type_1_diabetes
-https://en.wikipedia.org/wiki/Type_2_diabetes",,,,
+https://en.wikipedia.org/wiki/Type_2_diabetes",yes,yes,no,
 i035,"What do we know about the atmosphere of Venus, and why is its surface so hot?","Venus's atmosphere is extremely dense, composed of about 96.5% carbon dioxide and 3.5% nitrogen, with a surface pressure ~93 bar and temperature ~740 K (467 °C) [2]. This thick CO₂ atmosphere traps infrared radiation via a strong greenhouse effect, preventing heat loss to space [1]. The greenhouse effect on Venus ran away, evaporating any ancient oceans and creating a self‑reinforcing cycle that keeps the surface scorching hot [6]. As a result, Venus is the hottest planet in the Solar System, with surface temperatures far exceeding those of Mercury despite its greater distance from the Sun [7].
 
 Sources:
 https://en.wikipedia.org/wiki/Atmosphere_of_Venus
 https://en.wikipedia.org/wiki/Greenhouse_effect
 https://en.wikipedia.org/wiki/Runaway_greenhouse_effect
-https://en.wikipedia.org/wiki/Venus",,,,
+https://en.wikipedia.org/wiki/Venus",yes,yes,no,Minor: 'far exceeding' Mercury overstates it: Mercury's dayside peaks near 700 K vs Venus's ~737 K (its average is far lower); the pages just say 'hotter'.
 i036,"What was the Magna Carta, and why is it still considered important?","Answer: The Magna Carta was a 1215 royal charter sealed by King John that limited monarchical power and guaranteed baronial rights such as protection from illegal imprisonment and swift justice [1][2]. It established the principle that the king was subject to the law, forming an early foundation for the rule of law [3]. Later legal doctrines, including habeas corpus, drew on its clauses, giving it lasting significance as a symbol of constitutional constraint [5]. Today it is viewed as a cornerstone of modern constitutionalism and individual liberty [1][3].
 
 Sources:
 https://en.wikipedia.org/wiki/Magna_Carta
 https://en.wikipedia.org/wiki/John,_King_of_England
 https://en.wikipedia.org/wiki/Rule_of_law
-https://en.wikipedia.org/wiki/Habeas_corpus",,,,
+https://en.wikipedia.org/wiki/Habeas_corpus",yes,yes,no,Minor: the cited Habeas corpus page says habeas corpus predates Magna Carta; 'drew on its clauses' is still defensible (Selden argued in 1627 that habeas corpus was backed by Magna Carta).
 i037,What do modern historians consider the main causes of the fall of the Western Roman Empire?,"Answer: Modern historians generally view the fall of the Western Roman Empire as the result of a combination of interrelated internal and external factors rather than a single cause [1]. Internal factors include political instability, economic decline, military weakness, and administrative inefficiency, while external factors involve sustained pressure from invading Germanic peoples and the Huns [2]. Recent scholarship also highlights the roles of climate change, epidemic diseases, and environmental degradation in exacerbating these pressures [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Historiography_of_the_fall_of_the_Western_Roman_Empire
-https://en.wikipedia.org/wiki/Fall_of_the_Western_Roman_Empire",,,,
+https://en.wikipedia.org/wiki/Fall_of_the_Western_Roman_Empire",yes,yes,no,
 i038,"What is purchasing power parity, and how is it used to compare living standards across countries?","Purchasing power parity (PPP) is a measure of the price of specific goods in different countries and is used to compare the absolute purchasing power of the countries' currencies.  
 It is calculated as the ratio of the price of a market basket at one location to the price of the basket at another, and can be used to compare economies regarding their GDP, labour productivity and actual individual consumption.  
 PPP rates are also employed to measure differences in the cost of living between locations, enabling comparisons of living standards across countries.  
 
 Sources:
 https://en.wikipedia.org/wiki/Purchasing_power_parity
-https://en.wikipedia.org/wiki/Cost_of_living",,,,
+https://en.wikipedia.org/wiki/Cost_of_living",yes,yes,no,"Minor: the living-standards part is brief (cost-of-living differences, GDP/consumption comparisons) and does not mention GDP per capita at PPP."
 i039,"What is the origin of the Olympic Games, and when were the modern Games revived?","Answer: The ancient Olympic Games originated in Olympia, Greece, traditionally dated to 776 BC as a religious festival honoring Zeus [1]. The modern Olympic Games were revived through the efforts of Baron Pierre de Coubertin, who founded the International Olympic Committee in 1894 [6]. The first modern Games were held in Athens in 1896 [7].
 
 Sources:
 https://en.wikipedia.org/wiki/Ancient_Olympic_Games
 https://en.wikipedia.org/wiki/Olympic_Games
-https://en.wikipedia.org/wiki/1896_Summer_Olympics",,,,
+https://en.wikipedia.org/wiki/1896_Summer_Olympics",yes,yes,no,
 i040,"How do carbon pricing schemes like the EU Emissions Trading System work, and what effect have they had on emissions?","Answer: Carbon pricing schemes such as the EU Emissions Trading System (EU ETS) set a cap on total CO₂ emissions and issue tradable allowances equal to one tonne of CO₂, which firms must purchase to cover their emissions [2]. The ETS operates on a cap‑and‑trade model where the emissions cap declines each year, creating a market price for allowances that drives emission reductions; studies show covered sectors cut GHG emissions by about 50% from 2005‑2025 and a 2024 analysis estimates the ETS contributed roughly a 7% reduction in overall EU emissions [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Carbon_emission_trading
-https://en.wikipedia.org/wiki/European_Union_Emissions_Trading_System",,,,
+https://en.wikipedia.org/wiki/European_Union_Emissions_Trading_System",no,yes,yes,"Error: says a 2024 analysis found a ~7% cut in overall EU emissions; the 7.3% is for ETS-covered emissions, not total EU emissions (the ETS covers ~40%). / Unsupported: the page gives no 'overall EU' base for the 7%. / Minor: says firms must purchase allowances; many are free."
 i041,"What is purchasing power parity, and how is it used to compare living standards across countries?","Answer: Purchasing power parity (PPP) is an economic measure that compares the price of a standardized basket of goods and services across countries, expressing the ratio of costs to equalize the purchasing power of different currencies [1]. By adjusting for differences in price levels, PPP allows more accurate cross-country comparisons of living standards through metrics such as GDP per capita, labour productivity, and actual individual consumption, reflecting the real volume of goods and services people can afford [1].
 
 Sources:
-https://en.wikipedia.org/wiki/Purchasing_power_parity",,,,
+https://en.wikipedia.org/wiki/Purchasing_power_parity",yes,yes,no,Minor: treats labour productivity as a living-standards metric; the PPP page lists it only as something PPP can be used to compare.
 i042,"What is the difference between HTTP/2 and HTTP/3, and why did HTTP/3 move to QUIC?","Answer: HTTP/2 is a backward‑compatible revision that multiplexes multiple streams over a single TCP connection and adds header compression, server push, and request prioritization [11]. HTTP/3 keeps the same high‑level semantics but moves the transport layer to QUIC, a UDP‑based protocol that provides multiplexed connections, reduced handshake latency, and per‑stream loss recovery [9]. By using QUIC, HTTP/3 eliminates head‑of‑line blocking that can affect HTTP/2 when TCP packets are lost and allows faster connection establishment [9][12].
 
 Sources:
 https://en.wikipedia.org/wiki/HTTP/2
 https://en.wikipedia.org/wiki/QUIC
-https://en.wikipedia.org/wiki/Transmission_Control_Protocol",,,,
+https://en.wikipedia.org/wiki/Transmission_Control_Protocol",yes,yes,no,
 i043,"What caused the 1997 Asian financial crisis, and how did it spread between countries?","The crisis began in Thailand in July 1997 when the government could no longer defend the baht’s peg to the U.S. dollar and was forced to float the currency, sparking massive capital flight [1]. The shock spread to neighboring economies through financial contagion—investors pulled funds from countries with similarly high foreign‑debt ratios and fragile banking systems, causing currency devaluations, stock‑market collapses and a sharp rise in private debt across Southeast Asia and into South Korea and Japan [1][9]. Interconnected financial markets and a shared perception of vulnerability turned the initial Thai crisis into a regional panic that fed on itself [1].
 
 Sources:
 https://en.wikipedia.org/wiki/1997_Asian_financial_crisis
-https://en.wikipedia.org/wiki/Financial_contagion",,,,
+https://en.wikipedia.org/wiki/Financial_contagion",yes,yes,no,"Minor: causes given mainly as the trigger (peg could not be defended) plus a passing mention of high foreign debt and fragile banks; groups Japan with hit economies, though the page says it was less affected."
 i044,What evidence supports the theory of plate tectonics?,"Answer: Plate tectonics describes Earth's lithosphere as a set of rigid plates that move relative to each other, producing earthquakes, volcanic activity, and mountain building at their boundaries [1]. The theory gained acceptance in the 1960s after seafloor spreading was confirmed, which provided a basis for the mantle convection model of plate motion [2][4]. The breakup of the supercontinent Pangaea illustrates how large landmasses can fragment and move, consistent with plate tectonic processes [6].
 
 Sources:
 https://en.wikipedia.org/wiki/Plate_tectonics
 https://en.wikipedia.org/wiki/Plate_Tectonics_Revolution
-https://en.wikipedia.org/wiki/Tecton",,,,
+https://en.wikipedia.org/wiki/Tecton",yes,yes,no,"Minor: thin on evidence: mostly describes the theory; names only the 1960s confirmation of seafloor spreading, with Pangaea's break-up as an illustration. Tecton source is irrelevant."
 i045,"How does seawater desalination work, and what are its main environmental drawbacks?","Seawater desalination produces fresh water mainly by thermal distillation or membrane‑based reverse osmosis, which applies pressure to overcome osmotic pressure and forces water through a semi‑permeable membrane while retaining salts. [1][2]  
 Reverse osmosis is the dominant modern method, using pretreatment, high‑pressure pumping through membranes, and post‑treatment to yield potable water. [1]  
 The process generates a concentrated brine by‑product that is usually discharged back to the ocean, raising local salinity and potentially harming marine ecosystems. [2]  
@@ -260,38 +260,38 @@ Desalination is energy‑intensive, accounting for about 25 % of the water s
 
 Sources:
 https://en.wikipedia.org/wiki/Reverse_osmosis
-https://en.wikipedia.org/wiki/Desalination",,,,
+https://en.wikipedia.org/wiki/Desalination",yes,yes,no,
 i046,How does the Transformer architecture differ from recurrent neural networks for sequence modelling?,"Transformers process all tokens in a sequence simultaneously using self‑attention mechanisms, enabling parallel computation during training, whereas RNNs process tokens sequentially with recurrent connections that maintain a hidden state [9][14]. This parallelism makes transformers faster to train and better at capturing long‑range dependencies, as they avoid the vanishing‑gradient problem that limits RNNs [9][14]. Transformers also inject positional information via encodings, while RNNs inherently model order through recurrence [9].
 
 Sources:
 https://en.wikipedia.org/wiki/Transformer_(deep_learning)
-https://en.wikipedia.org/wiki/Recurrent_neural_network",,,,
+https://en.wikipedia.org/wiki/Recurrent_neural_network",yes,yes,no,"Minor: credits 'this parallelism' for the long-range advantage; that comes from direct attention links with no recurrence, which is also what allows parallelism."
 i047,"How does seawater desalination work, and what are its main environmental drawbacks?","Answer: Seawater desalination converts salt water to fresh water primarily through thermal distillation or membrane-based reverse osmosis, which uses pressure to push water through a semi-permeable membrane [1,3]. The main environmental drawbacks are high energy consumption—desalination accounted for about 25% of the water sector's energy use in 2016—and the production of brine as a concentrated waste by-product [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Desalination
-https://en.wikipedia.org/wiki/Reverse_osmosis",,,,
+https://en.wikipedia.org/wiki/Reverse_osmosis",yes,yes,no,Minor: brief; names energy use and brine as drawbacks without saying how they harm the environment.
 i048,"What causes the aurora borealis, and why is it mostly seen near the poles?","The aurora borealis is caused by charged particles from the Sun—mainly electrons and protons—that are disturbed by enhanced solar wind (from coronal holes or coronal mass ejections) and guided by Earth’s magnetosphere into the upper atmosphere, where they collide with and excite oxygen and nitrogen atoms, producing colorful light emissions [1]. It is mostly seen near the poles because the magnetosphere channels these particles into oval‑shaped bands (auroral ovals) around the magnetic poles, so the precipitation and resulting light occur predominantly at high latitudes [1].
 
 Sources:
-https://en.wikipedia.org/wiki/Aurora",,,,
+https://en.wikipedia.org/wiki/Aurora",yes,yes,no,"Minor: calls the particles 'from the Sun'; Aurora page and NOAA note auroral electrons are magnetospheric, energised by the solar wind (standard simplification)."
 i049,"How was the Panama Canal built, and how do its locks work?","The Panama Canal was initially attempted by a French company led by Ferdinand de Lesseps in the 1880s, but the effort collapsed due to disease and financial problems【1】. The United States took over the project in 1904, completed the 82‑km lock canal in 1914 after excavating the Culebra Cut, controlling malaria and yellow fever, and creating Gatun Lake by damming the Chagres River【1】. The canal’s lock system raises ships 26 m to Gatun Lake by filling lock chambers with water from the lake and lowers them by emptying the chambers, using miter gates to seal each chamber【2】. The 2016 expansion added a third set of locks that operate on the same gravity‑fed water‑flow principle, allowing larger New Panamax vessels to transit【3】.
 
 Sources:
 https://en.wikipedia.org/wiki/History_of_the_Panama_Canal
 https://en.wikipedia.org/wiki/Panama_Canal
-https://en.wikipedia.org/wiki/Panama_Canal_expansion_project",,,,
+https://en.wikipedia.org/wiki/Panama_Canal_expansion_project",yes,yes,no,
 i050,"How do vaccines create herd immunity, and what coverage is needed for measles?","Vaccines stimulate the immune system to produce active acquired immunity against specific pathogens [10]. When a sufficient proportion of individuals become immune, the pathogen’s ability to transmit is diminished, creating herd immunity that protects those who lack immunity [1]. Because measles is extremely transmissible, herd immunity requires vaccinating over 95% of the community [6].
 
 Sources:
 https://en.wikipedia.org/wiki/Vaccine
 https://en.wikipedia.org/wiki/Herd_immunity
-https://en.wikipedia.org/wiki/Measles",,,,
+https://en.wikipedia.org/wiki/Measles",yes,yes,no,
 i051,"Which river is the longest in the world, and why is the ranking disputed?","Answer: The Nile is traditionally regarded as the longest river, with a length of about 7,088 km [7]. However, measurements of the Amazon vary from 6,400 km to as much as 7,062 km, leading some studies to claim it is longer [1]. The disagreement stems from differing definitions of the river’s true source and the methods used to measure length [1]. Consequently, the ranking remains unsettled.
 
 Sources:
 https://en.wikipedia.org/wiki/Amazon_River
-https://en.wikipedia.org/wiki/Nile",,,,
+https://en.wikipedia.org/wiki/Nile",yes,yes,no,
 i052,"What is known about the causes of Alzheimer's disease, and why have amyloid-targeting drugs had mixed results?","Answer: Alzheimer's disease is a neurodegenerative disorder characterized by accumulation of misfolded amyloid‑beta peptides that form plaques in the brain, a process linked to genetic risk factors such as the APOE ε4 allele [1][4][5]. It also involves neurofibrillary tangles and progressive loss of neuronal function, leading to dementia symptoms [1]. Amyloid‑targeting therapies, including monoclonal antibodies like lecanemab, aim to clear these plaques but have shown only modest or no clinically significant efficacy in trials [7]. Lecanemab’s side‑effect profile includes amyloid‑related imaging abnormalities, which may limit its use despite the intended mechanism [7]. In contrast, aducanumab was approved based on controversial evidence without clear demonstration of clinical benefit, illustrating the mixed outcomes of amyloid‑targeting drugs [8].
 
 Sources:
@@ -299,15 +299,15 @@ https://en.wikipedia.org/wiki/Alzheimer%27s_disease
 https://en.wikipedia.org/wiki/Biochemistry_of_Alzheimer%27s_disease
 https://en.wikipedia.org/wiki/Apolipoprotein_E
 https://en.wikipedia.org/wiki/Lecanemab
-https://en.wikipedia.org/wiki/Aducanumab",,,,
+https://en.wikipedia.org/wiki/Aducanumab",yes,yes,no,
 i053,"What is quantitative easing, and how did central banks use it after the 2008 financial crisis?","The supplied evidence does not contain a definition of quantitative easing nor any description of how central banks employed it after the 2008 financial crisis (e.g., the Federal Reserve’s QE1‑QE3, the ECB’s expanded asset purchases, or the Bank of England’s QE programme). Without that information, the question cannot be answered based on the provided sources.
 
-Sources:",,,,
+Sources:",no,no,no,"Error: gives no answer; it says its sources lack the information. / Missing: no definition of QE and no account of its use after 2008. / Lists no sources; QE1-QE3, the ECB and the Bank of England appear only as examples of what is missing, so not counted as unsupported."
 i054,"What is the origin of the Olympic Games, and when were the modern Games revived?","Answer: The ancient Olympic Games originated in Olympia, Greece, with the first recorded competition dated to 776 BC and held in honor of Zeus [2]. The modern Olympic Games were revived by Pierre de Coubertin and first took place in Athens in 1896 [5].
 
 Sources:
 https://en.wikipedia.org/wiki/Ancient_Olympic_Games
-https://en.wikipedia.org/wiki/1896_Summer_Olympics",,,,
+https://en.wikipedia.org/wiki/1896_Summer_Olympics",yes,yes,no,
 i055,"What was the Bauhaus, and how did it influence modern design?","Answer: The Bauhaus (Staatliches Bauhaus) was a German art school operating from 1919 to 1933 that unified crafts, fine arts, and technology under the concept of Gesamtkunstwerk, emphasizing functional design and mass production [1]. Its influence on modern design is profound: it shaped the International Style of architecture with functional, unornamented buildings using glass, steel, and concrete [3]; its typographic clarity and grid layouts underpinned the Swiss Style of graphic design [6]; and its principles spread globally through figures like Arieh Sharon, who brought the International Style to Tel Aviv's ""White City"" [15]. The Bauhaus also pioneered industrial and product design for mass production, affecting modern furniture and industrial design [9].
 
 Sources:
@@ -315,39 +315,39 @@ https://en.wikipedia.org/wiki/Bauhaus
 https://en.wikipedia.org/wiki/International_Style
 https://en.wikipedia.org/wiki/Swiss_Style_(design)
 https://en.wikipedia.org/wiki/Arieh_Sharon
-https://en.wikipedia.org/wiki/Modern_furniture",,,,
+https://en.wikipedia.org/wiki/Modern_furniture",yes,yes,yes,"Unsupported: no cited page credits the Bauhaus with grid layouts (the Swiss Style page traces the grid to the International Typographic Style). / Minor: ""pioneered"" industrial design is strong; the Bauhaus page notes Behrens and the Werkbund came first."
 i056,"What caused the 1997 Asian financial crisis, and how did it spread between countries?","The 1997 Asian financial crisis began in Thailand when the government was forced to float the baht after exhausting foreign reserves supporting its peg to the U.S. dollar, triggering capital flight【1†L1-L10】. Underlying causes included unsustainable currency pegs, liberalized capital accounts that attracted short‑term “hot money,” weak financial systems with poor corporate governance, and rising foreign‑debt‑to‑GDP ratios【1†L10-L30】. The crisis spread via financial contagion, as market disturbances moved across borders through co‑movements in exchange rates, stock prices and capital flows【6†L1-L5】, and through trade links and competitive devaluations that transmitted pressure to neighboring economies【1†L15-L20】.
 
 Sources:
 https://en.wikipedia.org/wiki/1997_Asian_financial_crisis
-https://en.wikipedia.org/wiki/Financial_contagion",,,,
+https://en.wikipedia.org/wiki/Financial_contagion",yes,yes,no,"Minor: calls co-movements in exchange rates, stock prices and capital flows the route of spread; the contagion page says contagion is observed through them."
 i057,"What causes the aurora borealis, and why is it mostly seen near the poles?","The aurora borealis is produced when charged particles from the solar wind collide with oxygen and nitrogen atoms in Earth’s upper atmosphere, exciting them and causing them to emit light [1]. These particles are guided by Earth’s magnetosphere toward the magnetic poles, where they precipitate into the thermosphere/exosphere, creating luminous displays that occur in bands around both polar regions [1]. Consequently, auroras are most frequently observed at high latitudes.
 
 Sources:
-https://en.wikipedia.org/wiki/Aurora",,,,
+https://en.wikipedia.org/wiki/Aurora",yes,yes,no,"Minor: 'particles from the solar wind' is a standard simplification; Aurora page and NOAA note auroral electrons are magnetospheric, energised by the solar wind."
 i058,"What caused the 1997 Asian financial crisis, and how did it spread between countries?","Answer: The crisis began in Thailand in July 1997 when the government floated the baht, triggering massive capital flight and a sharp devaluation that exposed large foreign‑currency debts [1]. Rapid expansion of short‑term “hot money” and current‑account deficits had pushed foreign debt‑to‑GDP ratios in the major ASEAN economies from about 100 % to over 180 % before the crisis [1]. In Thailand and South Korea the debt‑service‑to‑exports ratio rose, making debt repayment unsustainable and prompting further sell‑offs [1]. The resulting exchange‑rate depreciation and rising sovereign spreads transmitted the shock to neighboring economies such as Indonesia, Malaysia, the Philippines and Hong Kong through currency contagion and co‑movement of asset prices [5]. International rescue packages were provided, but the crisis still produced sharp recessions and political upheaval in the most affected countries [1].
 
 Sources:
 https://en.wikipedia.org/wiki/1997_Asian_financial_crisis
-https://en.wikipedia.org/wiki/Financial_contagion",,,,
+https://en.wikipedia.org/wiki/Financial_contagion",no,yes,yes,"Error: puts ASEAN foreign debt-to-GDP above 180% before the crisis; the page says 167% by 1996, passing 180% only during the crisis (side detail). / Unsupported: rising debt-service ratios made repayment unsustainable and prompted sell-offs."
 i059,"How do vaccines create herd immunity, and what coverage is needed for measles?","Answer: Vaccines create herd immunity by stimulating adaptive immunity in a large portion of the population, which reduces the spread of contagious pathogens and indirectly protects those who cannot be vaccinated [2][6]. For measles, which is highly contagious, more than 95% of the community must be vaccinated to achieve herd immunity [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Measles
 https://en.wikipedia.org/wiki/Herd_immunity
-https://en.wikipedia.org/wiki/Vaccination",,,,
+https://en.wikipedia.org/wiki/Vaccination",yes,yes,no,
 i060,Compare CRISPR-Cas9 with earlier gene-editing methods such as zinc-finger nucleases and TALENs. What made CRISPR take over?,"Answer: CRISPR-Cas9 uses a synthetic guide RNA to target DNA, making it simpler and more cost-effective than ZFNs and TALENs, which require complex protein engineering for each target [6,7,8]. ZFNs suffer from context-dependent specificity that complicates their assembly [8], while TALENs also need custom protein construction [7]. CRISPR's RNA-guided system enables efficient, precise, and versatile in vivo genome editing, leading to its rapid adoption [6].
 
 Sources:
 https://en.wikipedia.org/wiki/CRISPR_gene_editing
 https://en.wikipedia.org/wiki/Transcription_activator-like_effector_nuclease
-https://en.wikipedia.org/wiki/Zinc-finger_nuclease",,,,
+https://en.wikipedia.org/wiki/Zinc-finger_nuclease",yes,yes,no,
 i061,"What are the main scientific goals of the James Webb Space Telescope, and where in space does it operate?","The James Webb Space Telescope’s primary scientific goals are to observe the first stars and galaxies forming in the early universe, study the formation and evolution of galaxies, and characterize the atmospheres of potentially habitable exoplanets [1][6]. It operates in a halo orbit around the Sun–Earth L2 Lagrange point, approximately 1.5 million kilometers (930,000 mi) from Earth [1][2].
 
 Sources:
 https://en.wikipedia.org/wiki/James_Webb_Space_Telescope
 https://en.wikipedia.org/wiki/Timeline_of_the_James_Webb_Space_Telescope
-https://en.wikipedia.org/wiki/NIRSpec",,,,
+https://en.wikipedia.org/wiki/NIRSpec",yes,yes,no,
 i062,How does public-key cryptography let two parties communicate securely without sharing a secret in advance?,"[14] RSA cryptosystem
 URL: https://en.wikipedia.org/wiki/RSA_cryptosystem
 The RSA (Rivest–Shamir–Adleman) cryptosystem is a family of public-key cryptosystems (one of the oldest), widely used for secure data transmission. The initialism ""RSA"" comes from the last-names of Ron Rivest, Adi Shamir and Leonard Adleman, who publicly described the algorithm in 1977. An equivalent system was developed secretly in 1973 at Government Communications Headquarters (GCHQ), the British signals intelligence agency, by the English mathematician Clifford Cocks. That system was declassified in 1997. RSA is used in digital signature such as RSASSA-PSS or RSA-FDH, public-key encryption 
@@ -410,49 +410,49 @@ Let's compile.</think>Public-key cryptography uses asymmetric key pairs: each pa
 Sources:
 https://en.wikipedia.org/wiki/RSA_cryptosystem
 https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange
-https://en.wikipedia.org/wiki/Public_key_infrastructure",,,,
+https://en.wikipedia.org/wiki/Public_key_infrastructure",yes,yes,no,Answer includes leaked working notes before the final answer.
 i063,"How do vaccines create herd immunity, and what coverage is needed for measles?","Answer: Vaccines confer immunity to individuals, and when enough people are immune the spread of disease is interrupted, providing indirect protection to those who cannot be vaccinated—this community protection is herd immunity [1]. For measles, public‑health models indicate that roughly 95 % of the population must be immune to stop sustained transmission [6].
 
 Sources:
 https://en.wikipedia.org/wiki/Herd_immunity
-https://en.wikipedia.org/wiki/Measles",,,,
+https://en.wikipedia.org/wiki/Measles",yes,yes,no,Minor: gives ~95% as the share that must be immune rather than vaccinated; consistent with the pages' figures (HIT 92-94% to >95%).
 i064,"What was the Magna Carta, and why is it still considered important?","The Magna Carta was a royal charter sealed by King John of England in 1215 that guaranteed church rights, protection from illegal imprisonment, access to swift and impartial justice, and limits on feudal payments to the Crown [1]. It is still considered important because it established the enduring principle that even the monarch is subject to the law, laying groundwork for the rule of law [3]. Its ideas influenced later constitutional milestones such as the English Bill of Rights 1689 and continue to shape modern conceptions of liberty and governance [12].
 
 Sources:
 https://en.wikipedia.org/wiki/Magna_Carta
 https://en.wikipedia.org/wiki/Rule_of_law
-https://en.wikipedia.org/wiki/Bill_of_Rights_1689",,,,
+https://en.wikipedia.org/wiki/Bill_of_Rights_1689",yes,yes,no,
 i065,"What is known about the causes of Alzheimer's disease, and why have amyloid-targeting drugs had mixed results?","The causes of Alzheimer's disease remain poorly understood, involving genetic risk factors such as the APOE ε4 allele, familial mutations, and environmental factors like head injury, depression, and hypertension, which lead to the accumulation of amyloid plaques and neurofibrillary tangles that damage neurons.[2] Amyloid beta peptides form the core of these plaques and generate toxic oligomers that disrupt neuronal function.[6] Anti‑amyloid therapies such as aducanumab reduce plaque burden but have produced inconsistent cognitive benefits, resulting in regulatory controversy over their clinical efficacy.[13]
 
 Sources:
 https://en.wikipedia.org/wiki/Alzheimer%27s_disease
 https://en.wikipedia.org/wiki/Amyloid_beta
-https://en.wikipedia.org/wiki/Aducanumab",,,,
+https://en.wikipedia.org/wiki/Aducanumab",yes,yes,yes,"Unsupported: says head injury, depression and hypertension lead to plaque and tangle build-up; the pages list them only as risk factors."
 i066,Compare CRISPR-Cas9 with earlier gene-editing methods such as zinc-finger nucleases and TALENs. What made CRISPR take over?,"CRISPR-Cas9 directs the Cas9 nuclease to a DNA sequence via a programmable guide RNA, enabling quick and inexpensive retargeting for any genomic site [1]. In contrast, TALENs must be assembled as custom proteins whose DNA‑binding domains are re‑engineered for each target, a process that is more time‑consuming and expensive [11]. Zinc‑finger nucleases share this protein‑engineering drawback, though the supplied sources do not elaborate on them. Because CRISPR’s RNA‑based targeting is simpler, cheaper, and more efficient, it rapidly displaced ZFNs and TALENs as the preferred gene‑editing tool.
 
 Sources:
 https://en.wikipedia.org/wiki/CRISPR_gene_editing
-https://en.wikipedia.org/wiki/Transcription_activator-like_effector_nuclease",,,,
+https://en.wikipedia.org/wiki/Transcription_activator-like_effector_nuclease",yes,yes,no,"Minor: 'retargeting for any genomic site' overstates, as Cas9 needs a PAM next to the target (the CRISPR page calls this not too limiting); the ZFN comparison is brief."
 i067,"What is the Montreal Protocol, and how successful has it been at repairing the ozone layer?","Answer: The Montreal Protocol is an international treaty adopted in 1987 to phase out ozone-depleting substances such as chlorofluorocarbons (CFCs) [1]. It has been ratified by 198 parties, making it the first universally ratified treaty in United Nations history [1]. As a result of the Protocol, atmospheric levels of ozone-depleting substances have declined, ozone levels stabilized by the mid-1990s and began to recover in the 2000s [6]. The Antarctic ozone hole has been shrinking, with NASA reporting the smallest hole on record in 2019 [6], and projections indicate the ozone layer could return to 1980 levels around 2075 [6]. The Protocol is widely regarded as the most successful international environmental agreement to date [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Montreal_Protocol
-https://en.wikipedia.org/wiki/Ozone_depletion",,,,
+https://en.wikipedia.org/wiki/Ozone_depletion",no,yes,no,"Error: says projections put the ozone layer's return to 1980 levels around 2075; that was an older projection for the Antarctic hole. Current UN assessment on both cited pages: ~2040 most of world, 2045 Arctic, 2066 Antarctica (side detail)."
 i068,"Which river is the longest in the world, and why is the ranking disputed?","The Nile is widely recognized as the world’s longest river at about 7,088 km [6]. The Amazon River is sometimes argued to be longer, with length estimates ranging from 6,575 to 7,062 km depending on which headwater is considered the true source [1]. The dispute arises because river length measurements depend on defining the exact source and mouth, and different studies have identified different headwaters for the Amazon (e.g., Apurímac vs. Mantaro) and for the Nile [1,6]. There is also disagreement over which tributary constitutes the main stem, particularly for the Amazon where Brazilians treat the Solimões separately [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Amazon_River
-https://en.wikipedia.org/wiki/Nile",,,,
+https://en.wikipedia.org/wiki/Nile",yes,yes,yes,"Unsupported: ties the 6,575-7,062 km range to which headwater is taken as the source; the cited pages do not / Minor: that spread comes mainly from the mouth definition and measuring method, and the Brazilian 'Solimoes' naming does not change measured length."
 i069,How does the Transformer architecture differ from recurrent neural networks for sequence modelling?,"Answer: The Transformer architecture uses multi-head self-attention to relate all tokens in a sequence simultaneously, whereas recurrent neural networks (RNNs) process tokens sequentially through a recurrent hidden state [4][5]. This allows Transformers to parallelize computation across sequence positions during training, while RNNs are inherently sequential [4]. Transformers also capture long-range dependencies more effectively because self-attention provides direct connections between any two positions, whereas RNNs can suffer from vanishing gradients over long sequences [5].
 
 Sources:
 https://en.wikipedia.org/wiki/Transformer_(deep_learning)
-https://en.wikipedia.org/wiki/Recurrent_neural_network",,,,
+https://en.wikipedia.org/wiki/Recurrent_neural_network",yes,yes,no,
 i070,How does public-key cryptography let two parties communicate securely without sharing a secret in advance?,"In public-key cryptography each party creates a key pair consisting of a public key that can be openly shared and a private key that must remain secret [1]. A sender encrypts a message with the recipient’s public key, and only the recipient’s corresponding private key can decrypt it, eliminating the need for any pre‑shared secret [1]. Alternatively, the Diffie–Hellman key exchange allows two parties to jointly compute a shared secret over an insecure channel without having exchanged any keys beforehand [2]. This shared secret can then be used with a symmetric cipher to secure their subsequent communication [2].
 
 Sources:
 https://en.wikipedia.org/wiki/Public-key_cryptography
-https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange",,,,
+https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange",yes,yes,no,
 i071,What evidence supports the theory of plate tectonics?,"The validation of seafloor spreading in the mid‑ to late 1960s provided a key mechanism that led to the acceptance of plate tectonics. [1] Symmetric patterns of magnetic striping recorded by geomagnetic reversals on the ocean floor allow reconstruction of past plate motions. [2][3] The fit of continents, fossil and geological matches (continental drift) and the formation of features such as the Isthmus of Panama (~3 Ma) show that plates have moved and collided over time. [4][6] Age progression of marine sediments and volcanic rock—youngest at mid‑ocean ridges and older with distance—further confirms continuous creation and destruction of crust. [8]
 
 Sources:
@@ -461,56 +461,56 @@ https://en.wikipedia.org/wiki/Geomagnetic_reversal
 https://en.wikipedia.org/wiki/Plate_reconstruction
 https://en.wikipedia.org/wiki/Continental_drift
 https://en.wikipedia.org/wiki/Isthmus_of_Panama
-https://en.wikipedia.org/wiki/Marine_sediment",,,,
+https://en.wikipedia.org/wiki/Marine_sediment",yes,yes,no,
 i072,"What causes the aurora borealis, and why is it mostly seen near the poles?","Answer: The aurora borealis is caused by solar‑wind electrons and protons that are accelerated into the upper atmosphere and excite oxygen and nitrogen, producing visible light [1]. These particles follow geomagnetic field lines that funnel them toward the polar regions, concentrating the emission into an auroral oval near the poles [4]. The geometry of Earth’s magnetic field and the long periods of darkness at high latitudes make the lights most frequently visible near the poles [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Aurora
-https://en.wikipedia.org/wiki/Birkeland_current",,,,
+https://en.wikipedia.org/wiki/Birkeland_current",no,yes,yes,Error: cites long polar darkness as a reason auroras are mostly seen near the poles; it's the auroral oval (high latitudes also have months of summer daylight) (side detail) / Unsupported: darkness claim not in cited pages / Minor: 'solar-wind electrons' simplifies
 i073,"Why does the Great Barrier Reef bleach, and what role does ocean temperature play?","Coral bleaching occurs when stressors such as elevated water temperatures cause corals to expel their symbiotic zooxanthellae, losing pigment and vital nutrients. [1]  
 The primary driver of bleaching events on the Great Barrier Reef is rising ocean temperatures linked to climate change. [1]  
 When ocean temperatures exceed corals’ thermal tolerance, the symbiosis breaks down, leading to widespread bleaching and mortality. [1]  
 
 Sources:
-https://en.wikipedia.org/wiki/Coral_bleaching",,,,
+https://en.wikipedia.org/wiki/Coral_bleaching",yes,yes,no,
 i074,"What is quantitative easing, and how did central banks use it after the 2008 financial crisis?","Answer: Quantitative easing (QE) is a monetary policy where a central bank purchases predetermined amounts of government bonds and other financial assets to stimulate economic activity, typically when interest rates are near zero [14]. After the 2008 financial crisis, the Federal Reserve implemented QE starting with QE1, the first round of large-scale asset purchases [10][14]. The European Central Bank also employed unconventional measures including asset purchases during the subsequent eurozone crisis [15]. These actions aimed to mitigate recession and prevent deflation by increasing money supply and lowering yields [14].
 
 Sources:
 https://en.wikipedia.org/wiki/Quantitative_easing
 https://en.wikipedia.org/wiki/QE1
-https://en.wikipedia.org/wiki/European_Central_Bank_intervention_in_the_eurozone_crisis",,,,
+https://en.wikipedia.org/wiki/European_Central_Bank_intervention_in_the_eurozone_crisis",yes,yes,no,"Minor: the ECB's 2010-12 crisis bond buying (SMP) was sterilised, so the money-supply/anti-deflation aim fits its 2015 QE rather than all its crisis purchases."
 i075,"What caused the 1997 Asian financial crisis, and how did it spread between countries?","Answer: The crisis began when Thailand was forced to float the baht in July 1997 after exhausting reserves defending its dollar peg, triggering a sharp devaluation and massive capital flight [1]. Underlying vulnerabilities included high short‑term foreign debt, asset bubbles driven by speculative inflows, weak corporate governance, and rigid exchange‑rate regimes that invited speculative attacks [1]. The shock spread rapidly across Southeast Asia through financial contagion—co‑movements in exchange rates, stock prices, and capital flows—as investors reassessed regional risk [1][7]. Neighboring countries then faced currency crises as foreign‑denominated debt burdens surged and reserves proved insufficient to maintain their pegs [6].
 
 Sources:
 https://en.wikipedia.org/wiki/1997_Asian_financial_crisis
 https://en.wikipedia.org/wiki/Currency_crisis
-https://en.wikipedia.org/wiki/Financial_contagion",,,,
+https://en.wikipedia.org/wiki/Financial_contagion",yes,yes,no,
 i076,What is the difference between type 1 and type 2 diabetes?,"Answer: Type 1 diabetes is an autoimmune disease causing destruction of pancreatic beta cells, resulting in absolute insulin deficiency and rapid symptom onset, usually in youth [10]. Type 2 diabetes involves insulin resistance and relative insulin deficiency, strongly linked to obesity and lifestyle, with gradual onset typically in adulthood [1]. Management of type 1 requires lifelong insulin therapy, while type 2 is initially treated with lifestyle modification and oral agents such as metformin, though insulin may be needed later [1, 10]. Type 1 represents 5–10% of diabetes cases, whereas type 2 accounts for approximately 90% [1, 10].
 
 Sources:
 https://en.wikipedia.org/wiki/Type_1_diabetes
-https://en.wikipedia.org/wiki/Type_2_diabetes",,,,
+https://en.wikipedia.org/wiki/Type_2_diabetes",yes,yes,no,
 i077,"What is purchasing power parity, and how is it used to compare living standards across countries?","Answer: Purchasing power parity (PPP) is a measure that compares price levels across countries by using a basket of goods and services, reflecting the relative purchasing power of currencies [1]. It adjusts for differences such as inflation, tariffs, and transaction costs so that monetary values can be compared on an equal footing. Consequently, GDP per capita measured at PPP is widely used to compare living standards between nations [8].
 
 Sources:
 https://en.wikipedia.org/wiki/Purchasing_power_parity
-https://en.wikipedia.org/wiki/Gross_domestic_product",,,,
+https://en.wikipedia.org/wiki/Gross_domestic_product",yes,yes,yes,Unsupported: the cited pages never say PPP adjusts for inflation (the PPP page says tariffs and transaction costs make PPP rates differ from market rates). / Minor: loosely worded mechanism.
 i078,Compare CRISPR-Cas9 with earlier gene-editing methods such as zinc-finger nucleases and TALENs. What made CRISPR take over?,"Answer: CRISPR‑Cas9 is a genome‑editing system that uses a synthetic guide RNA to direct the Cas9 nuclease to a specific DNA sequence, creating a double‑strand break [1,4]. The provided evidence does not mention zinc‑finger nucleases or TALENs, so a direct comparison with those earlier methods cannot be made from the given sources [5]. Additionally, the sources do not explicitly explain why CRISPR’s simplicity or multiplex capability led to its dominance, only that it is one of several engineered nucleases associated with off‑target effects [5].
 
 Sources:
 https://en.wikipedia.org/wiki/CRISPR_gene_editing
 https://en.wikipedia.org/wiki/Genome_editing
-https://en.wikipedia.org/wiki/Off-target_genome_editing",,,,
+https://en.wikipedia.org/wiki/Off-target_genome_editing",no,no,no,"Error: declines to answer, wrongly saying its sources don't mention ZFNs/TALENs or why CRISPR won (its CRISPR, Genome editing and Off-target pages cover both). / Missing: no comparison with ZFNs/TALENs; no reason why CRISPR took over."
 i079,"What is the difference between HTTP/2 and HTTP/3, and why did HTTP/3 move to QUIC?","Answer: HTTP/2 multiplexes multiple requests over a single TCP connection, fixing the HTTP-transaction-level head-of-line blocking problem present in HTTP/1.x [9]. HTTP/3 replaces TCP with QUIC, a multiplexed transport protocol built on UDP, which provides lower latency and faster real-world page loads [10]. The move to QUIC was motivated by its ability to improve performance of connection-oriented web applications that previously relied on TCP [11].
 
 Sources:
 https://en.wikipedia.org/wiki/HTTP/2
 https://en.wikipedia.org/wiki/HTTP/3
-https://en.wikipedia.org/wiki/QUIC",,,,
+https://en.wikipedia.org/wiki/QUIC",yes,yes,no,"Minor: answers 'why' only generically (performance, lower latency); does not mention TCP head-of-line blocking, the main reason in the cited HTTP/3 page."
 i080,"What causes the aurora borealis, and why is it mostly seen near the poles?","Answer: The aurora borealis is caused by charged particles from the solar wind (mainly electrons and protons) colliding with oxygen and nitrogen atoms in Earth's upper atmosphere, exciting them to emit light [1]. Earth's magnetic field funnels these particles along field lines that converge at the magnetic poles, creating an auroral oval around the polar regions where the collisions occur most frequently [1].
 
 Sources:
-https://en.wikipedia.org/wiki/Aurora",,,,
+https://en.wikipedia.org/wiki/Aurora",yes,yes,no,"Minor: 'particles from the solar wind' is a standard simplification; Aurora page and NOAA note auroral electrons are magnetospheric, energised by the solar wind."
 i081,"What is the deepest point in the ocean, how deep is it, and who first reached it?","Answer: The deepest point in the ocean is the Challenger Deep, located at the southern end of the Mariana Trench in the western Pacific Ocean, with a maximum known depth of 10,935 ± 6 meters (35,876 ± 20 ft) below sea level [2][4]. The first humans to reach this depth were Swiss oceanographer Jacques Piccard and U.S. Navy Lieutenant Don Walsh, who descended in the bathyscaphe *Trieste* on 23 January 1960 [1][3][5].
 
 Sources:
@@ -518,124 +518,124 @@ https://en.wikipedia.org/wiki/Jacques_Piccard
 https://en.wikipedia.org/wiki/Mariana_Trench
 https://en.wikipedia.org/wiki/Don_Walsh
 https://en.wikipedia.org/wiki/Challenger_Deep
-https://en.wikipedia.org/wiki/List_of_people_who_descended_to_Challenger_Deep",,,,
+https://en.wikipedia.org/wiki/List_of_people_who_descended_to_Challenger_Deep",yes,yes,no,"Minor: ""first humans to reach this depth"" is loose: Trieste bottomed at about 10,911-10,916 m in the western basin, not at the 10,935 m eastern-basin maximum."
 i082,"How did the Impressionist movement begin, and what were its defining techniques?","Answer: Impressionism emerged in the 1870s‑1880s when Paris‑based artists began independent exhibitions, and its defining techniques include visible brush‑strokes, open composition, an emphasis on the changing effects of light, and the practice of painting *en plein‑air* outdoors [1][6].
 
 Sources:
 https://en.wikipedia.org/wiki/Impressionism
-https://en.wikipedia.org/wiki/Abstract_impressionism",,,,
+https://en.wikipedia.org/wiki/Abstract_impressionism",yes,yes,no,"Minor: origin answered only briefly; the page dates the group's prominence, not its emergence, to the 1870s-1880s (first show 1874)."
 i083,"How does seawater desalination work, and what are its main environmental drawbacks?","Seawater desalination primarily uses either thermal distillation or membrane-based reverse osmosis, where pressure forces water through a semi‑permeable membrane to separate salts and impurities [2][1]. Its main environmental drawbacks are high energy consumption — desalination accounted for about 25 % of the water sector’s energy use in 2016 — and the production of concentrated brine as a by‑product, which can degrade marine ecosystems when discharged [2].
 
 Sources:
 https://en.wikipedia.org/wiki/Desalination
-https://en.wikipedia.org/wiki/Reverse_osmosis",,,,
+https://en.wikipedia.org/wiki/Reverse_osmosis",yes,yes,no,
 i084,"What is the origin of the Olympic Games, and when were the modern Games revived?","The ancient Olympic Games originated in Olympia, Greece, traditionally dated to 776 BC as a religious festival honoring Zeus.[1] The modern Olympic Games were revived in 1896 with the first international Olympics of the modern era held in Athens, organized by the International Olympic Committee founded by Pierre de Coubertin.[6][7]
 
 Sources:
 https://en.wikipedia.org/wiki/Ancient_Olympic_Games
 https://en.wikipedia.org/wiki/Pierre_de_Coubertin
-https://en.wikipedia.org/wiki/1896_Summer_Olympics",,,,
+https://en.wikipedia.org/wiki/1896_Summer_Olympics",yes,yes,no,
 i085,How does public-key cryptography let two parties communicate securely without sharing a secret in advance?,"Answer: Public‑key cryptography uses a mathematically linked public–private key pair, where the public key can be openly distributed while the private key remains secret [11]. Each party publishes its public key so that the other can encrypt messages or verify signatures without any prior shared secret [11]. Protocols such as Diffie–Hellman let the two parties derive a shared symmetric key from their public keys, providing confidentiality for subsequent communication [2]. Digital signatures enable a sender to authenticate a message by signing with a private key, which anyone can verify using the corresponding public key [12].
 
 Sources:
 https://en.wikipedia.org/wiki/Public-key_cryptography
 https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange
-https://en.wikipedia.org/wiki/Digital_signature",,,,
+https://en.wikipedia.org/wiki/Digital_signature",yes,yes,no,"Minor: says Diffie-Hellman derives the shared key ""from their public keys""; each party actually combines its own private key with the other's public key."
 i086,"What do we know about the atmosphere of Venus, and why is its surface so hot?","Answer: Venus has an extremely dense atmosphere composed of about 96.5% carbon dioxide and 3.5% nitrogen, with a surface pressure about 92–93 times that of Earth [1][3]. This thick CO₂-rich atmosphere creates an intense greenhouse effect that traps solar heat, raising the surface temperature to around 740 K (467 °C) [1][3]. The extreme heat is attributed to a runaway greenhouse effect: early in Venus's history, evaporating water vapor amplified the greenhouse effect, causing more water to evaporate and eventually escape to space, leaving a desiccated planet with a massive CO₂ atmosphere that efficiently blocks outgoing infrared radiation [6].
 
 Sources:
 https://en.wikipedia.org/wiki/Atmosphere_of_Venus
 https://en.wikipedia.org/wiki/Venus
-https://en.wikipedia.org/wiki/Runaway_greenhouse_effect",,,,
+https://en.wikipedia.org/wiki/Runaway_greenhouse_effect",yes,yes,no,
 i087,"What is the deepest point in the ocean, how deep is it, and who first reached it?","Answer: The deepest known point in the ocean is Challenger Deep in the Mariana Trench [1]. Its maximum depth is about 10,935 m (≈35,876 ft) according to recent measurements [1]. The first crewed descent to this point was made by Don Walsh and Jacques Piccard in the bathyscaphe *Trieste* on 23 January 1960 [3].
 
 Sources:
 https://en.wikipedia.org/wiki/Challenger_Deep
-https://en.wikipedia.org/wiki/List_of_people_who_descended_to_Challenger_Deep",,,,
+https://en.wikipedia.org/wiki/List_of_people_who_descended_to_Challenger_Deep",yes,yes,no,
 i088,"What do we know about the atmosphere of Venus, and why is its surface so hot?","Answer: The atmosphere of Venus is extremely dense, composed of about 96.5 % carbon dioxide and 3.5 % nitrogen, with a surface pressure of ~93 bar and a temperature near 740 K (467 °C) [1]. This thick CO₂ blanket creates a runaway greenhouse effect that traps heat and prevents the planet from cooling, making Venus the hottest body in the Solar System [5][6]. Winds in the upper troposphere exhibit super‑rotation, circling the planet in about four Earth days at speeds up to 100 m/s, while near‑surface winds are only a few meters per second [1]. Venus does not possess an intrinsic magnetic field; instead, its ionosphere interacts with the solar wind, producing an induced magnetosphere [2].
 
 Sources:
 https://en.wikipedia.org/wiki/Atmosphere_of_Venus
 https://en.wikipedia.org/wiki/Venus
 https://en.wikipedia.org/wiki/Runaway_greenhouse_effect
-https://en.wikipedia.org/wiki/Greenhouse_effect",,,,
+https://en.wikipedia.org/wiki/Greenhouse_effect",no,yes,yes,"Error: calls Venus the hottest body in the Solar System; the Sun is far hotter, Venus is the hottest planet (side detail). / Unsupported: that 'hottest body' claim; the pages say hottest planet. / Minor: winds 'up to 100 m/s' (page: 100 m/s or more); near-surface winds 'a few m/s' (page: mostly under 2 m/s)."
 i089,"How do carbon pricing schemes like the EU Emissions Trading System work, and what effect have they had on emissions?","Answer: Carbon pricing schemes such as the EU ETS operate as cap-and-trade systems: a declining emissions cap is set, and polluters must buy or receive allowances for each tonne of CO₂ they emit, creating a market price for carbon [1][2]. The EU ETS, launched in 2005, covers about 40% of EU greenhouse gases and requires operators to surrender allowances annually [1][3]. Evidence shows that emissions in covered sectors dropped roughly 50% between 2005 and 2025, with studies attributing a 7–11.5% reduction directly to the ETS, alongside co-benefits like reduced air pollutants [1].
 
 Sources:
 https://en.wikipedia.org/wiki/European_Union_Emissions_Trading_System
 https://en.wikipedia.org/wiki/Carbon_emission_trading
-https://en.wikipedia.org/wiki/EU_Allowance",,,,
+https://en.wikipedia.org/wiki/EU_Allowance",yes,yes,no,
 i090,"How do vaccines create herd immunity, and what coverage is needed for measles?","Vaccines create herd immunity by inducing immunity in a large share of the population, which reduces the pool of susceptible hosts and interrupts pathogen transmission, thereby indirectly protecting those who cannot be vaccinated or who do not develop full immunity [1]. For measles, one of the most contagious human diseases, the theoretical herd‑immunity threshold is about 92–94% (based on its basic reproduction number of 12–18), but because vaccines are not 100% effective, public‑health guidance sets the target at **≥95% of the community vaccinated with two doses** to achieve and maintain herd immunity [6].
 
 Sources:
 https://en.wikipedia.org/wiki/Herd_immunity
-https://en.wikipedia.org/wiki/Measles",,,,
+https://en.wikipedia.org/wiki/Measles",yes,yes,yes,Unsupported: 'with two doses' is not in the cited pages (it is true: WHO/CDC target is >=95% coverage with both doses).
 i091,"What is the difference between HTTP/2 and HTTP/3, and why did HTTP/3 move to QUIC?","HTTP/2 multiplexes streams over a single TCP connection, but TCP’s in‑order delivery causes head‑of‑line blocking when packets are lost [9]. HTTP/3 replaces TCP with QUIC, a UDP‑based transport that provides native per‑stream multiplexing and loss recovery, eliminating head‑of‑line blocking [10][11]. QUIC also integrates TLS 1.3 for faster handshakes (including 0‑RTT resumption), moves congestion control to user space for rapid evolution, and encrypts transport headers to avoid middlebox ossification [11]. The move to QUIC was driven by HTTP/2’s inability to fully realize multiplexing benefits under real‑world packet loss and the goal of lower latency and greater protocol extensibility [10][11].
 
 Sources:
 https://en.wikipedia.org/wiki/HTTP/2
 https://en.wikipedia.org/wiki/HTTP/3
-https://en.wikipedia.org/wiki/QUIC",,,,
+https://en.wikipedia.org/wiki/QUIC",yes,yes,yes,Unsupported: '0-RTT resumption' is not in the cited pages (true; only the uncited TCP page mentions zero-RTT resumption).
 i092,"How did the Impressionist movement begin, and what were its defining techniques?","The Impressionist movement began in the 1870s when a group of Paris‑based artists, led by Claude Monet, broke away from the official Salon and organized independent exhibitions, taking their name from Monet’s 1872 painting *Impression, Sunrise* [6][7]. Their defining techniques featured visible brush strokes, an emphasis on capturing the fleeting effects of light and atmosphere, plein air (outdoor) painting, ordinary subject matter, and unconventional compositions that conveyed movement [6][7].
 
 Sources:
 https://en.wikipedia.org/wiki/Claude_Monet
-https://en.wikipedia.org/wiki/Impressionism",,,,
+https://en.wikipedia.org/wiki/Impressionism",yes,yes,no,Minor: 'led by Claude Monet' simplifies; the 1874 show was a collective effort in which Monet was a leading figure.
 i093,"What is quantitative easing, and how did central banks use it after the 2008 financial crisis?","Answer: Quantitative easing (QE) is a monetary policy in which a central bank purchases government and other securities to inject liquidity and lower long‑term interest rates [6]. After the 2008 financial crisis, the Federal Reserve employed QE to support market liquidity and stimulate the economy by buying Treasury and agency securities, as reflected in the Federal Open Market Committee’s actions [9][8]. The policy involved large‑scale asset purchases that expanded the central bank’s balance sheet.  
 
 Sources:
 https://en.wikipedia.org/wiki/Quantitative_easing
 https://en.wikipedia.org/wiki/Federal_Reserve_responses_to_the_subprime_crisis
-https://en.wikipedia.org/wiki/History_of_Federal_Open_Market_Committee_actions",,,,
+https://en.wikipedia.org/wiki/History_of_Federal_Open_Market_Committee_actions",yes,yes,no,Minor: describes only the Fed; no other central bank's post-2008 use is covered.
 i094,Why does the Moon always show the same face to Earth?,"The Moon’s near side always faces Earth because gravitational tidal forces have synchronized its rotation with its orbit, a state known as tidal locking. [2]  
 Earth’s gravity raises tidal bulges on the Moon; friction from these bulges gradually slowed the Moon’s spin until its rotational period equaled its orbital period. [9]  
 
 Sources:
 https://en.wikipedia.org/wiki/Moon
-https://en.wikipedia.org/wiki/Tidal_acceleration",,,,
+https://en.wikipedia.org/wiki/Tidal_acceleration",yes,yes,no,
 i095,"Why does the Great Barrier Reef bleach, and what role does ocean temperature play?","The Great Barrier Reef bleaches when corals expel their symbiotic zooxanthellae due to environmental stress, primarily caused by rising ocean temperatures from climate change [1][7]. Elevated sea temperatures disrupt the coral–algae symbiosis, leading to loss of pigment and increased vulnerability to starvation and disease [1]. Ocean temperature is the leading driver of mass bleaching events, with thermal stress affecting over 84 % of global reefs in the 2023–2025 event [2].
 
 Sources:
 https://en.wikipedia.org/wiki/Coral_bleaching
 https://en.wikipedia.org/wiki/Environmental_threats_to_the_Great_Barrier_Reef
-https://en.wikipedia.org/wiki/2023%E2%80%932025_global_coral_bleaching_event",,,,
+https://en.wikipedia.org/wiki/2023%E2%80%932025_global_coral_bleaching_event",yes,yes,no,
 i096,"What was the Bauhaus, and how did it influence modern design?","The Bauhaus was a German art school operating from 1919 to 1933 that combined crafts and fine arts, aiming to unify artistic vision with mass production and functional design【1】. Its approach emphasized functionality, simplicity, and the integration of art, technology, and craftsmanship, influencing modernist architecture and design education【1】. Former Bauhaus figures disseminated its ideas abroad, helping shape the International Style in architecture and the Swiss Style in graphic design【2】【4】. Consequently, the Bauhaus left a lasting impact on fields such as graphic design, interior design, industrial design, and typography, becoming a cornerstone of modern design【1】.
 
 Sources:
 https://en.wikipedia.org/wiki/Bauhaus
 https://en.wikipedia.org/wiki/International_Style
-https://en.wikipedia.org/wiki/Swiss_Style_(design)",,,,
+https://en.wikipedia.org/wiki/Swiss_Style_(design)",yes,yes,no,
 i097,How does the Transformer architecture differ from recurrent neural networks for sequence modelling?,"Answer: Transformers process all tokens at once using self‑attention, enabling parallel computation and direct modeling of long‑range dependencies [8]. In contrast, recurrent neural networks handle sequences token‑by‑token with a hidden state that updates sequentially, which limits parallelism and often makes it hard to capture dependencies over many steps [6]. This architectural difference gives Transformers better scalability and more flexible attention mechanisms for sequence modelling [8].
 
 Sources:
 https://en.wikipedia.org/wiki/Transformer_(deep_learning)
 https://en.wikipedia.org/wiki/History_of_artificial_neural_networks
-https://en.wikipedia.org/wiki/Transformer_(deep_learning)",,,,
+https://en.wikipedia.org/wiki/Transformer_(deep_learning)",yes,yes,no,Minor: 'better scalability' holds for parallel training of large models; the cited page notes attention cost grows quadratically with sequence length.
 i098,What do modern historians consider the main causes of the fall of the Western Roman Empire?,"Modern historians argue that the fall resulted from a mix of internal weaknesses—such as political instability, economic decline, reduced military effectiveness, and administrative inefficiency—and external pressures from invading barbarian groups, exacerbated by climate change and disease outbreaks.[1][2] While some scholars emphasize one set of factors over the other, the prevailing view is that neither internal nor external causes alone suffice; rather, their interaction precipitated the collapse.[2] Consequently, contemporary scholarship treats the fall as a multifaceted process rather than a single‑event catastrophe.[1][2]
 
 Sources:
 https://en.wikipedia.org/wiki/Fall_of_the_Western_Roman_Empire
-https://en.wikipedia.org/wiki/Historiography_of_the_fall_of_the_Western_Roman_Empire",,,,
+https://en.wikipedia.org/wiki/Historiography_of_the_fall_of_the_Western_Roman_Empire",yes,yes,no,
 i099,"What are the main scientific goals of the James Webb Space Telescope, and where in space does it operate?","Answer: Its primary scientific goals are to observe the first stars and galaxies and to characterize the atmospheres of potentially habitable exoplanets [1]. It operates in a halo orbit around the Sun–Earth L2 Lagrange point about 1.5 million km from Earth [1].
 
 Sources:
-https://en.wikipedia.org/wiki/James_Webb_Space_Telescope",,,,
+https://en.wikipedia.org/wiki/James_Webb_Space_Telescope",yes,yes,no,
 i100,"What is the Montreal Protocol, and how successful has it been at repairing the ozone layer?","The Montreal Protocol is an international treaty agreed on 16 September 1987 to protect the ozone layer by phasing out the production and consumption of ozone‑depleting substances [5]. It has been ratified by 198 parties, making it the first universally ratified treaty in United Nations history, and is widely regarded as the most successful international environmental agreement [5]. As a result of its implementation, the Antarctic ozone hole is slowly recovering, with scientific projections indicating the ozone layer will return to 1980 levels by around 2040 globally and by 2066 over Antarctica [5].
 
 Sources:
-https://en.wikipedia.org/wiki/Montreal_Protocol",,,,
+https://en.wikipedia.org/wiki/Montreal_Protocol",yes,yes,no,
 i101,"What was the Magna Carta, and why is it still considered important?","The Magna Carta was a royal charter of rights sealed by King John of England at Runnymede on 15 June 1215, drafted by Archbishop Stephen Langton to end a baronial rebellion by guaranteeing church freedoms, protection from arbitrary imprisonment, swift justice, and limits on feudal payments to the Crown [1][3][6]. Although annulled by the Pope and later reissued in modified forms, it established the principle that the monarch is subject to the law rather than above it [1]. In the 17th century jurists such as Sir Edward Coke invoked it to challenge the divine right of kings, and it directly influenced later constitutional documents including the English Bill of Rights (1689) and the United States Constitution [1][4]. Today it remains a powerful symbol of the rule of law and individual liberty, cited by courts and politicians as a foundational touchstone for rights such as habeas corpus [1].
 
 Sources:
 https://en.wikipedia.org/wiki/Magna_Carta
 https://en.wikipedia.org/wiki/Runnymede
 https://en.wikipedia.org/wiki/John,_King_of_England
-https://en.wikipedia.org/wiki/Bill_of_Rights_1689",,,,
+https://en.wikipedia.org/wiki/Bill_of_Rights_1689",yes,yes,no,Minor: the pages imply but do not say Magna Carta 'directly' influenced the Bill of Rights 1689; 'cited by courts' is loose (Magna Carta page: rarely invoked in court today).
 i102,"How does seawater desalination work, and what are its main environmental drawbacks?","Answer: Seawater desalination most commonly relies on reverse osmosis, where high‑pressure pumps force seawater through a semi‑permeable membrane that permits water molecules to pass while rejecting salts and contaminants, yielding fresh water and a concentrated brine by‑product [1][2]. The process begins with intake screens that pre‑filter the water, then the pressurised flow is pushed through reverse‑osmosis membranes, and the permeate is collected as drinking water while the reject stream is discharged [1]. Major environmental drawbacks include the large volume of brine waste that can raise seawater salinity and harm marine ecosystems, and the high energy consumption of the pumps, which often draws on fossil‑fuel electricity and adds significant greenhouse‑gas emissions [2]. Additionally, the intake and discharge systems can affect marine life and alter local habitats [2].  
 
 Sources:
 https://en.wikipedia.org/wiki/Reverse_osmosis
-https://en.wikipedia.org/wiki/Desalination",,,,
+https://en.wikipedia.org/wiki/Desalination",yes,yes,no,
 i103,"What is the difference between HTTP/2 and HTTP/3, and why did HTTP/3 move to QUIC?","HTTP/2 is a major revision of the HTTP protocol that adds features such as multiplexing and header compression while remaining compatible with existing web infrastructure【1】.  
 HTTP/3 preserves the same semantics but replaces the underlying transport with QUIC, a multiplexed protocol built on UDP【2】.  
 QUIC was designed to improve performance over TCP by reducing connection‑setup latency, eliminating head‑of‑line blocking, and supporting rapid retransmission and connection migration【3】.  
@@ -644,30 +644,30 @@ Consequently, HTTP/3 moved to QUIC to achieve lower latency and better reliabili
 Sources:
 https://en.wikipedia.org/wiki/HTTP/2
 https://en.wikipedia.org/wiki/HTTP/3
-https://en.wikipedia.org/wiki/QUIC",,,,
+https://en.wikipedia.org/wiki/QUIC",yes,yes,no,Minor: 'rapid retransmission' and 'better reliability' loosely paraphrase the QUIC page's 'more efficient loss recovery' and its gains on lossy and mobile networks.
 i104,What do modern historians consider the main causes of the fall of the Western Roman Empire?,"Modern historians generally see the fall of the Western Roman Empire as the result of a complex interplay between internal weaknesses and external pressures. Internal factors include the declining effectiveness and size of the army, economic stagnation, political instability and incompetent leadership, demographic decline, administrative inefficiency, and religious changes. External factors involve sustained pressure from invading peoples (such as Goths and Huns), which was intensified by climatic changes and epidemic diseases. Most scholars argue that no single cause suffices; rather, a combination of these elements led to the collapse.  
 
 Sources:  
 https://en.wikipedia.org/wiki/Fall_of_the_Western_Roman_Empire  
-https://en.wikipedia.org/wiki/Historiography_of_the_fall_of_the_Western_Roman_Empire",,,,
+https://en.wikipedia.org/wiki/Historiography_of_the_fall_of_the_Western_Roman_Empire",yes,yes,no,
 i105,"Why does the Great Barrier Reef bleach, and what role does ocean temperature play?","Answer: The Great Barrier Reef bleaches primarily because rising ocean temperatures due to climate change stress the corals, causing them to expel their symbiotic algae (zooxanthellae) and lose their color and primary energy source [1]. Ocean temperature is the leading cause of coral bleaching; abnormally warm water disrupts the coral-algae symbiosis, making corals more vulnerable to starvation, disease, and death [1]. Climate change is identified as the most significant environmental threat to the Great Barrier Reef, driving mass bleaching events such as the 2016 event that killed 29–50 % of the reef’s coral [1, 7].
 
 Sources:
 https://en.wikipedia.org/wiki/Coral_bleaching
-https://en.wikipedia.org/wiki/Environmental_threats_to_the_Great_Barrier_Reef",,,,
+https://en.wikipedia.org/wiki/Environmental_threats_to_the_Great_Barrier_Reef",yes,yes,no,"Minor: 29-50% is the cited page's range; the GBRMPA's estimate for 2016 was 29% of shallow-water coral, and 'as much as half' referred to 2016-17 combined."
 i106,"What is purchasing power parity, and how is it used to compare living standards across countries?","Purchasing power parity (PPP) is an economic measure that compares the absolute purchasing power of different currencies by evaluating the price of a standardized basket of goods and services across countries, based on the law of one price [1]. It is calculated as the ratio of the cost of a broad market basket (covering thousands of consumer goods, government services, equipment, and construction projects) in one country relative to another [1]. PPP exchange rates are used to adjust nominal GDP for cost‑of‑living differences, yielding real GDP and GDP per capita figures that better reflect the volume of goods and services a typical resident can buy, thus enabling more accurate cross‑country comparisons of living standards [1][14][18]. International organizations such as the World Bank and IMF routinely publish GDP (PPP) per capita to rank countries by material living standards [14].
 
 Sources:
 https://en.wikipedia.org/wiki/Purchasing_power_parity
 https://en.wikipedia.org/wiki/List_of_countries_by_GDP_(PPP)_per_capita
-https://en.wikipedia.org/wiki/Cost_of_living",,,,
+https://en.wikipedia.org/wiki/Cost_of_living",yes,yes,yes,"Unsupported: that the World Bank and IMF routinely publish GDP (PPP) per capita to rank countries by material living standards. / Minor: GDP per capita is an average, not what a 'typical resident' can buy."
 i107,"Which river is the longest in the world, and why is the ranking disputed?","The Nile is frequently listed as the longest river in the world, measuring about 7,088 km [8]. However, the Amazon River’s length is debated, with figures ranging from its accepted 6,400 km up to 7,062 km depending on which tributary is considered the true source [1]. This disagreement arises because different studies identify either the Mantaro or the Apurímac headwaters in Peru as the Amazon’s most distant source, altering the total length calculation [1]. Consequently, whether the Nile or the Amazon holds the title depends on the criteria used for measuring river length.
 
 Sources:
 https://en.wikipedia.org/wiki/Nile
-https://en.wikipedia.org/wiki/Amazon_River",,,,
+https://en.wikipedia.org/wiki/Amazon_River",no,yes,yes,"Error: blames the 6,400-7,062 km spread on studies choosing the Mantaro or Apurimac source; those figures were all measured from the Apurimac side, the Mantaro adds only ~80 km, and the spread comes mainly from where the mouth is put / Unsupported: the cited pages do not tie the range to the source tributary."
 i108,"What are the main scientific goals of the James Webb Space Telescope, and where in space does it operate?","The James Webb Space Telescope is designed to conduct infrared astronomy, enabling observations of the first stars and the formation of the first galaxies, as well as the atmospheric characterization of potentially habitable exoplanets【1†L...】. It operates in a halo orbit around the Sun–Earth L2 Lagrange point, about 1.5 million kilometers from Earth【1†L...】【6†L...】.
 
 Sources:
 https://en.wikipedia.org/wiki/James_Webb_Space_Telescope
-https://en.wikipedia.org/wiki/Lagrange_point",,,,
+https://en.wikipedia.org/wiki/Lagrange_point",yes,yes,no,
