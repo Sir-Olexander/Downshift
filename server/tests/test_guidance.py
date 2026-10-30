@@ -71,3 +71,15 @@ def test_model_targets_cover_any_model_in_the_table():
 
     assert target_spec("model:gpt-oss-20b")["allowed"] == ["gpt-oss-20b"]
     assert target_spec("model:not-a-model") is None and target_spec("nano")["allowed"] == ["nemotron-3-nano"]
+
+
+def test_failure_summary_groups_failures_by_kind():
+    def item(ok, details, status="ok"):
+        return {"metrics": {"success": ok}, "judge": {"method": "ground_truth", "candidate": {"details": details}}, "record": {"status": status}}
+
+    items = [item(False, "no SQL: No SQL produced. Response: Japan has 5"), item(False, "no SQL: No SQL produced. Response: 11 orchestras"),
+             item(False, "expected 3 rows, got 1"), item(True, "1 rows match")]
+    s = Engine._failure_summary(items)
+    assert s[0] == "2 of 4 runs: no SQL: No SQL produced. Response: ..." and s[1] == "1 of 4 runs: expected N rows, got N"
+    text = _history_text([{"round": 1, "metrics": {}, "worst_examples": [], "failure_summary": s, "changelog": []}])
+    assert "failures by kind: 2 of 4 runs: no SQL" in text

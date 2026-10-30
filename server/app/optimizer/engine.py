@@ -144,6 +144,29 @@ class Engine:
             })
         return out
 
+    @staticmethod
+    def _failure_summary(items: list[dict[str, Any]], n: int = 6) -> list[str]:
+        """Failed runs grouped by what went wrong (the grader's or judge's reason with numbers blanked), most
+        common first, so the rewriter targets the commonest failure class instead of single tasks."""
+        import re as _re
+        from collections import Counter
+
+        def cls(x: dict[str, Any]) -> str:
+            j = x.get("judge") or {}
+            if j.get("method") == "ground_truth":
+                why = str((j.get("candidate") or {}).get("details") or "")
+            else:
+                why = str(j.get("reason") or "")
+            if x["record"].get("status") != "ok":
+                why = "run error: " + str(x["record"].get("error") or "")
+            why = _re.sub(r"\d+(\.\d+)?", "N", why)
+            why = _re.sub(r"(Response:|near|such (table|column):).*", r"\1 ...", why)
+            return why.strip()[:90] or "failed"
+
+        fails = [x for x in items if not x["metrics"].get("success")]
+        counts = Counter(cls(x) for x in fails)
+        return [f"{c} of {len(items)} runs: {k}" for k, c in counts.most_common(n)]
+
     def _replayer(self, project_id: str, harness: Harness, sdk: Downshift, tools: SearchTools) -> tuple[Any, str]:
         """How replays run: the built-in research agent in-process, or the project's own agent code
         through its adapter (harness runtime: custom)."""
@@ -266,7 +289,7 @@ class Engine:
                 rounds_log.append(entry)
                 self.db.update_option(option["id"], rounds_json=rounds_log)
                 self._event(oid, f"{spec['label']} model swap alone (no prompt changes): success {agg.get('success_rate')}% vs baseline {base_agg.get('success_rate')}%, cost ${agg.get('cost_per_run')} vs ${base_agg.get('cost_per_run')} per run (optimization sample, n={len(items)}). Rewrites must beat this.", phase=f"optimize:{target}", data={"metrics": agg, "baseline": base_agg, "objective": score})
-                previous.append({"round": "0 (model swap only, prompts unchanged)", "metrics": agg, "baseline_success_rate": base_agg.get("success_rate"), "baseline_quality": base_agg.get("quality"), "baseline_cost": base_agg.get("cost_per_run"), "worst_examples": entry["worst_examples"], "changelog": swap.changelog})
+                previous.append({"round": "0 (model swap only, prompts unchanged)", "metrics": agg, "baseline_success_rate": base_agg.get("success_rate"), "baseline_quality": base_agg.get("quality"), "baseline_cost": base_agg.get("cost_per_run"), "worst_examples": entry["worst_examples"], "failure_summary": self._failure_summary(items), "changelog": swap.changelog})
                 best = {"harness": swap, "score": score, "round": 0, "rationale": "The model swap alone did at least as well as any rewrite on the optimization sample, so the prompts are kept as they are."}
             for round_no in range(1, rounds + 1):
                 if spent["usd"] > float(cfg["max_cost_usd"]):
@@ -294,7 +317,7 @@ class Engine:
                 rounds_log.append(entry)
                 self.db.update_option(option["id"], rounds_json=rounds_log)
                 self._event(oid, f"{spec['label']} round {round_no}: success {agg.get('success_rate')}% vs baseline {base_agg.get('success_rate')}%, quality {agg.get('quality')} vs {base_agg.get('quality')}, cost ${agg.get('cost_per_run')} vs ${base_agg.get('cost_per_run')} per run (optimization sample, n={len(items)}).", phase=f"optimize:{target}", data={"metrics": agg, "baseline": base_agg, "objective": score})
-                previous.append({"round": round_no, "metrics": agg, "baseline_success_rate": base_agg.get("success_rate"), "baseline_quality": base_agg.get("quality"), "baseline_cost": base_agg.get("cost_per_run"), "worst_examples": entry["worst_examples"], "changelog": cand.changelog})
+                previous.append({"round": round_no, "metrics": agg, "baseline_success_rate": base_agg.get("success_rate"), "baseline_quality": base_agg.get("quality"), "baseline_cost": base_agg.get("cost_per_run"), "worst_examples": entry["worst_examples"], "failure_summary": self._failure_summary(items), "changelog": cand.changelog})
                 if best is None or score > best["score"]:
                     best = {"harness": cand, "score": score, "round": round_no, "rationale": proposal["rationale"]}
                 current = best["harness"] if best else current

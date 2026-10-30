@@ -82,6 +82,7 @@ Rules:
 - Output the complete new harness (every field), not a diff. Keep name, runtime, contract, every step id and kind, and every tool name.
 - Only use these model ids: {allowed_models}. {model_rule}
 - Smaller models need explicit output formats, short numbered rules and clear stop conditions. Look at how failed runs went wrong and target that.
+- Make the smallest change that fixes the most common kind of failure ("failures by kind" above). Do not add rules for single tasks, specific values or SQL patterns seen in one example: they rarely transfer to other tasks, and every extra rule makes small models follow the others less well. If a round made things worse, go back to the previous best harness and change less.
 - Reasoning (thinking) tokens count against max_tokens: if you set max_tokens on a step with reasoning on, leave plenty of room, or the answer comes back empty.
 - Correctness first. Cut cost (thinking off, fewer calls, fewer tokens) only where the recorded runs show the step does not need it; a cheaper step that fails the task costs more than it saves.
 - Fill `changelog` with 3-6 short lines describing the changes.
@@ -148,6 +149,8 @@ def _history_text(previous: list[dict[str, Any]]) -> str:
             f"quality {m.get('quality')}/100 (baseline {p.get('baseline_quality')}), cost ${m.get('cost_per_run')}/run "
             f"(baseline ${p.get('baseline_cost')}), checks passed {m.get('checks_pass_rate')}%"
         )
+        if p.get("failure_summary"):
+            parts.append("  failures by kind: " + " | ".join(p["failure_summary"]))
         for ex in p.get("worst_examples") or []:
             line = f"  worst example: Q: {ex.get('question','')[:140]} | verdict: {ex.get('reason','')[:220]} | checks: {ex.get('checks','')} | output: {ex.get('answer_excerpt','')[:200]!r}"
             final = (ex.get('final_message') or '').strip()
